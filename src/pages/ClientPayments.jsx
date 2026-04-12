@@ -51,6 +51,9 @@ export const ClientPayments = () => {
   const [filterMonth, setFilterMonth] = useState(currentMonth.toString());
   const [filterYear, setFilterYear] = useState(currentYear.toString());
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
+
   const [editingRecord, setEditingRecord] = useState(null);
   const [editForm, setEditForm] = useState({
     dueDate: '', value: 0, status: 'pendente', paymentMethod: 'Boleto bancário'
@@ -71,6 +74,7 @@ export const ClientPayments = () => {
     setFilterStatus('Todos');
     setFilterMonth(currentMonth.toString());
     setFilterYear(currentYear.toString());
+    setCurrentPage(1);
   };
 
   const allRecords = useMemo(() => {
@@ -115,7 +119,7 @@ export const ClientPayments = () => {
 
   const filteredRecords = useMemo(() => {
     const digits = (s = '') => s.replace(/\D/g, '');
-    return allRecords.filter(r => {
+    const filtered = allRecords.filter(r => {
       if (filterName && !r.clientName.toLowerCase().includes(filterName.toLowerCase())) return false;
       if (filterCnpj) {
         const qDigits = digits(filterCnpj);
@@ -131,7 +135,21 @@ export const ClientPayments = () => {
       if (filterEndDate && new Date(r.dueDate) > new Date(filterEndDate)) return false;
       return true;
     });
+    
+    // Reset to page 1 if filter search changes count significantly
+    return filtered;
   }, [allRecords, filterName, filterCnpj, filterStatus, filterStartDate, filterEndDate]);
+
+  // Pagination Logic
+  const totalPages = Math.ceil(filteredRecords.length / itemsPerPage);
+  const paginatedRecords = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredRecords.slice(start, start + itemsPerPage);
+  }, [filteredRecords, currentPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterName, filterCnpj, filterStatus, filterMonth, filterYear, filterStartDate, filterEndDate]);
 
   const openEditModal = (record) => {
     if (!isFinance) return;
@@ -288,19 +306,19 @@ export const ClientPayments = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredRecords.map(record => {
+              {paginatedRecords.map(record => {
                 const isOverdue = record.computedStatus === 'atrasado';
                 return (
                   <tr key={record.id} style={isOverdue ? { background: '#fff5f5' } : {}}>
                     <td>
-                      <div style={{ fontWeight: 600, color: '#1e293b' }}>{record.clientName}</div>
+                      <div style={{ fontWeight: 600, color: '#1e293b' }}>{record.clientName || 'Cliente sem nome'}</div>
                       {record.cnpj && <div style={{ fontSize: '0.78rem', color: '#64748b' }}>{record.cnpj}</div>}
                     </td>
                     <td>{record.reference}</td>
                     <td style={{ color: isOverdue ? '#be123c' : 'inherit', fontWeight: isOverdue ? 600 : 400 }}>
                       {formatDate(record.dueDate)}
                     </td>
-                    <td style={{ fontWeight: 600 }}>R$ {record.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                    <td style={{ fontWeight: 600 }}>R$ {(record.value || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
                     <td><StatusBadge status={record.computedStatus} /></td>
                     <td>{record.paymentMethod}</td>
                     <td style={{ textAlign: 'center' }}>
@@ -348,6 +366,36 @@ export const ClientPayments = () => {
             </tbody>
           </table>
         </div>
+
+        {totalPages > 1 && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '24px', padding: '0 8px' }}>
+            <span style={{ fontSize: '0.85rem', color: '#64748b' }}>
+              Mostrando <b>{paginatedRecords.length}</b> de <b>{filteredRecords.length}</b> mensalidades
+            </span>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button 
+                className="btn btn-secondary" 
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(prev => prev - 1)}
+                style={{ opacity: currentPage === 1 ? 0.5 : 1 }}
+              >
+                Anterior
+              </button>
+              <span style={{ display: 'flex', alignItems: 'center', padding: '0 12px', fontWeight: 600, color: 'var(--primary)' }}>
+                {currentPage} / {totalPages}
+              </span>
+              <button 
+                className="btn btn-secondary" 
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage(prev => prev + 1)}
+                style={{ opacity: currentPage === totalPages ? 0.5 : 1 }}
+              >
+                Próximo
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
       </div>
 
       {editingRecord && (
