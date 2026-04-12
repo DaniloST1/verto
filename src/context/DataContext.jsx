@@ -161,6 +161,9 @@ export const DataProvider = ({ children }) => {
 
     let newMonths = currentRecord ? { ...currentRecord.months, [monthIndex]: { ...(currentRecord.months[monthIndex] || {}), ...data } } : { [monthIndex]: data };
 
+    let success = false;
+    let savedObj = null;
+
     if (currentRecord) {
       const { data: updatedObj, error } = await supabase.from('client_payments')
         .update({ months: newMonths })
@@ -170,7 +173,8 @@ export const DataProvider = ({ children }) => {
       
       if (!error && updatedObj) {
         setClientPayments(prev => prev.map(c => c.id === currentRecord.id ? updatedObj : c));
-        addToast(`Pagamento do mês ${monthIndex + 1} atualizado.`, 'success');
+        success = true;
+        savedObj = updatedObj;
       } else if (error) {
          addToast(`Erro: ${error.message}`, 'error');
       }
@@ -182,10 +186,37 @@ export const DataProvider = ({ children }) => {
       
       if (!error && newRecord) {
         setClientPayments(prev => [...prev, newRecord]);
-        addToast(`Pagamento do mês ${monthIndex + 1} atualizado.`, 'success');
+        success = true;
+        savedObj = newRecord;
       } else if (error) {
         addToast(`Erro: ${error.message}`, 'error');
       }
+    }
+
+    // Automation: Add to Cash Flow if status is "pago"
+    if (success && data.status === 'pago') {
+      const client = clients.find(c => (c.id === clientId || c.id === String(clientId)));
+      const clientName = client ? (client.name || client.name) : 'Cliente';
+      const monthName = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"][monthIndex];
+      
+      const cashFlowData = {
+        name: `Mensalidade: ${clientName} (${monthName}/${year})`,
+        value: data.value,
+        type: 'receita',
+        specific_type: 'mensalidade',
+        date: new Date().toISOString(),
+        status: 'pago'
+      };
+
+      const { data: cfItem, error: cfError } = await supabase.from('cash_flow').insert([cashFlowData]).select().single();
+      if (!cfError && cfItem) {
+        setCashFlow(prev => [...prev, cfItem]);
+        addToast(`Lançamento automático gerado no Fluxo de Caixa.`, 'info');
+      }
+    }
+
+    if (success) {
+      addToast(`Pagamento do mês ${monthIndex + 1} atualizado.`, 'success');
     }
   };
 
