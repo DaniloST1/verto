@@ -54,22 +54,22 @@ export const CashFlow = () => {
         )}
       </div>
 
-      <div className="grid-cards" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))' }}>
-        <div className="stat-card glass-panel" style={{ borderLeft: '4px solid var(--success)'}}>
+      <div className="cashflow-summary-grid" style={{ marginBottom: '24px' }}>
+        <div className="stat-card glass-panel" style={{ borderLeft: '4px solid var(--success)', margin: 0 }}>
           <span className="title"><TrendingUp size={16} /> Total Receitas</span>
           <span className="value" style={{color: 'var(--success)'}}>R$ {totalReceitas.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
         </div>
-        <div className="stat-card glass-panel" style={{ borderLeft: '4px solid var(--error)'}}>
+        <div className="stat-card glass-panel" style={{ borderLeft: '4px solid var(--error)', margin: 0 }}>
           <span className="title"><TrendingDown size={16} /> Total Despesas</span>
           <span className="value" style={{color: 'var(--error)'}}>R$ {totalDespesas.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
         </div>
-        <div className="stat-card glass-panel" style={{ borderLeft: balance >= 0 ? '4px solid var(--primary)' : '4px solid var(--warning)'}}>
+        <div className="stat-card glass-panel" style={{ borderLeft: balance >= 0 ? '4px solid var(--primary)' : '4px solid var(--warning)', margin: 0 }}>
           <span className="title">Saldo Líquido</span>
           <span className="value" style={{color: balance >= 0 ? 'var(--primary)' : 'var(--warning)'}}>R$ {balance.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
         </div>
       </div>
 
-      <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginBottom: '32px', height: '350px'}}>
+      <div className="cashflow-charts-grid" style={{ marginBottom: '32px' }}>
         <div className="glass-panel" style={{padding: '20px', display: 'flex', flexDirection: 'column'}}>
           <h3 style={{marginBottom: '16px', fontSize: '1.1rem', textAlign: 'center'}}>Receita vs Despesa</h3>
           <div style={{flex: 1}}>
@@ -121,6 +121,34 @@ export const CashFlow = () => {
           </div>
         </div>
       </div>
+
+      <style>{`
+        .cashflow-summary-grid, .cashflow-charts-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 20px;
+        }
+        .cashflow-charts-grid {
+          height: 350px;
+        }
+        @media (max-width: 1024px) {
+          .cashflow-summary-grid, .cashflow-charts-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
+        @media (max-width: 768px) {
+          .cashflow-summary-grid, .cashflow-charts-grid {
+            grid-template-columns: 1fr;
+            height: auto;
+          }
+          .cashflow-charts-grid {
+             height: auto;
+          }
+          .cashflow-charts-grid > div {
+            height: 300px;
+          }
+        }
+      `}</style>
 
       <div className="table-container">
         <table>
