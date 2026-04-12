@@ -59,7 +59,7 @@ export const Clients = () => {
   const emptyForm = {
     name: '', cnpj: '', contact: '', email: '', status: 'apto', responsible_id: '',
     cash_value: 0, notes: '',
-    cpf_cnpj_responsible: '', state_registration: '', due_day: 10, contract_validity: ''
+    cpf_cnpj_responsible: '', state_registration: '', due_day: 10, contract_end: ''
   };
   const [formData, setFormData] = useState(emptyForm);
 
@@ -99,7 +99,13 @@ export const Clients = () => {
   const openForm = (client = null) => {
     if (client) {
       setEditingId(client.id);
-      setFormData({ ...emptyForm, ...client });
+      setFormData({ 
+        ...emptyForm, 
+        ...client,
+        cash_value: client.cashValue ?? client.cash_value,
+        responsible_id: client.responsible ?? client.responsible_id,
+        contract_end: client.contractEnd ?? client.contract_end
+      });
     } else {
       setEditingId(null);
       setFormData(emptyForm);
@@ -360,8 +366,8 @@ export const Clients = () => {
                 <label>Validade do Contrato *</label>
                 <input
                   type="date"
-                  value={formData.contract_validity || ''}
-                  onChange={e => set('contract_validity', e.target.value)}
+                  value={formData.contract_end || ''}
+                  onChange={e => set('contract_end', e.target.value)}
                 />
               </div>
             </div>
