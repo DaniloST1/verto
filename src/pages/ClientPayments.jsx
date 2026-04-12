@@ -79,7 +79,7 @@ export const ClientPayments = () => {
 
     clients.forEach(client => {
       const cp = clientPayments.find(c => c.clientId === client.id && c.year === yearToUse);
-      const monthsToGenerate = filterMonth ? [parseInt(filterMonth) - 1] : [0,1,2,3,4,5,6,7,8,9,10,11];
+      const monthsToGenerate = (filterMonth && filterMonth !== 'Todos') ? [parseInt(filterMonth) - 1] : [0,1,2,3,4,5,6,7,8,9,10,11];
 
       monthsToGenerate.forEach(i => {
         const dueDay = client.due_day || client.cashValue ? 10 : 10; // default 10
