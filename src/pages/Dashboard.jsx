@@ -1,15 +1,36 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useData } from '../context/DataContext';
+import { useAuth } from '../context/AuthContext';
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend, Cell, PieChart, Pie } from 'recharts';
 
 export const Dashboard = () => {
   const { clients, bids, disputes, contracts, cashFlow } = useData();
+  const { users } = useAuth();
+  
+  const currentYear = new Date().getFullYear().toString();
+  const [cfYear, setCfYear] = useState(currentYear);
+  const [bidResponsible, setBidResponsible] = useState('Todos');
 
   const balance = cashFlow.reduce((acc, curr) => {
     return curr.type === 'receita' ? acc + curr.value : acc - curr.value;
   }, 0);
 
-  const cashFlowByMonth = cashFlow.reduce((acc, curr) => {
+  const availableYears = Array.from(new Set(cashFlow.map(c => {
+    if (!c.date) return null;
+    return new Date(c.date).getFullYear().toString();
+  }).filter(Boolean))).sort((a,b) => b.localeCompare(a));
+  
+  if (!availableYears.includes(currentYear)) {
+    availableYears.unshift(currentYear);
+  }
+
+  const filteredCashFlow = cashFlow.filter(curr => {
+    if (cfYear === 'Todos') return true;
+    if (!curr.date) return false;
+    return new Date(curr.date).getFullYear().toString() === cfYear;
+  });
+
+  const cashFlowByMonth = filteredCashFlow.reduce((acc, curr) => {
     const month = new Date(curr.date).toLocaleString('pt-BR', { month: 'short' });
     if (!acc[month]) acc[month] = { name: month, Receitas: 0, Despesas: 0 };
     if (curr.type === 'receita') acc[month].Receitas += curr.value;
@@ -19,7 +40,12 @@ export const Dashboard = () => {
 
   const barData = Object.values(cashFlowByMonth);
 
-  const bidsByStatus = bids.reduce((acc, curr) => {
+  const filteredBids = bids.filter(b => {
+    if (bidResponsible === 'Todos') return true;
+    return b.responsible === bidResponsible || b.responsible_id === bidResponsible;
+  });
+
+  const bidsByStatus = filteredBids.reduce((acc, curr) => {
     acc[curr.status] = (acc[curr.status] || 0) + 1;
     return acc;
   }, {});
@@ -66,7 +92,17 @@ export const Dashboard = () => {
 
       <div className="chart-grid">
         <div className="glass-panel chart-panel" style={{ borderRadius: '12px' }}>
-          <h3 style={{ marginBottom: '16px', color: '#1e293b' }}>Fluxo de Caixa por Mês</h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <h3 style={{ color: '#1e293b', margin: 0, fontSize: '1.05rem' }}>Fluxo de Caixa</h3>
+            <select 
+              value={cfYear} 
+              onChange={e => setCfYear(e.target.value)}
+              style={{ padding: '6px 10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.85rem', color: '#1e293b', outline: 'none' }}
+            >
+              <option value="Todos">Todos os Anos</option>
+              {availableYears.map(y => <option key={y} value={y}>{y}</option>)}
+            </select>
+          </div>
           <div style={{ width: '100%', height: '280px' }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={barData} margin={{ top: 4, right: 20, left: 0, bottom: 0 }}>
@@ -82,7 +118,17 @@ export const Dashboard = () => {
         </div>
 
         <div className="glass-panel chart-panel" style={{ borderRadius: '12px' }}>
-          <h3 style={{ marginBottom: '16px', color: '#1e293b', textAlign: 'center' }}>Distribuição de Editais</h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <h3 style={{ color: '#1e293b', margin: 0, fontSize: '1.05rem' }}>Monitoramento de Editais</h3>
+            <select 
+              value={bidResponsible} 
+              onChange={e => setBidResponsible(e.target.value)}
+              style={{ padding: '6px 10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.85rem', color: '#1e293b', outline: 'none', maxWidth: '160px' }}
+            >
+              <option value="Todos">Por Responsável...</option>
+              {users.map(u => <option key={u.id} value={u.id}>{(u.name || 'Usuário').split(' ')[0]}</option>)}
+            </select>
+          </div>
           <div style={{ width: '100%', height: '280px' }}>
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
