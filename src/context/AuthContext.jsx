@@ -7,17 +7,40 @@ const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    const saved = localStorage.getItem('verto_user');
+    return saved ? JSON.parse(saved) : null;
+  });
   const [users, setUsers] = useState([]);
   const { addToast } = useToast();
 
   useEffect(() => {
-    const savedUser = localStorage.getItem('verto_user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
     fetchUsers();
-  }, []);
+
+    // Inactivity Timer (3 hours)
+    let timeoutId;
+    const INACTIVITY_LIMIT = 3 * 60 * 60 * 1000; // 3 hours
+
+    const resetTimer = () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        logout('Sessão expirada por inatividade.');
+      }, INACTIVITY_LIMIT);
+    };
+
+    // User interaction events
+    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+    
+    if (user) {
+      resetTimer();
+      events.forEach(event => document.addEventListener(event, resetTimer));
+    }
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      events.forEach(event => document.removeEventListener(event, resetTimer));
+    };
+  }, [user]);
 
   const fetchUsers = async () => {
     const { data, error } = await supabase.from('users').select('*');
@@ -47,9 +70,10 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = () => {
+  const logout = (message = 'Logout realizado.') => {
     setUser(null);
     localStorage.removeItem('verto_user');
+    if (message) addToast(message, 'info');
   };
 
   const addUser = async (newUser) => {
