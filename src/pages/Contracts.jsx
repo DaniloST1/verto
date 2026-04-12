@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
-import { Plus, Edit2, Trash2 } from 'lucide-react';
+import { Plus, Edit2, Trash2, Calendar, Flag } from 'lucide-react';
 import { Modal } from '../components/Modal';
 
 const ROLE_NAMES = {
@@ -99,8 +99,12 @@ export const Contracts = () => {
                 <td style={{ fontWeight: 600 }}>R$ {Number(contract.value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
                 <td><span className={`badge ${contract.status === 'ativo' ? 'badge-success' : contract.status === 'suspenso' ? 'badge-warning' : 'badge-danger'}`}>{contract.status.toUpperCase()}</span></td>
                 <td style={{ fontSize: '0.85rem' }}>
-                  <div style={{ color: '#1e293b' }}>▶ {formatDisplay(contract.startDate)}</div>
-                  <div style={{ color: '#64748b', marginTop: '2px' }}>■ {formatDisplay(contract.endDate)}</div>
+                  <div style={{ color: '#1e293b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Calendar size={14} color="#10b981" /> {formatDisplay(contract.startDate)}
+                  </div>
+                  <div style={{ color: '#64748b', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Flag size={14} color="#ef4444" /> {formatDisplay(contract.endDate)}
+                  </div>
                 </td>
                 <td>{getResponsibleName(contract.responsible)}</td>
                 <td style={{ textAlign: 'center' }}>
