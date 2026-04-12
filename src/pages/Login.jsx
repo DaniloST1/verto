@@ -84,7 +84,7 @@ export const Login = () => {
           <img
             src={LOGO_URL}
             alt="Verto Logo"
-            style={{ maxHeight: '80px', marginBottom: '12px', objectFit: 'contain' }}
+            style={{ maxHeight: '80px', maxWidth: '100%', marginBottom: '12px', objectFit: 'contain' }}
             onError={e => { e.target.onerror = null; e.target.src = '/logo.png'; }}
           />
           <p style={{ color: '#64748b', fontSize: '0.9rem', marginTop: '4px' }}>

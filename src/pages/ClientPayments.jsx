@@ -396,7 +396,6 @@ export const ClientPayments = () => {
           </div>
         )}
       </div>
-      </div>
 
       {editingRecord && (
         <Modal
