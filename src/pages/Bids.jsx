@@ -201,9 +201,17 @@ export const Bids = () => {
                   <p style={{ fontWeight: 600, color: '#1e293b' }}>{bid.criterion || 'Maior Lance'}</p>
                 </div>
               </div>
-              <div>
-                 <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>DISPUTA</p>
-                 <p style={{ fontWeight: 600, color: '#1e293b', textTransform: 'capitalize' }}>{bid.status}</p>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                   <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>DISPUTA</p>
+                   <p style={{ fontWeight: 600, color: '#1e293b', textTransform: 'capitalize' }}>{bid.status}</p>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                   <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>RESPONSÁVEL</p>
+                   <p style={{ fontWeight: 500, color: '#475569', fontSize: '0.9rem' }}>
+                    {users.find(u => u.id === bid.responsible)?.name || 'Não atribuído'}
+                   </p>
+                </div>
               </div>
             </div>
             
