@@ -99,40 +99,40 @@ export const Bids = () => {
       </div>
 
       <div className="glass-panel bid-filter-panel" style={{ padding: '24px', marginBottom: '24px', borderRadius: '12px', marginTop: '24px' }}>
-        <div className="filter-grid-container">
-          <div>
-            <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Data</label>
+        <div className="filter-flex-container">
+          <div className="filter-item">
+            <label>Data</label>
             <input type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)} />
           </div>
-          <div>
-            <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Nome do Edital</label>
+          <div className="filter-item" style={{ flexGrow: 2 }}>
+            <label>Nome do Edital</label>
             <input type="text" placeholder="Buscar por título..." value={filterName} onChange={e => setFilterName(e.target.value)} />
           </div>
-          <div>
-            <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>N° do Pregão</label>
+          <div className="filter-item">
+            <label>N° do Pregão</label>
             <input type="text" placeholder="Ex: 123/2026" value={filterNumber} onChange={e => setFilterNumber(e.target.value)} />
           </div>
-          <div>
-            <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Critério</label>
+          <div className="filter-item">
+            <label>Critério</label>
             <select value={filterCriterion} onChange={e => setFilterCriterion(e.target.value)}>
               <option value="Todos">Todos</option>
               <option value="Maior Lance">Maior Lance</option>
               <option value="Menor Preço">Menor Preço</option>
             </select>
           </div>
-          <div>
-            <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Disputa</label>
+          <div className="filter-item">
+            <label>Disputa</label>
             <select value={filterDispute} onChange={e => setFilterDispute(e.target.value)}>
               <option value="Todos">Todos</option>
               <option value="Aberto">Aberto</option>
               <option value="Fechado">Fechado</option>
             </select>
           </div>
-          <div className="filter-actions-cell">
-            <button className="btn btn-secondary" onClick={clearFilters} style={{ flex: 1, background: '#fff', border: '1px solid #cbd5e1' }}>
+          <div className="filter-actions">
+            <button className="btn btn-secondary" onClick={clearFilters} style={{ background: '#fff', border: '1px solid #cbd5e1' }}>
               <X size={16} /> Limpar
             </button>
-            <button className="btn btn-primary" style={{ flex: 1, background: '#1d3e83' }}>
+            <button className="btn btn-primary" style={{ background: '#1d3e83' }}>
               <Filter size={16} /> Filtrar
             </button>
           </div>
@@ -140,33 +140,42 @@ export const Bids = () => {
       </div>
 
       <style>{`
-        .filter-grid-container {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-          gap: 12px;
-          align-items: end;
+        .filter-flex-container {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 16px;
+          align-items: flex-end;
         }
-        .filter-actions-cell {
+        .filter-item {
+          flex: 1;
+          min-width: 150px;
+        }
+        .filter-item label {
+          font-size: 0.8rem;
+          font-weight: 600;
+          color: var(--text-muted);
+          display: block;
+          marginBottom: 4px;
+        }
+        .filter-actions {
           display: flex;
           gap: 8px;
+          flex-shrink: 0;
         }
-        @media (max-width: 600px) {
-          .filter-grid-container {
-            grid-template-columns: 1fr 1fr;
+        @media (max-width: 768px) {
+          .filter-item {
+            min-width: calc(50% - 8px);
           }
-          .filter-actions-cell {
-            grid-column: span 2;
+          .filter-actions {
+            width: 100%;
+          }
+          .filter-actions button {
+            flex: 1;
           }
         }
-        @media (max-width: 400px) {
-          .filter-grid-container {
-            grid-template-columns: 1fr;
-          }
-          .filter-actions-cell {
-            grid-column: span 1;
-          }
-          .bid-filter-panel {
-            padding: 16px !important;
+        @media (max-width: 480px) {
+          .filter-item {
+            min-width: 100%;
           }
         }
       `}</style>
