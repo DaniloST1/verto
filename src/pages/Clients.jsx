@@ -73,6 +73,14 @@ export const Clients = () => {
     return () => document.body.classList.remove('modal-open');
   }, [showModal]);
 
+  // Keep viewingClient in sync when clients state updates (e.g. after an edit)
+  useEffect(() => {
+    if (viewingClient) {
+      const updated = clients.find(c => c.id === viewingClient.id);
+      if (updated) setViewingClient(updated);
+    }
+  }, [clients]);
+
   const clearFilters = () => {
     setFilterName('');
     setFilterCnpj('');
