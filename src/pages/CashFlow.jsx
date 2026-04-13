@@ -200,8 +200,8 @@ export const CashFlow = () => {
           grid-template-columns: repeat(3, 1fr);
           gap: 20px;
         }
-        .cashflow-charts-grid {
-          height: 350px;
+        .cashflow-charts-grid .glass-panel {
+          min-height: 280px;
         }
         @media (max-width: 1024px) {
           .cashflow-summary-grid, .cashflow-charts-grid {
@@ -211,13 +211,6 @@ export const CashFlow = () => {
         @media (max-width: 768px) {
           .cashflow-summary-grid, .cashflow-charts-grid {
             grid-template-columns: 1fr;
-            height: auto;
-          }
-          .cashflow-charts-grid {
-             height: auto;
-          }
-          .cashflow-charts-grid > div {
-            height: 300px;
           }
         }
       `}</style>
