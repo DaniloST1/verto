@@ -394,7 +394,18 @@ export const Clients = () => {
               </div>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '8px' }}>
+            <div className="form-group" style={{ marginTop: '16px' }}>
+              <label>Observações Adicionais</label>
+              <textarea
+                rows={3}
+                placeholder="Insira detalhes pertinentes sobre este cliente..."
+                value={formData.notes || ''}
+                onChange={e => set('notes', e.target.value)}
+                style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.9rem', color: '#1e293b', outline: 'none', resize: 'vertical' }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '16px' }}>
               <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancelar</button>
               <button type="submit" className="btn btn-primary" style={{ background: '#1d3e83' }}>Salvar</button>
             </div>
