@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
-import { Plus, Trash2, TrendingUp, TrendingDown, Edit2 } from 'lucide-react';
+import { Plus, Trash2, TrendingUp, TrendingDown, Edit2, UploadCloud } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from 'recharts';
 import { Modal } from '../components/Modal';
 import { CashFlowImporterModal } from '../components/CashFlowImporterModal';
