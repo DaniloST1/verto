@@ -70,6 +70,7 @@ export const DataProvider = ({ children }) => {
       else if (key === 'specificType') newObj.specific_type = obj[key];
       else if (key === 'referenceMonth') newObj.reference_month = obj[key];
       else if (key === 'referenceYear') newObj.reference_year = obj[key];
+      else if (key === 'paymentMethod') newObj.payment_method = obj[key];
       else newObj[key] = obj[key];
     }
     return newObj;
@@ -92,6 +93,7 @@ export const DataProvider = ({ children }) => {
       else if (key === 'specific_type') newObj.specificType = obj[key];
       else if (key === 'reference_month') newObj.referenceMonth = obj[key];
       else if (key === 'reference_year') newObj.referenceYear = obj[key];
+      else if (key === 'payment_method') newObj.paymentMethod = obj[key];
       else newObj[key] = obj[key];
     }
     return newObj;
@@ -163,7 +165,8 @@ export const DataProvider = ({ children }) => {
     if (targetClientId && data.type === 'receita') {
       const year = data.referenceYear !== undefined ? parseInt(data.referenceYear) : new Date(data.date).getFullYear();
       const monthIndex = data.referenceMonth !== undefined ? parseInt(data.referenceMonth) : new Date(data.date).getMonth();
-      await updatePaymentStatus(targetClientId, year, monthIndex, { status: data.status, value: data.value });
+      const pMethod = data.paymentMethod || 'Boleto bancário';
+      await updatePaymentStatus(targetClientId, year, monthIndex, { status: data.status, value: data.value, paymentMethod: pMethod });
     }
   };
   const updateCashFlow = async (id, data) => {
@@ -179,7 +182,8 @@ export const DataProvider = ({ children }) => {
     if (targetClientId && data.type === 'receita') {
       const year = data.referenceYear !== undefined ? parseInt(data.referenceYear) : new Date(data.date).getFullYear();
       const monthIndex = data.referenceMonth !== undefined ? parseInt(data.referenceMonth) : new Date(data.date).getMonth();
-      await updatePaymentStatus(targetClientId, year, monthIndex, { status: data.status, value: data.value });
+      const pMethod = data.paymentMethod || 'Boleto bancário';
+      await updatePaymentStatus(targetClientId, year, monthIndex, { status: data.status, value: data.value, paymentMethod: pMethod });
     }
   };
   const deleteCashFlow = async (id) => {

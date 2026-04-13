@@ -12,7 +12,8 @@ export const CashFlow = () => {
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({
     name: '', date: new Date().toISOString(), value: 0, type: 'despesa', specificType: 'equipe', status: 'pago',
-    referenceMonth: new Date().getMonth().toString(), referenceYear: new Date().getFullYear().toString()
+    referenceMonth: new Date().getMonth().toString(), referenceYear: new Date().getFullYear().toString(),
+    paymentMethod: 'Boleto bancário'
   });
   const [cnpjInput, setCnpjInput] = useState('');
 
@@ -110,7 +111,7 @@ export const CashFlow = () => {
           <button className="btn btn-primary" onClick={() => {
             setCnpjInput('');
             setEditingId(null);
-            setFormData({ name: '', date: new Date().toISOString(), value: 0, type: 'despesa', specificType: 'equipe', status: 'pago', referenceMonth: new Date().getMonth().toString(), referenceYear: new Date().getFullYear().toString() });
+            setFormData({ name: '', date: new Date().toISOString(), value: 0, type: 'despesa', specificType: 'equipe', status: 'pago', referenceMonth: new Date().getMonth().toString(), referenceYear: new Date().getFullYear().toString(), paymentMethod: 'Boleto bancário' });
             setShowModal(true);
           }}><Plus size={18}/> Novo Lançamento</button>
         )}
@@ -372,12 +373,25 @@ export const CashFlow = () => {
                 </div>
               )}
 
-              <div className="form-group">
-                <label>Status</label>
-                <select value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})}>
-                  <option value="pago">Pago / Recebido</option>
-                  <option value="pendente">Pendente</option>
-                </select>
+              <div className="form-group" style={{display: 'flex', gap: '16px'}}>
+                <div style={{flex: 1}}>
+                  <label>Status</label>
+                  <select value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})}>
+                    <option value="pago">Pago / Recebido</option>
+                    <option value="pendente">Pendente</option>
+                  </select>
+                </div>
+                {formData.type === 'receita' && formData.specificType === 'assessoria recorrente' && (
+                  <div style={{flex: 1}}>
+                    <label>Forma de Pagamento</label>
+                    <select value={formData.paymentMethod || 'Boleto bancário'} onChange={e => setFormData({...formData, paymentMethod: e.target.value})}>
+                      <option value="Boleto bancário">Boleto bancário</option>
+                      <option value="Pix">Pix</option>
+                      <option value="Cartão de Crédito">Cartão de Crédito</option>
+                      <option value="Transferência">Transferência</option>
+                    </select>
+                  </div>
+                )}
               </div>
 
               <div style={{display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px'}}>
