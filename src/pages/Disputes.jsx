@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { Plus, Edit2, Trash2 } from 'lucide-react';
+import { Plus, Edit2, Trash2, Calendar as CalendarIcon, List } from 'lucide-react';
 import { Modal } from '../components/Modal';
 
 const ROLE_NAMES = {
@@ -17,6 +17,8 @@ export const Disputes = () => {
   const { user, users } = useAuth();
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [viewMode, setViewMode] = useState('list');
+  const [currentDate, setCurrentDate] = useState(new Date());
   
   const [formData, setFormData] = useState({
     name: '', clientId: '', bidId: '', date: '', status: 'agendada', result: 'pendente', responsible: user.id
@@ -107,16 +109,125 @@ export const Disputes = () => {
     </form>
   );
 
+  const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
+  const getFirstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
+
+  const renderCalendar = () => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const daysInMonth = getDaysInMonth(year, month);
+    const firstDay = getFirstDayOfMonth(year, month);
+
+    const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
+    const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
+
+    const weeks = [];
+    let days = [];
+    
+    for (let i = 0; i < firstDay; i++) {
+       days.push(<td key={`empty-${i}`} style={{ border: '1px solid #f1f5f9', background: '#fafafa' }}></td>);
+    }
+    
+    for (let d = 1; d <= daysInMonth; d++) {
+       const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+       const dayDisputes = disputes.filter(disp => {
+          if(!disp.date) return false;
+          return disp.date.startsWith(dateStr);
+       }).sort((a,b) => new Date(a.date) - new Date(b.date));
+
+       const isToday = new Date().toISOString().startsWith(dateStr);
+
+       days.push(
+         <td key={d} style={{ verticalAlign: 'top', padding: '8px', border: '1px solid #e2e8f0', minHeight: '120px', height: '120px', width: '14.28%', background: isToday ? '#f0fdfa' : '#fff' }}>
+           <div style={{ fontWeight: 600, color: isToday ? '#0f766e' : '#64748b', marginBottom: '8px', textAlign: 'right' }}>
+             <span style={{ background: isToday ? '#ccfbf1' : 'transparent', padding: '2px 8px', borderRadius: '12px' }}>{d}</span>
+           </div>
+           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '80px', overflowY: 'auto' }}>
+             {dayDisputes.map(disp => {
+               const time = new Date(disp.date).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
+               const statusColors = {
+                 'agendada': { bg: '#ecfeff', color: '#0891b2', border: '#06b6d4' },
+                 'em andamento': { bg: '#fffbeb', color: '#d97706', border: '#f59e0b' },
+                 'finalizada': { bg: '#f0fdf4', color: '#16a34a', border: '#22c55e' }
+               };
+               const c = statusColors[disp.status] || statusColors['agendada'];
+               return (
+                 <div key={disp.id} onClick={() => openModal(disp)} style={{ fontSize: '0.7rem', padding: '4px 6px', background: c.bg, color: c.color, borderRadius: '4px', cursor: 'pointer', borderLeft: `3px solid ${c.border}`, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={`${time} - ${disp.name}`}>
+                   <strong>{time}</strong> {getClient(disp.clientId)?.name?.split(' ')[0] || ''}
+                 </div>
+               );
+             })}
+           </div>
+         </td>
+       );
+       
+       if (days.length === 7) {
+         weeks.push(<tr key={`week-${weeks.length}`}>{days}</tr>);
+         days = [];
+       }
+    }
+    
+    if (days.length > 0) {
+      while (days.length < 7) {
+        days.push(<td key={`empty-end-${days.length}`} style={{ border: '1px solid #f1f5f9', background: '#fafafa' }}></td>);
+      }
+      weeks.push(<tr key={`week-${weeks.length}`}>{days}</tr>);
+    }
+
+    const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+
+    return (
+       <div className="glass-panel animate-fade-in" style={{ padding: '24px' }}>
+         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <h3 style={{ margin: 0, color: '#1e293b', fontSize: '1.25rem' }}>{monthNames[month]} de {year}</h3>
+            <div style={{ display: 'flex', gap: '8px' }}>
+               <button className="btn" style={{ padding: '6px 12px', background: '#fff', border: '1px solid #cbd5e1' }} onClick={prevMonth}>&lt; Anterior</button>
+               <button className="btn" style={{ padding: '6px 12px', background: '#fff', border: '1px solid #cbd5e1' }} onClick={() => setCurrentDate(new Date())}>Hoje</button>
+               <button className="btn" style={{ padding: '6px 12px', background: '#fff', border: '1px solid #cbd5e1' }} onClick={nextMonth}>Próximo &gt;</button>
+            </div>
+         </div>
+         <div style={{ overflowX: 'auto' }}>
+           <table style={{ width: '100%', minWidth: '800px', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+             <thead>
+               <tr>
+                 {['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'].map(d => (
+                   <th key={d} style={{ padding: '12px 8px', background: '#f8fafc', border: '1px solid #e2e8f0', color: '#475569', fontWeight: 600, textAlign: 'center', fontSize: '0.85rem' }}>{d}</th>
+                 ))}
+               </tr>
+             </thead>
+             <tbody>
+               {weeks}
+             </tbody>
+           </table>
+         </div>
+       </div>
+    );
+  };
+
   return (
     <div>
-      <div className="page-header">
-        <h1 className="page-title">Disputas</h1>
-        <button className="btn btn-primary" style={{ background: '#1d3e83' }} onClick={() => openModal()}>
-          <Plus size={18}/> Nova Disputa
-        </button>
+      <div className="page-header" style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+        <div>
+          <h1 className="page-title" style={{ fontSize: '2rem', color: '#0f172a', margin: 0 }}>Disputas</h1>
+          <p style={{ color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Gerenciamento de lances e pregões</p>
+        </div>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <div style={{ display: 'flex', background: '#e2e8f0', borderRadius: '8px', padding: '4px' }}>
+            <button className={`btn ${viewMode === 'list' ? 'btn-primary' : ''}`} style={{ padding: '6px 12px', background: viewMode === 'list' ? '#fff' : 'transparent', color: viewMode === 'list' ? '#1e293b' : '#64748b', border: 'none', boxShadow: viewMode === 'list' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none' }} onClick={() => setViewMode('list')}>
+              <List size={16} /> Lista
+            </button>
+            <button className={`btn ${viewMode === 'calendar' ? 'btn-primary' : ''}`} style={{ padding: '6px 12px', background: viewMode === 'calendar' ? '#fff' : 'transparent', color: viewMode === 'calendar' ? '#1e293b' : '#64748b', border: 'none', boxShadow: viewMode === 'calendar' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none' }} onClick={() => setViewMode('calendar')}>
+              <CalendarIcon size={16} /> Calendário
+            </button>
+          </div>
+          <button className="btn btn-primary" style={{ background: '#1d3e83' }} onClick={() => openModal()}>
+            <Plus size={18}/> Nova Disputa
+          </button>
+        </div>
       </div>
 
-      <div className="table-container">
+      {viewMode === 'calendar' ? renderCalendar() : (
+      <div className="table-container animate-fade-in">
         <table>
           <thead style={{ background: '#eef2f6' }}>
             <tr>
@@ -187,6 +298,7 @@ export const Disputes = () => {
           </tbody>
         </table>
       </div>
+      )}
 
       {showModal && (
         <Modal
