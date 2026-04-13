@@ -68,6 +68,8 @@ export const DataProvider = ({ children }) => {
       else if (key === 'startDate') newObj.start_date = obj[key];
       else if (key === 'endDate') newObj.end_date = obj[key];
       else if (key === 'specificType') newObj.specific_type = obj[key];
+      else if (key === 'referenceMonth') newObj.reference_month = obj[key];
+      else if (key === 'referenceYear') newObj.reference_year = obj[key];
       else newObj[key] = obj[key];
     }
     return newObj;
@@ -88,6 +90,8 @@ export const DataProvider = ({ children }) => {
       else if (key === 'start_date') newObj.startDate = obj[key];
       else if (key === 'end_date') newObj.endDate = obj[key];
       else if (key === 'specific_type') newObj.specificType = obj[key];
+      else if (key === 'reference_month') newObj.referenceMonth = obj[key];
+      else if (key === 'reference_year') newObj.referenceYear = obj[key];
       else newObj[key] = obj[key];
     }
     return newObj;
@@ -148,16 +152,18 @@ export const DataProvider = ({ children }) => {
 
   const addCashFlow = async (data) => {
     await addItem('cash_flow', setCashFlow, data, 'Fluxo de Caixa', ['finance', 'admin']);
-    if (data.clientId) {
-      const d = new Date(data.date);
-      await updatePaymentStatus(data.clientId, d.getFullYear(), d.getMonth(), { status: data.status, value: data.value });
+    if (data.clientId && data.type === 'receita') {
+      const year = data.referenceYear !== undefined ? parseInt(data.referenceYear) : new Date(data.date).getFullYear();
+      const monthIndex = data.referenceMonth !== undefined ? parseInt(data.referenceMonth) : new Date(data.date).getMonth();
+      await updatePaymentStatus(data.clientId, year, monthIndex, { status: data.status, value: data.value });
     }
   };
   const updateCashFlow = async (id, data) => {
     await updateItem('cash_flow', setCashFlow, id, data, 'Fluxo de Caixa', ['finance', 'admin']);
-    if (data.clientId) {
-      const d = new Date(data.date);
-      await updatePaymentStatus(data.clientId, d.getFullYear(), d.getMonth(), { status: data.status, value: data.value });
+    if (data.clientId && data.type === 'receita') {
+      const year = data.referenceYear !== undefined ? parseInt(data.referenceYear) : new Date(data.date).getFullYear();
+      const monthIndex = data.referenceMonth !== undefined ? parseInt(data.referenceMonth) : new Date(data.date).getMonth();
+      await updatePaymentStatus(data.clientId, year, monthIndex, { status: data.status, value: data.value });
     }
   };
 
