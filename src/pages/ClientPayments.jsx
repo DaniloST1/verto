@@ -182,10 +182,23 @@ export const ClientPayments = () => {
 
   const sendWhatsApp = (record) => {
     if (!record.contact) { addToast('Cliente não possui contato cadastrado.', 'error'); return; }
-    const dtArr = record.dueDate.split('-');
-    const brDate = `${dtArr[2]}/${dtArr[1]}/${dtArr[0]}`;
-    const msg = encodeURIComponent(`Olá ${record.clientName}, tudo bem? Identificamos que a fatura referente ao mês de ${record.reference} no valor de R$ ${record.value.toFixed(2)}, com vencimento para ${brDate}, está constando em aberto. Por favor, poderia verificar? A Verto Soluções agradece.`);
-    window.open(`https://wa.me/55${record.contact.replace(/\D/g,'')}?text=${msg}`, '_blank');
+    
+    let brDate = 'data não informada';
+    if (record.dueDate) {
+      const dtArr = String(record.dueDate).split('-');
+      if (dtArr.length === 3) brDate = `${dtArr[2]}/${dtArr[1]}/${dtArr[0]}`;
+    }
+    
+    const val = Number(record.value) || 0;
+    const msg = encodeURIComponent(`Olá ${record.clientName}, tudo bem? Identificamos que a fatura referente ao mês de ${record.reference} no valor de R$ ${val.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}, com vencimento para ${brDate}, está constando em aberto. Por favor, poderia verificar? A Verto Soluções agradece.`);
+    
+    const phone = String(record.contact).replace(/\D/g, '');
+    const url = `https://api.whatsapp.com/send?phone=55${phone}&text=${msg}`;
+    
+    const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
+    if (!newWindow) {
+      window.location.href = url;
+    }
   };
 
   const formatDate = (d) => {
