@@ -12,6 +12,10 @@ export const CashFlow = () => {
     name: '', date: new Date().toISOString(), value: 0, type: 'despesa', specificType: 'operacional', status: 'pago'
   });
 
+  const [filterQuery, setFilterQuery] = useState('');
+  const [filterMonth, setFilterMonth] = useState('Todos');
+  const [filterYear, setFilterYear] = useState(new Date().getFullYear().toString());
+
   const isFinance = user.role === 'finance' || user.role === 'admin';
 
   const handleSubmit = (e) => {
@@ -20,27 +24,57 @@ export const CashFlow = () => {
     setShowModal(false);
   };
 
-  const balance = cashFlow.reduce((acc, curr) => curr.type === 'receita' ? acc + curr.value : acc - curr.value, 0);
-  const totalReceitas = cashFlow.filter(c => c.type === 'receita').reduce((a, b) => a + b.value, 0);
-  const totalDespesas = cashFlow.filter(c => c.type === 'despesa').reduce((a, b) => a + b.value, 0);
+  const filteredCashFlow = useMemo(() => {
+    return cashFlow.filter(c => {
+       if (filterQuery && !c.name.toLowerCase().includes(filterQuery.toLowerCase()) && !(c.specificType||'').toLowerCase().includes(filterQuery.toLowerCase())) return false;
+       if (filterMonth !== 'Todos') {
+          const m = new Date(c.date).getMonth() + 1;
+          if (m.toString() !== filterMonth) return false;
+       }
+       if (filterYear !== 'Todos') {
+          const y = new Date(c.date).getFullYear();
+          if (y.toString() !== filterYear) return false;
+       }
+       return true;
+    });
+  }, [cashFlow, filterQuery, filterMonth, filterYear]);
+
+  const balance = filteredCashFlow.reduce((acc, curr) => curr.type === 'receita' ? acc + curr.value : acc - curr.value, 0);
+  const totalReceitas = filteredCashFlow.filter(c => c.type === 'receita').reduce((a, b) => a + b.value, 0);
+  const totalDespesas = filteredCashFlow.filter(c => c.type === 'despesa').reduce((a, b) => a + b.value, 0);
 
   const pieData = [
     { name: 'Receitas', value: totalReceitas },
     { name: 'Despesas', value: totalDespesas }
-  ];
-  const COLORS = ['#2ed573', '#ff4757'];
+  ].filter(d => d.value > 0);
+  
+  const COLORS = ['#10b981', '#ef4444'];
 
-  const receitasPorTipo = cashFlow.filter(c => c.type === 'receita').reduce((acc, curr) => {
-    acc[curr.specificType] = (acc[curr.specificType] || 0) + curr.value;
+  const receitasPorTipo = filteredCashFlow.filter(c => c.type === 'receita').reduce((acc, curr) => {
+    const key = curr.specificType === 'mensalidade' ? 'Mensalidade' : curr.specificType === 'comissao' ? 'Comissão' : 'Outros';
+    acc[key] = (acc[key] || 0) + curr.value;
     return acc;
   }, {});
   const pieReceitas = Object.keys(receitasPorTipo).map(key => ({ name: key, value: receitasPorTipo[key] }));
 
-  const despesasPorTipo = cashFlow.filter(c => c.type === 'despesa').reduce((acc, curr) => {
-    acc[curr.specificType] = (acc[curr.specificType] || 0) + curr.value;
+  const despesasPorTipo = filteredCashFlow.filter(c => c.type === 'despesa').reduce((acc, curr) => {
+    const key = curr.specificType.charAt(0).toUpperCase() + curr.specificType.slice(1);
+    acc[key] = (acc[key] || 0) + curr.value;
     return acc;
   }, {});
   const pieDespesas = Object.keys(despesasPorTipo).map(key => ({ name: key, value: despesasPorTipo[key] }));
+
+  const monthlyBalanceData = useMemo(() => {
+     const dataByMonth = {};
+     filteredCashFlow.forEach(c => {
+       const d = new Date(c.date);
+       const key = `${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+       if (!dataByMonth[key]) dataByMonth[key] = { name: key, Receita: 0, Despesa: 0, sortKey: d.getFullYear()*100 + d.getMonth() };
+       if (c.type === 'receita') dataByMonth[key].Receita += c.value;
+       else dataByMonth[key].Despesa += c.value;
+     });
+     return Object.values(dataByMonth).sort((a,b) => a.sortKey - b.sortKey);
+  }, [filteredCashFlow]);
 
   return (
     <div>
@@ -52,6 +86,29 @@ export const CashFlow = () => {
             setShowModal(true);
           }}><Plus size={18}/> Novo Lançamento</button>
         )}
+      </div>
+
+      <div className="glass-panel" style={{ padding: '20px', marginBottom: '24px', display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ flex: '1 1 200px' }}>
+          <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Buscar por Empresa/Nome</label>
+          <input type="text" placeholder="Ex: Mensalidade Verto..." value={filterQuery} onChange={e => setFilterQuery(e.target.value)} style={{ width: '100%' }} />
+        </div>
+        <div style={{ flex: '1 1 150px' }}>
+          <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Mês</label>
+          <select value={filterMonth} onChange={e => setFilterMonth(e.target.value)} style={{ width: '100%' }}>
+            <option value="Todos">Todos os Meses</option>
+            {["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"].map((m, i) => (
+              <option key={i+1} value={(i+1).toString()}>{m}</option>
+            ))}
+          </select>
+        </div>
+        <div style={{ flex: '1 1 120px' }}>
+          <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Ano</label>
+          <select value={filterYear} onChange={e => setFilterYear(e.target.value)} style={{ width: '100%' }}>
+            <option value="Todos">Todos os Anos</option>
+            {[2024, 2025, 2026, 2027, 2028].map(y => <option key={y} value={y.toString()}>{y}</option>)}
+          </select>
+        </div>
       </div>
 
       <div className="cashflow-summary-grid" style={{ marginBottom: '24px' }}>
@@ -105,20 +162,35 @@ export const CashFlow = () => {
         </div>
 
         <div className="glass-panel" style={{padding: '20px', display: 'flex', flexDirection: 'column'}}>
-          <h3 style={{marginBottom: '16px', fontSize: '1.1rem', textAlign: 'center'}}>Detalhamento de Despesas</h3>
+          <h3 style={{marginBottom: '16px', fontSize: '1.1rem', textAlign: 'center'}}>Despesas por Categoria</h3>
           <div style={{flex: 1}}>
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={pieDespesas} innerRadius={50} outerRadius={80} paddingAngle={2} dataKey="value">
+                <Pie data={pieDespesas} innerRadius={50} outerRadius={80} paddingAngle={2} dataKey="value" label={({name, percent}) => percent > 0 ? `${(percent * 100).toFixed(0)}%` : ''}>
                   {pieDespesas.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={['#ef4444', '#f87171', '#fca5a5', '#fecaca'][index % 4]} />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip formatter={(value) => `R$ ${value.toLocaleString('pt-BR', {minimumFractionDigits:2})}`} />
                 <Legend />
               </PieChart>
             </ResponsiveContainer>
           </div>
+        </div>
+
+        <div className="glass-panel" style={{padding: '20px', display: 'flex', flexDirection: 'column', gridColumn: '1 / -1', height: '350px'}}>
+          <h3 style={{marginBottom: '16px', fontSize: '1.2rem', color: '#1e293b'}}>Comparativo Mensal (Entrada vs Saída)</h3>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={monthlyBalanceData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3}/>
+              <XAxis dataKey="name" stroke="#94a3b8" />
+              <YAxis stroke="#94a3b8" tickFormatter={(value) => `R$ ${value >= 1000 ? (value/1000).toFixed(1)+'k' : value}`} />
+              <Tooltip formatter={(value) => `R$ ${value.toLocaleString('pt-BR', {minimumFractionDigits:2})}`} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} cursor={{fill: 'rgba(0,0,0,0.05)'}} />
+              <Legend verticalAlign="top" height={36}/>
+              <Bar dataKey="Receita" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={50} />
+              <Bar dataKey="Despesa" fill="#ef4444" radius={[4, 4, 0, 0]} maxBarSize={50} />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       </div>
 
@@ -164,7 +236,7 @@ export const CashFlow = () => {
             </tr>
           </thead>
           <tbody>
-            {cashFlow.sort((a,b) => new Date(b.date) - new Date(a.date)).map(item => (
+            {filteredCashFlow.sort((a,b) => new Date(b.date) - new Date(a.date)).map(item => (
               <tr key={item.id}>
                 <td>{new Date(item.date).toLocaleDateString()}</td>
                 <td>{item.name}</td>
