@@ -45,7 +45,7 @@ const isValidPhone = (v = '') => v.replace(/\D/g, '').length >= 10;
 const LOGO_URL = 'https://kxvminodzhcsdwrmucdj.supabase.co/storage/v1/object/public/Verto%20imagens/logo-verto.jpeg';
 
 export const Clients = () => {
-  const { clients, bids, disputes, contracts, cashFlow, addClient, updateClient, deleteClient } = useData();
+  const { clients, bids, disputes, contracts, cashFlow, clientPayments, addClient, updateClient, deleteClient } = useData();
   const { user, users } = useAuth();
   const { addToast } = useToast();
 
@@ -151,19 +151,32 @@ export const Clients = () => {
     const clientBids = bids.filter(b => b.clientsLinked && b.clientsLinked.includes(c.id));
     const clientDisputes = disputes.filter(d => d.clientId === c.id);
     const clientContracts = contracts.filter(con => con.clientId === c.id);
-    const clientCashFlow = cashFlow.filter(cf => cf.clientId === c.id);
 
     const formatCurrency = (val) => `R$ ${Number(val).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
-    const totalRevenue = clientCashFlow.filter(cf => cf.type === 'receita' && cf.status === 'pago').reduce((acc, curr) => acc + curr.value, 0);
+    
+    // Extract real revenue from Client Payments registry
+    let paidList = [];
+    clientPayments.filter(cp => cp.clientId === c.id).forEach(cp => {
+       if (cp.months) {
+           Object.entries(cp.months).forEach(([mIdx, monthData]) => {
+              if (monthData && monthData.status === 'pago') {
+                 paidList.push({ year: cp.year, monthIndex: parseInt(mIdx), value: Number(monthData.value) || 0 });
+              }
+           });
+       }
+    });
 
-    const monthlyData = clientCashFlow.reduce((acc, curr) => {
-      if (curr.type !== 'receita') return acc;
-      const monthYear = new Date(curr.date || curr.dueDate || new Date()).toLocaleString('pt-BR', { month: 'short', year: 'numeric' });
-      if (!acc[monthYear]) acc[monthYear] = { name: monthYear, Receita: 0 };
+    const totalRevenue = paidList.reduce((acc, curr) => acc + curr.value, 0);
+
+    const monthlyData = paidList.reduce((acc, curr) => {
+      const sortKeyDate = new Date(curr.year, curr.monthIndex, 1);
+      const monthYear = sortKeyDate.toLocaleString('pt-BR', { month: 'short', year: 'numeric' });
+      if (!acc[monthYear]) acc[monthYear] = { name: monthYear, Receita: 0, sortKey: sortKeyDate.getTime() };
       acc[monthYear].Receita += curr.value;
       return acc;
     }, {});
-    const chartData = Object.values(monthlyData);
+    
+    const chartData = Object.values(monthlyData).sort((a,b) => a.sortKey - b.sortKey);
 
     return (
       <div className="client-viewer fade-in">
