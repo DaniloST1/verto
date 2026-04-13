@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { UploadCloud, CheckCircle, AlertCircle, Trash2, ArrowRight, FileText } from 'lucide-react';
 import Papa from 'papaparse';
+import { Modal } from './Modal';
 
 const parseOFX = (content) => {
   const transactions = [];
@@ -184,17 +185,13 @@ export const CashFlowImporterModal = ({ isOpen, onClose, clients, onSave }) => {
   };
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content" style={{ maxWidth: step === 'review' ? '1200px' : '600px', width: '90%', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
-        <div className="modal-header">
-          <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0, fontSize: '1.25rem', color: '#1e293b' }}>
-            <UploadCloud size={20} className="text-primary" />
-            Importação Inteligente de Extratos
-          </h2>
-          <button className="btn-close" onClick={onClose}>×</button>
-        </div>
-
-        <div className="modal-body" style={{ overflowY: 'auto', flex: 1, padding: '24px' }}>
+    <Modal 
+      title={<span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><UploadCloud size={20} className="text-primary" /> Importação Inteligente de Extratos</span>} 
+      maxWidth={step === 'review' ? '1200px' : '600px'} 
+      onClose={onClose}
+    >
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <div style={{ flex: 1 }}>
           {step === 'upload' && (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px', padding: '40px 20px' }}>
               <div style={{ textAlign: 'center' }}>
@@ -370,6 +367,6 @@ export const CashFlowImporterModal = ({ isOpen, onClose, clients, onSave }) => {
           )}
         </div>
       </div>
-    </div>
+    </Modal>
   );
 };
