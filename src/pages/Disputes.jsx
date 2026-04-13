@@ -21,7 +21,7 @@ export const Disputes = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   
   const [formData, setFormData] = useState({
-    name: '', clientId: '', bidId: '', date: '', status: 'agendada', result: 'pendente', responsible: user.id
+    name: '', clientId: '', bidId: '', date: '', start_time: '', end_time: '', status: 'agendada', result: 'pendente', responsible: user.id
   });
 
   const openModal = (dispute = null) => {
@@ -30,7 +30,7 @@ export const Disputes = () => {
       setFormData({ ...dispute });
     } else {
       setEditingId(null);
-      setFormData({ name: '', clientId: '', bidId: '', date: '', status: 'agendada', result: 'pendente', responsible: user.id });
+      setFormData({ name: '', clientId: '', bidId: '', date: '', start_time: '', end_time: '', status: 'agendada', result: 'pendente', responsible: user.id });
     }
     setShowModal(true);
   };
@@ -72,9 +72,20 @@ export const Disputes = () => {
 
       <div style={{display: 'flex', gap: '16px'}}>
         <div className="form-group" style={{flex: 1}}>
-          <label>Data e Horário</label>
-          <input type="datetime-local" value={formData.date ? formData.date.slice(0, 16) : ''} onChange={e => setFormData({...formData, date: new Date(e.target.value).toISOString()})} />
+          <label>Data</label>
+          <input type="date" value={formData.date ? (typeof formData.date === 'string' && formData.date.includes('T') ? formData.date.split('T')[0] : formData.date) : ''} onChange={e => setFormData({...formData, date: e.target.value})} required />
         </div>
+        <div className="form-group" style={{flex: 1}}>
+          <label>Horário (Início)</label>
+          <input type="time" value={formData.start_time || ''} onChange={e => setFormData({...formData, start_time: e.target.value})} />
+        </div>
+        <div className="form-group" style={{flex: 1}}>
+          <label>Horário (Término)</label>
+          <input type="time" value={formData.end_time || ''} onChange={e => setFormData({...formData, end_time: e.target.value})} />
+        </div>
+      </div>
+
+      <div style={{display: 'flex', gap: '16px'}}>
         <div className="form-group" style={{flex: 1}}>
           <label>Status</label>
           <select value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})}>
@@ -144,7 +155,7 @@ export const Disputes = () => {
            </div>
            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '80px', overflowY: 'auto' }}>
              {dayDisputes.map(disp => {
-               const time = new Date(disp.date).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
+               const timeStr = disp.start_time || (disp.date && disp.date.includes('T') ? new Date(disp.date).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}) : '00:00');
                const statusColors = {
                  'agendada': { bg: '#ecfeff', color: '#0891b2', border: '#06b6d4' },
                  'em andamento': { bg: '#fffbeb', color: '#d97706', border: '#f59e0b' },
@@ -152,8 +163,8 @@ export const Disputes = () => {
                };
                const c = statusColors[disp.status] || statusColors['agendada'];
                return (
-                 <div key={disp.id} onClick={() => openModal(disp)} style={{ fontSize: '0.7rem', padding: '4px 6px', background: c.bg, color: c.color, borderRadius: '4px', cursor: 'pointer', borderLeft: `3px solid ${c.border}`, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={`${time} - ${disp.name}`}>
-                   <strong>{time}</strong> {getClient(disp.clientId)?.name?.split(' ')[0] || ''}
+                 <div key={disp.id} onClick={() => openModal(disp)} style={{ fontSize: '0.7rem', padding: '4px 6px', background: c.bg, color: c.color, borderRadius: '4px', cursor: 'pointer', borderLeft: `3px solid ${c.border}`, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={`${timeStr} - ${disp.name}`}>
+                   <strong>{timeStr}</strong> {getClient(disp.clientId)?.name?.split(' ')[0] || ''}
                  </div>
                );
              })}
@@ -258,7 +269,18 @@ export const Disputes = () => {
                   })()}
                 </td>
                 <td>{getBidNumber(dispute.bidId)}</td>
-                <td>{dispute.date ? new Date(dispute.date).toLocaleString('pt-BR') : '—'}</td>
+                <td>
+                  <div>
+                    <div style={{ color: '#1e293b', fontWeight: 500 }}>
+                      {dispute.date ? (dispute.date.includes('T') ? new Date(dispute.date).toLocaleDateString('pt-BR') : dispute.date.split('-').reverse().join('/')) : '—'}
+                    </div>
+                    {(dispute.start_time || dispute.end_time) && (
+                      <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                        {dispute.start_time || '-'} às {dispute.end_time || '-'}
+                      </div>
+                    )}
+                  </div>
+                </td>
                 <td><span className="badge badge-info">{dispute.status.toUpperCase()}</span></td>
                 <td>
                   <span className={`badge ${dispute.result === 'ganha' ? 'badge-success' : dispute.result === 'perdida' ? 'badge-danger' : 'badge-warning'}`}>
