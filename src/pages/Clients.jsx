@@ -474,7 +474,7 @@ export const Clients = () => {
             {/* Valor + Validades */}
             <div style={{ display: 'flex', gap: '16px' }}>
               <div className="form-group" style={{ flex: 1 }}>
-                <label>Valor Recorrente do Contrato (R$) *</label>
+                <label>Valor Recorrente (R$) *</label>
                 <input
                   type="number" step="0.01"
                   value={formData.cash_value}
