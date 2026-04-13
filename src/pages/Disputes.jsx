@@ -19,6 +19,7 @@ export const Disputes = () => {
   const [editingId, setEditingId] = useState(null);
   const [viewMode, setViewMode] = useState('list');
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [activeDayDate, setActiveDayDate] = useState(null);
   
   const [formData, setFormData] = useState({
     name: '', clientId: '', bidId: '', date: '', start_time: '', end_time: '', status: 'agendada', result: 'pendente', responsible: user.id
@@ -151,7 +152,7 @@ export const Disputes = () => {
        days.push(
          <td key={d} style={{ verticalAlign: 'top', padding: '8px', border: '1px solid #e2e8f0', minHeight: '120px', height: '120px', width: '14.28%', background: isToday ? '#f0fdfa' : '#fff' }}>
            <div style={{ fontWeight: 600, color: isToday ? '#0f766e' : '#64748b', marginBottom: '8px', textAlign: 'right' }}>
-             <span style={{ background: isToday ? '#ccfbf1' : 'transparent', padding: '2px 8px', borderRadius: '12px' }}>{d}</span>
+             <span onClick={() => setActiveDayDate(dateStr)} style={{ background: isToday ? '#ccfbf1' : 'transparent', padding: '2px 8px', borderRadius: '12px', cursor: 'pointer', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = '#e2e8f0'} onMouseLeave={e => e.currentTarget.style.background = isToday ? '#ccfbf1' : 'transparent'} title="Ver todas as disputas do dia">{d}</span>
            </div>
            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '80px', overflowY: 'auto' }}>
              {dayDisputes.map(disp => {
@@ -328,6 +329,55 @@ export const Disputes = () => {
           onClose={() => setShowModal(false)}
         >
           {formFields}
+        </Modal>
+      )}
+
+      {activeDayDate && (
+        <Modal
+          title={`Disputas em ${activeDayDate.split('-').reverse().join('/')}`}
+          onClose={() => setActiveDayDate(null)}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {(() => {
+              const dayItems = disputes.filter(disp => disp.date && disp.date.startsWith(activeDayDate)).sort((a,b) => new Date(a.date) - new Date(b.date));
+              if (dayItems.length === 0) return <div style={{ color: '#64748b', textAlign: 'center', padding: '20px' }}>Nenhuma disputa agendada para este dia.</div>;
+              return dayItems.map(disp => {
+                const statusColors = {
+                 'agendada': { bg: '#ecfeff', border: '#06b6d4', color: '#0891b2' },
+                 'em andamento': { bg: '#fffbeb', border: '#f59e0b', color: '#d97706' },
+                 'finalizada': { bg: '#f0fdf4', border: '#22c55e', color: '#16a34a' }
+                };
+                const c = statusColors[disp.status] || statusColors['agendada'];
+                const timeStr = disp.start_time || (disp.date.includes('T') ? new Date(disp.date).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}) : '00:00');
+                
+                return (
+                  <div key={disp.id} style={{ padding: '16px', background: '#f8fafc', borderLeft: `6px solid ${c.border}`, borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <h4 style={{ margin: '0 0 4px 0', color: '#1e293b' }}>{timeStr} - {disp.name}</h4>
+                      <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b' }}>
+                        <strong>Cliente:</strong> {getClient(disp.clientId)?.name || 'N/A'}<br/>
+                        <strong>Responsável:</strong> {getResponsibleName(disp.responsible)}<br/>
+                        {(disp.start_time || disp.end_time) && <span><strong>Duração:</strong> {disp.start_time || '...'} às {disp.end_time || '...'}</span>}
+                      </p>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 600, background: c.bg, color: c.color, padding: '4px 8px', borderRadius: '12px' }}>{disp.status.toUpperCase()}</span>
+                    </div>
+                  </div>
+                );
+              });
+            })()}
+            <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+               <button className="btn btn-secondary" onClick={() => setActiveDayDate(null)}>Fechar</button>
+               <button className="btn btn-primary" onClick={() => {
+                 setActiveDayDate(null);
+                 setEditingId(null);
+                 const datePrefix = activeDayDate;
+                 setFormData({ name: '', clientId: '', bidId: '', date: datePrefix, start_time: '', end_time: '', status: 'agendada', result: 'pendente', responsible: user.id });
+                 setShowModal(true);
+               }}>Adicionar Nova</button>
+            </div>
+          </div>
         </Modal>
       )}
     </div>
