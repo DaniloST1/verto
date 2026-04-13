@@ -4,11 +4,15 @@ import { useAuth } from '../context/AuthContext';
 import { Plus, Trash2, TrendingUp, TrendingDown, Edit2 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from 'recharts';
 import { Modal } from '../components/Modal';
+import { CashFlowImporterModal } from '../components/CashFlowImporterModal';
+import { useToast } from '../context/ToastContext';
 
 export const CashFlow = () => {
   const { cashFlow, addCashFlow, updateCashFlow, deleteCashFlow, clients } = useData();
   const { user } = useAuth();
+  const { addToast } = useToast();
   const [showModal, setShowModal] = useState(false);
+  const [isImporterOpen, setIsImporterOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({
     name: '', date: new Date().toISOString(), value: 0, type: 'despesa', specificType: 'equipe', status: 'pago',
@@ -31,6 +35,19 @@ export const CashFlow = () => {
       addCashFlow(formData);
     }
     setShowModal(false);
+  };
+
+  const handleImportSave = async (txs) => {
+    try {
+      addToast(`Importando ${txs.length} lançamentos... Isto pode levar alguns segundos.`, 'success');
+      for (const tx of txs) {
+        await addCashFlow(tx);
+      }
+      addToast('Extrato importado com sucesso!', 'success');
+    } catch (e) {
+      addToast('Ocorreu um erro ao concluir a importação inteligente.', 'error');
+      console.error(e);
+    }
   };
 
   const handleCnpjChange = (e) => {
@@ -108,12 +125,18 @@ export const CashFlow = () => {
       <div className="page-header">
         <h1 className="page-title">Fluxo de Caixa</h1>
         {isFinance && (
-          <button className="btn btn-primary" onClick={() => {
-            setCnpjInput('');
-            setEditingId(null);
-            setFormData({ name: '', date: new Date().toISOString(), value: 0, type: 'despesa', specificType: 'equipe', status: 'pago', referenceMonth: new Date().getMonth().toString(), referenceYear: new Date().getFullYear().toString(), paymentMethod: 'Boleto bancário' });
-            setShowModal(true);
-          }}><Plus size={18}/> Novo Lançamento</button>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button className="btn btn-secondary" onClick={() => setIsImporterOpen(true)} style={{ background: '#f8fafc', color: '#1e293b', border: '1px solid #cbd5e1' }}>
+              <UploadCloud size={18} style={{ marginRight: '6px' }} />
+              Importar Extrato
+            </button>
+            <button className="btn btn-primary" onClick={() => {
+              setCnpjInput('');
+              setEditingId(null);
+              setFormData({ name: '', date: new Date().toISOString(), value: 0, type: 'despesa', specificType: 'equipe', status: 'pago', referenceMonth: new Date().getMonth().toString(), referenceYear: new Date().getFullYear().toString(), paymentMethod: 'Boleto bancário' });
+              setShowModal(true);
+            }}><Plus size={18}/> Novo Lançamento</button>
+          </div>
         )}
       </div>
 
@@ -401,6 +424,13 @@ export const CashFlow = () => {
             </form>
         </Modal>
       )}
+
+      <CashFlowImporterModal 
+        isOpen={isImporterOpen} 
+        onClose={() => setIsImporterOpen(false)} 
+        clients={clients} 
+        onSave={handleImportSave} 
+      />
     </div>
   );
 };
