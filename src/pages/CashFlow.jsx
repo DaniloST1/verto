@@ -1,14 +1,15 @@
 import React, { useState, useMemo } from 'react';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
-import { Plus, Trash2, TrendingUp, TrendingDown } from 'lucide-react';
+import { Plus, Trash2, TrendingUp, TrendingDown, Edit2 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from 'recharts';
 import { Modal } from '../components/Modal';
 
 export const CashFlow = () => {
-  const { cashFlow, addCashFlow, deleteCashFlow, clients } = useData();
+  const { cashFlow, addCashFlow, updateCashFlow, deleteCashFlow, clients } = useData();
   const { user } = useAuth();
   const [showModal, setShowModal] = useState(false);
+  const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({
     name: '', date: new Date().toISOString(), value: 0, type: 'despesa', specificType: 'equipe', status: 'pago'
   });
@@ -22,7 +23,11 @@ export const CashFlow = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    addCashFlow(formData);
+    if (editingId) {
+      updateCashFlow(editingId, formData);
+    } else {
+      addCashFlow(formData);
+    }
     setShowModal(false);
   };
 
@@ -103,6 +108,7 @@ export const CashFlow = () => {
         {isFinance && (
           <button className="btn btn-primary" onClick={() => {
             setCnpjInput('');
+            setEditingId(null);
             setFormData({ name: '', date: new Date().toISOString(), value: 0, type: 'despesa', specificType: 'equipe', status: 'pago' });
             setShowModal(true);
           }}><Plus size={18}/> Novo Lançamento</button>
@@ -266,9 +272,18 @@ export const CashFlow = () => {
                 <td><span className="badge badge-info">{item.status.toUpperCase()}</span></td>
                 {isFinance && (
                   <td>
-                    <button className="btn btn-danger" style={{padding: '6px'}} onClick={() => deleteCashFlow(item.id)}>
-                      <Trash2 size={16} />
-                    </button>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button className="btn" style={{padding: '6px', background: '#fff', border: '1px solid #e2e8f0', color: '#3b82f6', borderRadius: '8px'}} onClick={() => {
+                        setEditingId(item.id);
+                        setFormData({ ...item });
+                        setShowModal(true);
+                      }}>
+                        <Edit2 size={16} />
+                      </button>
+                      <button className="btn btn-danger" style={{padding: '6px'}} onClick={() => deleteCashFlow(item.id)}>
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </td>
                 )}
               </tr>
@@ -278,7 +293,7 @@ export const CashFlow = () => {
       </div>
 
       {showModal && (
-        <Modal title="Novo Lançamento" onClose={() => setShowModal(false)}>
+        <Modal title={editingId ? "Editar Lançamento" : "Novo Lançamento"} onClose={() => setShowModal(false)}>
             <form onSubmit={handleSubmit}>
               <div className="form-group">
                 <label>Vincular Cliente via CNPJ (Opcional)</label>
