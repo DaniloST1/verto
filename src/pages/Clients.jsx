@@ -154,8 +154,10 @@ export const Clients = () => {
       setFieldErrors(errors);
       return;
     }
-    if (editingId) updateClient(editingId, formData);
-    else addClient(formData);
+    // Strip stale camelCase duplicates that conflict with snake_case when DataContext serializes
+    const { contractEnd, contractStart, cashValue, responsible, clientPayments: _cp, ...cleanData } = formData;
+    if (editingId) updateClient(editingId, cleanData);
+    else addClient(cleanData);
     setShowModal(false);
   };
 
