@@ -222,6 +222,7 @@ export const Clients = () => {
               <th>EMAIL</th>
               <th>TELEFONE</th>
               <th>STATUS</th>
+              <th>RESPONSÁVEL</th>
               <th style={{ textAlign: 'center' }}>AÇÕES</th>
             </tr>
           </thead>
@@ -241,6 +242,9 @@ export const Clients = () => {
                   }}>
                     {c.status === 'apto' ? 'ATIVADO' : 'INATIVO'}
                   </span>
+                </td>
+                <td style={{ color: '#475569', fontSize: '0.9rem', fontWeight: 500 }}>
+                  {users.find(u => u.id === c.responsible)?.name || 'Não atribuído'}
                 </td>
                 <td style={{ textAlign: 'center' }}>
                   <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
