@@ -146,8 +146,20 @@ export const DataProvider = ({ children }) => {
   const addContract = (data) => addItem('contracts', setContracts, data, 'Contrato', ['supervisor', 'admin']);
   const updateContract = (id, data) => updateItem('contracts', setContracts, id, data, 'Contrato', ['supervisor', 'employee', 'admin']);
 
-  const addCashFlow = (data) => addItem('cash_flow', setCashFlow, data, 'Fluxo de Caixa', ['finance', 'admin']);
-  const updateCashFlow = (id, data) => updateItem('cash_flow', setCashFlow, id, data, 'Fluxo de Caixa', ['finance', 'admin']);
+  const addCashFlow = async (data) => {
+    await addItem('cash_flow', setCashFlow, data, 'Fluxo de Caixa', ['finance', 'admin']);
+    if (data.clientId) {
+      const d = new Date(data.date);
+      await updatePaymentStatus(data.clientId, d.getFullYear(), d.getMonth(), { status: data.status, value: data.value });
+    }
+  };
+  const updateCashFlow = async (id, data) => {
+    await updateItem('cash_flow', setCashFlow, id, data, 'Fluxo de Caixa', ['finance', 'admin']);
+    if (data.clientId) {
+      const d = new Date(data.date);
+      await updatePaymentStatus(data.clientId, d.getFullYear(), d.getMonth(), { status: data.status, value: data.value });
+    }
+  };
 
   const updatePaymentStatus = async (clientId, year, monthIndex, data) => {
     if (!checkPermission(['finance', 'admin'], 'Atualizar Pagamento')) return;
@@ -190,28 +202,6 @@ export const DataProvider = ({ children }) => {
         savedObj = newRecord;
       } else if (error) {
         addToast(`Erro: ${error.message}`, 'error');
-      }
-    }
-
-    // Automation: Add to Cash Flow if status is "pago"
-    if (success && data.status === 'pago') {
-      const client = clients.find(c => (c.id === clientId || c.id === String(clientId)));
-      const clientName = client ? (client.name || client.name) : 'Cliente';
-      const monthName = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"][monthIndex];
-      
-      const cashFlowData = {
-        name: `Mensalidade: ${clientName} (${monthName}/${year})`,
-        value: data.value,
-        type: 'receita',
-        specific_type: 'mensalidade',
-        date: new Date().toISOString(),
-        status: 'pago'
-      };
-
-      const { data: cfItem, error: cfError } = await supabase.from('cash_flow').insert([cashFlowData]).select().single();
-      if (!cfError && cfItem) {
-        setCashFlow(prev => [...prev, cfItem]);
-        addToast(`Lançamento automático gerado no Fluxo de Caixa.`, 'info');
       }
     }
 
