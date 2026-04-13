@@ -2,8 +2,9 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { Plus, Edit2, Trash2, Filter, X } from 'lucide-react';
+import { Plus, Edit2, Trash2, Filter, X, Eye, ArrowLeft, TrendingUp, Building, Briefcase, DollarSign, Activity, FileText, Gavel, BarChart2 } from 'lucide-react';
 import { Modal } from '../components/Modal';
+import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
 
 // ---- Mask helpers ----
 const maskCNPJ = (v = '') => {
@@ -44,7 +45,7 @@ const isValidPhone = (v = '') => v.replace(/\D/g, '').length >= 10;
 const LOGO_URL = 'https://kxvminodzhcsdwrmucdj.supabase.co/storage/v1/object/public/Verto%20imagens/logo-verto.jpeg';
 
 export const Clients = () => {
-  const { clients, addClient, updateClient, deleteClient } = useData();
+  const { clients, bids, disputes, contracts, cashFlow, addClient, updateClient, deleteClient } = useData();
   const { user, users } = useAuth();
   const { addToast } = useToast();
 
@@ -54,6 +55,7 @@ export const Clients = () => {
 
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [viewingClient, setViewingClient] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
 
   const emptyForm = {
@@ -143,6 +145,103 @@ export const Clients = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (fieldErrors[field]) setFieldErrors(prev => ({ ...prev, [field]: undefined }));
   };
+
+  if (viewingClient) {
+    const c = viewingClient;
+    const clientBids = bids.filter(b => b.clientsLinked && b.clientsLinked.includes(c.id));
+    const clientDisputes = disputes.filter(d => d.clientId === c.id);
+    const clientContracts = contracts.filter(con => con.clientId === c.id);
+    const clientCashFlow = cashFlow.filter(cf => cf.clientId === c.id);
+
+    const formatCurrency = (val) => `R$ ${Number(val).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+    const totalRevenue = clientCashFlow.filter(cf => cf.type === 'receita' && cf.status === 'pago').reduce((acc, curr) => acc + curr.value, 0);
+
+    const monthlyData = clientCashFlow.reduce((acc, curr) => {
+      if (curr.type !== 'receita') return acc;
+      const monthYear = new Date(curr.date || curr.dueDate || new Date()).toLocaleString('pt-BR', { month: 'short', year: 'numeric' });
+      if (!acc[monthYear]) acc[monthYear] = { name: monthYear, Receita: 0 };
+      acc[monthYear].Receita += curr.value;
+      return acc;
+    }, {});
+    const chartData = Object.values(monthlyData);
+
+    return (
+      <div className="client-viewer fade-in">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
+          <button className="btn btn-secondary" onClick={() => setViewingClient(null)}>
+            <ArrowLeft size={16} /> Voltar
+          </button>
+          <div>
+            <h1 style={{ fontSize: '1.75rem', color: '#0f172a', margin: 0 }}>{c.name}</h1>
+            <p style={{ color: '#64748b', margin: '4px 0 0 0' }}>Visualização detalhada e mapa de resultados</p>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', marginBottom: '24px' }}>
+          <div className="glass-panel" style={{ flex: '1 1 300px', padding: '24px' }}>
+            <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#1e293b', marginBottom: '16px' }}><Building size={18}/> Ficha Cadastral</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '0.9rem' }}>
+              <div><strong style={{ color: '#64748b' }}>CNPJ Principal:</strong> <span style={{ color: '#1e293b', fontWeight: 600 }}>{c.cnpj || '-'}</span></div>
+              <div><strong style={{ color: '#64748b' }}>CPF/CNPJ do Responsável:</strong> {c.cpf_cnpj_responsible || '-'}</div>
+              <div><strong style={{ color: '#64748b' }}>Inscrição Estadual:</strong> {c.state_registration || '-'}</div>
+              <div><strong style={{ color: '#64748b' }}>Telefone:</strong> {c.contact || '-'}</div>
+              <div><strong style={{ color: '#64748b' }}>Email:</strong> {c.email || '-'}</div>
+              <div><strong style={{ color: '#64748b' }}>Responsável de Gestão (Verto):</strong> {users.find(u => u.id === c.responsible)?.name || 'Não atribuído'}</div>
+              <div><strong style={{ color: '#64748b' }}>Mês/Dia de Cobrança:</strong> Dia {c.due_day || 10}</div>
+              <div><strong style={{ color: '#64748b' }}>Valor de Honorário:</strong> {formatCurrency(c.cash_value || 0)}</div>
+              <div><strong style={{ color: '#64748b' }}>Status Operacional:</strong> <span style={{ color: c.status==='apto'? '#10b981':'#ef4444', fontWeight: 600 }}>{c.status === 'apto' ? 'ATIVADO' : 'INATIVO'}</span></div>
+            </div>
+            {c.notes && (
+              <div style={{ marginTop: '16px', padding: '12px', background: '#f8fafc', borderRadius: '8px', fontSize: '0.85rem', color: '#475569', border: '1px solid #e2e8f0' }}>
+                <strong style={{display:'block', marginBottom:'4px', color:'#1e293b'}}>Observações Internas:</strong>
+                <p style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{c.notes}</p>
+              </div>
+            )}
+          </div>
+
+          <div className="glass-panel" style={{ flex: '2 1 500px', padding: '24px', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+            <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#1e293b', marginBottom: '24px' }}><BarChart2 size={18}/> Retorno Estratégico</h3>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '16px', marginBottom: '32px' }}>
+               <div style={{ padding: '16px', background: '#f8fafc', borderRadius: '12px', borderLeft: '4px solid #3b82f6' }}>
+                  <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600, display: 'flex', alignItems: 'center', gap:'6px' }}><FileText size={14}/> Editais Mapeados</div>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#1e293b', marginTop: '8px' }}>{clientBids.length}</div>
+               </div>
+               <div style={{ padding: '16px', background: '#f8fafc', borderRadius: '12px', borderLeft: '4px solid #f59e0b' }}>
+                  <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600, display: 'flex', alignItems: 'center', gap:'6px' }}><Gavel size={14}/> Disputas</div>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#1e293b', marginTop: '8px' }}>{clientDisputes.length}</div>
+               </div>
+               <div style={{ padding: '16px', background: '#f8fafc', borderRadius: '12px', borderLeft: '4px solid #8b5cf6' }}>
+                  <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600, display: 'flex', alignItems: 'center', gap:'6px' }}><Briefcase size={14}/> Contratos Ativos</div>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#1e293b', marginTop: '8px' }}>{clientContracts.length}</div>
+               </div>
+               <div style={{ padding: '16px', background: '#f0fdf4', borderRadius: '12px', borderLeft: '4px solid #10b981' }}>
+                  <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600, display: 'flex', alignItems: 'center', gap:'6px' }}><DollarSign size={14}/> Receita Realizada</div>
+                  <div style={{ fontSize: '1.3rem', fontWeight: 700, color: '#10b981', marginTop: '8px' }}>{formatCurrency(totalRevenue)}</div>
+               </div>
+            </div>
+
+            <div style={{ flex: 1, minHeight: '280px', width: '100%' }}>
+              <h4 style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '16px', fontWeight: 600 }}>Evolução de Receita (Meses Históricos)</h4>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.2} vertical={false}/>
+                  <XAxis dataKey="name" stroke="#94a3b8" tick={{fontSize: 12}} />
+                  <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} cursor={{fill: 'rgba(0,0,0,0.05)'}}/>
+                  <Bar dataKey="Receita" fill="#10b981" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+              {chartData.length === 0 && (
+                <div style={{ position: 'absolute', top: '70%', left: '50%', transform: 'translate(-50%, -50%)', color: '#94a3b8', fontSize: '0.9rem' }}>
+                  Sem histórico de pagamentos registrados ainda.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -248,7 +347,10 @@ export const Clients = () => {
                 </td>
                 <td style={{ textAlign: 'center' }}>
                   <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                    <button className="btn" style={{ padding: '6px', background: '#fff', border: '1px solid #e2e8f0', color: '#3b82f6', borderRadius: '8px' }} onClick={() => openForm(c)}>
+                    <button className="btn" style={{ padding: '6px', background: '#f8fafc', border: '1px solid #e2e8f0', color: '#1e293b', borderRadius: '8px' }} onClick={() => setViewingClient(c)} title="Ver Dados">
+                      <Eye size={16} />
+                    </button>
+                    <button className="btn" style={{ padding: '6px', background: '#fff', border: '1px solid #e2e8f0', color: '#3b82f6', borderRadius: '8px' }} onClick={() => openForm(c)} title="Editar">
                       <Edit2 size={16} />
                     </button>
                     {(user.role === 'admin' || user.role === 'supervisor') && (
