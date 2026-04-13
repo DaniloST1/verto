@@ -39,7 +39,7 @@ export const CashFlow = () => {
     const cleanVal = val.replace(/\D/g, '');
     const found = clients.find(c => c.cnpj && c.cnpj.replace(/\D/g, '') === cleanVal);
     if (found) {
-      setFormData(prev => ({ ...prev, name: `Mensalidade: ${found.name}`, type: 'receita', specificType: 'assessoria recorrente' }));
+      setFormData(prev => ({ ...prev, name: `Mensalidade: ${found.name}`, type: 'receita', specificType: 'assessoria recorrente', clientId: found.id }));
     }
   };
 

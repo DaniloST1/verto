@@ -171,7 +171,7 @@ export const DataProvider = ({ children }) => {
     if (!checkPermission(['finance', 'admin'], 'Atualizar Pagamento')) return;
     
     // We expect state clientPayments to be in snake_case directly from supabase right now, but we just want to find it.
-    let currentRecord = clientPayments.find(c => c.client_id === clientId && c.year === year);
+    let currentRecord = clientPayments.find(c => String(c.client_id) === String(clientId) && Number(c.year) === Number(year));
     if (!currentRecord) {
         // Fallback or double check since `convertArray` returns camelCase above. However, the raw state `clientPayments` holds snake_case from `await supabase`. 
         // Let's be careful. `fetchTable` stores raw DB objects (snake_case). 
