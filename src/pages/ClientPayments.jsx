@@ -86,6 +86,28 @@ export const ClientPayments = () => {
       const monthsToGenerate = (filterMonth && filterMonth !== 'Todos') ? [parseInt(filterMonth) - 1] : [0,1,2,3,4,5,6,7,8,9,10,11];
 
       monthsToGenerate.forEach(i => {
+        const hasCashFlowData = !!cp?.months?.[i];
+        let isWithinContract = true;
+
+        if (!hasCashFlowData) {
+          if (client.contract_start || client.contractStart) {
+            const startStr = client.contract_start || client.contractStart;
+            if (startStr && startStr.includes('-')) {
+              const [sY, sM] = startStr.split('-').map(Number);
+              if (yearToUse < sY || (yearToUse === sY && i < sM - 1)) isWithinContract = false;
+            }
+          }
+          if (client.contract_end || client.contractEnd) {
+            const endStr = client.contract_end || client.contractEnd;
+            if (endStr && endStr.includes('-')) {
+              const [eY, eM] = endStr.split('-').map(Number);
+              if (yearToUse > eY || (yearToUse === eY && i > eM - 1)) isWithinContract = false;
+            }
+          }
+        }
+
+        if (!hasCashFlowData && !isWithinContract) return;
+
         const dueDay = client.due_day || client.cashValue ? 10 : 10; // default 10
         const dueDayNum = client.due_day || 10;
         const monthData = cp?.months?.[i] || {
