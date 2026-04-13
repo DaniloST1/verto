@@ -11,7 +11,8 @@ export const CashFlow = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({
-    name: '', date: new Date().toISOString(), value: 0, type: 'despesa', specificType: 'equipe', status: 'pago'
+    name: '', date: new Date().toISOString(), value: 0, type: 'despesa', specificType: 'equipe', status: 'pago',
+    referenceMonth: new Date().getMonth().toString(), referenceYear: new Date().getFullYear().toString()
   });
   const [cnpjInput, setCnpjInput] = useState('');
 
@@ -109,7 +110,7 @@ export const CashFlow = () => {
           <button className="btn btn-primary" onClick={() => {
             setCnpjInput('');
             setEditingId(null);
-            setFormData({ name: '', date: new Date().toISOString(), value: 0, type: 'despesa', specificType: 'equipe', status: 'pago' });
+            setFormData({ name: '', date: new Date().toISOString(), value: 0, type: 'despesa', specificType: 'equipe', status: 'pago', referenceMonth: new Date().getMonth().toString(), referenceYear: new Date().getFullYear().toString() });
             setShowModal(true);
           }}><Plus size={18}/> Novo Lançamento</button>
         )}
@@ -350,6 +351,26 @@ export const CashFlow = () => {
                   </select>
                 </div>
               </div>
+
+              {formData.type === 'receita' && formData.specificType === 'assessoria recorrente' && (
+                <div className="form-group" style={{display: 'flex', gap: '16px'}}>
+                  <div style={{flex: 1}}>
+                    <label>Mês de Referência do Pagamento</label>
+                    <select value={formData.referenceMonth || new Date().getMonth().toString()} onChange={e => setFormData({...formData, referenceMonth: e.target.value})}>
+                      {["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"].map((m, i) => (
+                        <option key={i} value={i.toString()}>{m}</option>
+                      ))}
+                    </select>
+                    <small style={{ color: '#64748b', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>Será quitado no extrato do cliente para esse mês específico.</small>
+                  </div>
+                  <div style={{flex: 1}}>
+                    <label>Ano de Referência</label>
+                    <select value={formData.referenceYear || new Date().getFullYear().toString()} onChange={e => setFormData({...formData, referenceYear: e.target.value})}>
+                      {[2024, 2025, 2026, 2027, 2028].map(y => <option key={y} value={y.toString()}>{y}</option>)}
+                    </select>
+                  </div>
+                </div>
+              )}
 
               <div className="form-group">
                 <label>Status</label>
