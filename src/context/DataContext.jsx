@@ -151,21 +151,28 @@ export const DataProvider = ({ children }) => {
   const updateContract = (id, data) => updateItem('contracts', setContracts, id, data, 'Contrato', ['supervisor', 'employee', 'admin']);
 
   const addCashFlow = async (data) => {
-    const { clientId, ...rest } = data;
-    await addItem('cash_flow', setCashFlow, rest, 'Fluxo de Caixa', ['finance', 'admin']);
-    if (clientId && data.type === 'receita') {
+    await addItem('cash_flow', setCashFlow, data, 'Fluxo de Caixa', ['finance', 'admin']);
+    if (data.clientId && data.type === 'receita') {
       const year = data.referenceYear !== undefined ? parseInt(data.referenceYear) : new Date(data.date).getFullYear();
       const monthIndex = data.referenceMonth !== undefined ? parseInt(data.referenceMonth) : new Date(data.date).getMonth();
-      await updatePaymentStatus(clientId, year, monthIndex, { status: data.status, value: data.value });
+      await updatePaymentStatus(data.clientId, year, monthIndex, { status: data.status, value: data.value });
     }
   };
   const updateCashFlow = async (id, data) => {
-    const { clientId, ...rest } = data;
-    await updateItem('cash_flow', setCashFlow, id, rest, 'Fluxo de Caixa', ['finance', 'admin']);
-    if (clientId && data.type === 'receita') {
+    await updateItem('cash_flow', setCashFlow, id, data, 'Fluxo de Caixa', ['finance', 'admin']);
+    if (data.clientId && data.type === 'receita') {
       const year = data.referenceYear !== undefined ? parseInt(data.referenceYear) : new Date(data.date).getFullYear();
       const monthIndex = data.referenceMonth !== undefined ? parseInt(data.referenceMonth) : new Date(data.date).getMonth();
-      await updatePaymentStatus(clientId, year, monthIndex, { status: data.status, value: data.value });
+      await updatePaymentStatus(data.clientId, year, monthIndex, { status: data.status, value: data.value });
+    }
+  };
+  const deleteCashFlow = async (id) => {
+    const item = cashFlow.find(c => c.id === id);
+    await deleteItem('cash_flow', setCashFlow, id, 'Fluxo de Caixa', ['finance', 'admin']);
+    if (item && item.clientId && item.type === 'receita') {
+      const year = item.referenceYear !== undefined ? parseInt(item.referenceYear) : new Date(item.date).getFullYear();
+      const monthIndex = item.referenceMonth !== undefined ? parseInt(item.referenceMonth) : new Date(item.date).getMonth();
+      await updatePaymentStatus(item.clientId, year, monthIndex, { status: 'pendente' });
     }
   };
 
@@ -224,7 +231,7 @@ export const DataProvider = ({ children }) => {
       bids: convertArray(bids), addBid, updateBid, deleteBid: id => deleteItem('bids', setBids, id, 'Edital', ['admin', 'supervisor']),
       disputes: convertArray(disputes), addDispute, updateDispute, deleteDispute: id => deleteItem('disputes', setDisputes, id, 'Disputa', ['admin', 'supervisor']),
       contracts: convertArray(contracts), addContract, updateContract, deleteContract: id => deleteItem('contracts', setContracts, id, 'Contrato', ['admin', 'supervisor']),
-      cashFlow: convertArray(cashFlow), addCashFlow, updateCashFlow, deleteCashFlow: id => deleteItem('cash_flow', setCashFlow, id, 'Lançamento', ['admin', 'finance']),
+      cashFlow: convertArray(cashFlow), addCashFlow, updateCashFlow, deleteCashFlow,
       clientPayments: convertArray(clientPayments), updatePaymentStatus
     }}>
       {children}
