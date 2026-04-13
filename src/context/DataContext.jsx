@@ -151,19 +151,21 @@ export const DataProvider = ({ children }) => {
   const updateContract = (id, data) => updateItem('contracts', setContracts, id, data, 'Contrato', ['supervisor', 'employee', 'admin']);
 
   const addCashFlow = async (data) => {
-    await addItem('cash_flow', setCashFlow, data, 'Fluxo de Caixa', ['finance', 'admin']);
-    if (data.clientId && data.type === 'receita') {
+    const { clientId, ...rest } = data;
+    await addItem('cash_flow', setCashFlow, rest, 'Fluxo de Caixa', ['finance', 'admin']);
+    if (clientId && data.type === 'receita') {
       const year = data.referenceYear !== undefined ? parseInt(data.referenceYear) : new Date(data.date).getFullYear();
       const monthIndex = data.referenceMonth !== undefined ? parseInt(data.referenceMonth) : new Date(data.date).getMonth();
-      await updatePaymentStatus(data.clientId, year, monthIndex, { status: data.status, value: data.value });
+      await updatePaymentStatus(clientId, year, monthIndex, { status: data.status, value: data.value });
     }
   };
   const updateCashFlow = async (id, data) => {
-    await updateItem('cash_flow', setCashFlow, id, data, 'Fluxo de Caixa', ['finance', 'admin']);
-    if (data.clientId && data.type === 'receita') {
+    const { clientId, ...rest } = data;
+    await updateItem('cash_flow', setCashFlow, id, rest, 'Fluxo de Caixa', ['finance', 'admin']);
+    if (clientId && data.type === 'receita') {
       const year = data.referenceYear !== undefined ? parseInt(data.referenceYear) : new Date(data.date).getFullYear();
       const monthIndex = data.referenceMonth !== undefined ? parseInt(data.referenceMonth) : new Date(data.date).getMonth();
-      await updatePaymentStatus(data.clientId, year, monthIndex, { status: data.status, value: data.value });
+      await updatePaymentStatus(clientId, year, monthIndex, { status: data.status, value: data.value });
     }
   };
 
