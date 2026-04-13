@@ -3,14 +3,16 @@ import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
 import { Plus, Trash2, TrendingUp, TrendingDown } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from 'recharts';
+import { Modal } from '../components/Modal';
 
 export const CashFlow = () => {
-  const { cashFlow, addCashFlow, deleteCashFlow } = useData();
+  const { cashFlow, addCashFlow, deleteCashFlow, clients } = useData();
   const { user } = useAuth();
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({
     name: '', date: new Date().toISOString(), value: 0, type: 'despesa', specificType: 'equipe', status: 'pago'
   });
+  const [cnpjInput, setCnpjInput] = useState('');
 
   const [filterQuery, setFilterQuery] = useState('');
   const [filterMonth, setFilterMonth] = useState('Todos');
@@ -22,6 +24,17 @@ export const CashFlow = () => {
     e.preventDefault();
     addCashFlow(formData);
     setShowModal(false);
+  };
+
+  const handleCnpjChange = (e) => {
+    const val = e.target.value;
+    setCnpjInput(val);
+    if (!val) return;
+    const cleanVal = val.replace(/\D/g, '');
+    const found = clients.find(c => c.cnpj && c.cnpj.replace(/\D/g, '') === cleanVal);
+    if (found) {
+      setFormData(prev => ({ ...prev, name: `Mensalidade: ${found.name}`, type: 'receita', specificType: 'assessoria recorrente' }));
+    }
   };
 
   const filteredCashFlow = useMemo(() => {
@@ -89,6 +102,7 @@ export const CashFlow = () => {
         <h1 className="page-title">Fluxo de Caixa</h1>
         {isFinance && (
           <button className="btn btn-primary" onClick={() => {
+            setCnpjInput('');
             setFormData({ name: '', date: new Date().toISOString(), value: 0, type: 'despesa', specificType: 'equipe', status: 'pago' });
             setShowModal(true);
           }}><Plus size={18}/> Novo Lançamento</button>
@@ -264,13 +278,19 @@ export const CashFlow = () => {
       </div>
 
       {showModal && (
-        <div className="modal-overlay">
-          <div className="modal-content glass-panel animate-fade-in">
-            <h2>Novo Lançamento</h2>
+        <Modal title="Novo Lançamento" onClose={() => setShowModal(false)}>
             <form onSubmit={handleSubmit}>
               <div className="form-group">
+                <label>Vincular Cliente via CNPJ (Opcional)</label>
+                <input type="text" placeholder="Digite o CNPJ..." value={cnpjInput} onChange={handleCnpjChange} />
+                {cnpjInput && clients.some(c => c.cnpj && c.cnpj.replace(/\D/g, '') === cnpjInput.replace(/\D/g, '')) && (
+                  <div style={{ fontSize: '0.8rem', color: '#10b981', marginTop: '4px' }}>Cliente encontrado! Dados preenchidos automaticamente.</div>
+                )}
+              </div>
+
+              <div className="form-group">
                 <label>Descrição</label>
-                <input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required />
+                <input type="text" placeholder="Ex: Mensalidade Produto XYZ" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required />
               </div>
               
               <div className="form-group" style={{display: 'flex', gap: '16px'}}>
@@ -326,11 +346,10 @@ export const CashFlow = () => {
 
               <div style={{display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px'}}>
                 <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancelar</button>
-                <button type="submit" className="btn btn-success">Lançar</button>
+                <button type="submit" className="btn btn-primary" style={{background: '#1d3e83'}}>Lançar</button>
               </div>
             </form>
-          </div>
-        </div>
+        </Modal>
       )}
     </div>
   );
