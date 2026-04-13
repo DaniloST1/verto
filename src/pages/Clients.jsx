@@ -61,7 +61,8 @@ export const Clients = () => {
   const emptyForm = {
     name: '', cnpj: '', contact: '', email: '', status: 'apto', responsible_id: '',
     cash_value: 0, notes: '',
-    cpf_cnpj_responsible: '', state_registration: '', due_day: 10, contract_end: ''
+    cpf_cnpj_responsible: '', state_registration: '', due_day: 10,
+    contract_start: '', contract_end: ''
   };
   const [formData, setFormData] = useState(emptyForm);
 
@@ -101,13 +102,25 @@ export const Clients = () => {
   const openForm = (client = null) => {
     if (client) {
       setEditingId(client.id);
-      setFormData({ 
-        ...emptyForm, 
+      // Normalize dates: DataContext converts snake_case to camelCase,
+      // so contract_end comes back as contractEnd, contract_start as contractStart
+      const resolvedContractEnd = client.contract_end ?? client.contractEnd ?? '';
+      const resolvedContractStart = client.contract_start ?? client.contractStart ?? '';
+      // Ensure short date format (YYYY-MM-DD) for <input type='date'>
+      const toDateInput = (val) => {
+        if (!val) return '';
+        // If it's already YYYY-MM-DD, return as-is
+        if (/^\d{4}-\d{2}-\d{2}$/.test(val)) return val;
+        // If it's an ISO string with time, take date part
+        return val.split('T')[0];
+      };
+      setFormData({
+        ...emptyForm,
         ...client,
-        cash_value: client.cashValue ?? client.cash_value,
-        responsible_id: client.responsible ?? client.responsible_id,
-        contract_start: client.contractStart ?? client.contract_start,
-        contract_end: client.contractEnd ?? client.contract_end
+        cash_value: client.cashValue ?? client.cash_value ?? 0,
+        responsible_id: client.responsible ?? client.responsible_id ?? '',
+        contract_start: toDateInput(resolvedContractStart),
+        contract_end: toDateInput(resolvedContractEnd),
       });
     } else {
       setEditingId(null);
@@ -203,8 +216,18 @@ export const Clients = () => {
               <div><strong style={{ color: '#64748b' }}>Responsável de Gestão (Verto):</strong> {users.find(u => u.id === c.responsible)?.name || 'Não atribuído'}</div>
               <div><strong style={{ color: '#64748b' }}>Mês/Dia de Cobrança:</strong> Dia {c.due_day || 10}</div>
               <div><strong style={{ color: '#64748b' }}>Valor de Honorário:</strong> {formatCurrency(c.cash_value || 0)}</div>
-              <div><strong style={{ color: '#64748b' }}>Início do Contrato:</strong> {c.contract_start || c.contractStart ? new Date((c.contract_start || c.contractStart) + 'T00:00:00').toLocaleDateString('pt-BR') : '-'}</div>
-              <div><strong style={{ color: '#64748b' }}>Término do Contrato:</strong> {c.contract_end || c.contractEnd ? new Date((c.contract_end || c.contractEnd) + 'T00:00:00').toLocaleDateString('pt-BR') : '-'}</div>
+              <div><strong style={{ color: '#64748b' }}>Início do Contrato:</strong> {(() => {
+                const val = c.contract_start || c.contractStart;
+                if (!val) return '-';
+                const d = new Date(val.includes('T') ? val : val + 'T12:00:00');
+                return isNaN(d) ? '-' : d.toLocaleDateString('pt-BR');
+              })()}</div>
+              <div><strong style={{ color: '#64748b' }}>Término do Contrato:</strong> {(() => {
+                const val = c.contract_end || c.contractEnd;
+                if (!val) return '-';
+                const d = new Date(val.includes('T') ? val : val + 'T12:00:00');
+                return isNaN(d) ? '-' : d.toLocaleDateString('pt-BR');
+              })()}</div>
               <div><strong style={{ color: '#64748b' }}>Status Operacional:</strong> <span style={{ color: c.status==='apto'? '#10b981':'#ef4444', fontWeight: 600 }}>{c.status === 'apto' ? 'ATIVADO' : 'INATIVO'}</span></div>
             </div>
             {c.notes && (
