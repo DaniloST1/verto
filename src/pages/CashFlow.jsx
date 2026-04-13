@@ -9,7 +9,7 @@ export const CashFlow = () => {
   const { user } = useAuth();
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({
-    name: '', date: new Date().toISOString(), value: 0, type: 'despesa', specificType: 'operacional', status: 'pago'
+    name: '', date: new Date().toISOString(), value: 0, type: 'despesa', specificType: 'equipe', status: 'pago'
   });
 
   const [filterQuery, setFilterQuery] = useState('');
@@ -50,15 +50,22 @@ export const CashFlow = () => {
   
   const COLORS = ['#10b981', '#ef4444'];
 
+  const categoryMap = {
+    'mensalidade': 'Assessoria recorrente',
+    'comissao': 'Implementação',
+    'pessoal': 'Equipe'
+  };
+  const getCategoryName = (val) => categoryMap[val?.toLowerCase()] || (val ? val.charAt(0).toUpperCase() + val.slice(1) : 'Outros');
+
   const receitasPorTipo = filteredCashFlow.filter(c => c.type === 'receita').reduce((acc, curr) => {
-    const key = curr.specificType === 'mensalidade' ? 'Mensalidade' : curr.specificType === 'comissao' ? 'Comissão' : 'Outros';
+    const key = getCategoryName(curr.specificType);
     acc[key] = (acc[key] || 0) + curr.value;
     return acc;
   }, {});
   const pieReceitas = Object.keys(receitasPorTipo).map(key => ({ name: key, value: receitasPorTipo[key] }));
 
   const despesasPorTipo = filteredCashFlow.filter(c => c.type === 'despesa').reduce((acc, curr) => {
-    const key = curr.specificType.charAt(0).toUpperCase() + curr.specificType.slice(1);
+    const key = getCategoryName(curr.specificType);
     acc[key] = (acc[key] || 0) + curr.value;
     return acc;
   }, {});
@@ -82,7 +89,7 @@ export const CashFlow = () => {
         <h1 className="page-title">Fluxo de Caixa</h1>
         {isFinance && (
           <button className="btn btn-primary" onClick={() => {
-            setFormData({ name: '', date: new Date().toISOString(), value: 0, type: 'despesa', specificType: 'operacional', status: 'pago' });
+            setFormData({ name: '', date: new Date().toISOString(), value: 0, type: 'despesa', specificType: 'equipe', status: 'pago' });
             setShowModal(true);
           }}><Plus size={18}/> Novo Lançamento</button>
         )}
@@ -280,7 +287,10 @@ export const CashFlow = () => {
               <div className="form-group" style={{display: 'flex', gap: '16px'}}>
                 <div style={{flex: 1}}>
                   <label>Tipo</label>
-                  <select value={formData.type} onChange={e => setFormData({...formData, type: e.target.value})}>
+                  <select value={formData.type} onChange={e => {
+                     const newType = e.target.value;
+                     setFormData({...formData, type: newType, specificType: newType === 'receita' ? 'assessoria recorrente' : 'equipe'});
+                  }}>
                     <option value="receita">Receita</option>
                     <option value="despesa">Despesa</option>
                   </select>
@@ -290,16 +300,16 @@ export const CashFlow = () => {
                   <select value={formData.specificType} onChange={e => setFormData({...formData, specificType: e.target.value})}>
                     {formData.type === 'receita' ? (
                       <>
-                        <option value="mensalidade">Mensalidade</option>
-                        <option value="comissao">Comissão</option>
-                        <option value="outros">Outros</option>
+                        <option value="assessoria recorrente">Assessoria recorrente</option>
+                        <option value="implementação">Implementação</option>
+                        <option value="percentual de contrato">Percentual de contrato</option>
                       </>
                     ) : (
                       <>
+                        <option value="equipe">Equipe</option>
                         <option value="operacional">Operacional</option>
                         <option value="impostos">Impostos</option>
-                        <option value="pessoal">Pessoal</option>
-                        <option value="outros">Outros</option>
+                        <option value="pró-labore">Pró-labore</option>
                       </>
                     )}
                   </select>
