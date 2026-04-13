@@ -82,7 +82,7 @@ export const ClientPayments = () => {
     const yearToUse = parseInt(filterYear) || currentYear;
 
     clients.forEach(client => {
-      const cp = clientPayments.find(c => c.clientId === client.id && c.year === yearToUse);
+      const cp = clientPayments.find(c => String(c.clientId || c.client_id) === String(client.id) && Number(c.year) === Number(yearToUse));
       const monthsToGenerate = (filterMonth && filterMonth !== 'Todos') ? [parseInt(filterMonth) - 1] : [0,1,2,3,4,5,6,7,8,9,10,11];
 
       monthsToGenerate.forEach(i => {
@@ -106,8 +106,8 @@ export const ClientPayments = () => {
           year: yearToUse,
           reference: `${MONTH_NAMES[i]}/${yearToUse}`,
           status: monthData.status,
-          value: monthData.value,
-          dueDate: monthData.dueDate,
+          value: monthData.value !== undefined ? monthData.value : (client.cash_value || client.cashValue || 0),
+          dueDate: monthData.dueDate || `${yearToUse}-${String(i + 1).padStart(2, '0')}-${String(dueDayNum).padStart(2,'0')}`,
           paymentMethod: monthData.paymentMethod,
           proof: monthData.proof
         };
