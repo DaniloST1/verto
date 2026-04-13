@@ -59,6 +59,7 @@ export const DataProvider = ({ children }) => {
     for (const key in obj) {
       if (key === 'cashValue') newObj.cash_value = obj[key];
       else if (key === 'responsible') newObj.responsible_id = obj[key];
+      else if (key === 'contractStart') newObj.contract_start = obj[key];
       else if (key === 'contractEnd') newObj.contract_end = obj[key];
       else if (key === 'estimatedValue') newObj.estimated_value = obj[key];
       else if (key === 'clientsLinked') newObj.clients_linked = obj[key];
@@ -82,6 +83,7 @@ export const DataProvider = ({ children }) => {
     for (const key in obj) {
       if (key === 'cash_value') newObj.cashValue = obj[key];
       else if (key === 'responsible_id') newObj.responsible = obj[key];
+      else if (key === 'contract_start') newObj.contractStart = obj[key];
       else if (key === 'contract_end') newObj.contractEnd = obj[key];
       else if (key === 'estimated_value') newObj.estimatedValue = obj[key];
       else if (key === 'clients_linked') newObj.clientsLinked = obj[key];

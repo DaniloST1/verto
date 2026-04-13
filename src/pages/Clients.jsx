@@ -471,7 +471,7 @@ export const Clients = () => {
               </div>
             </div>
 
-            {/* Valor + Validade */}
+            {/* Valor + Validades */}
             <div style={{ display: 'flex', gap: '16px' }}>
               <div className="form-group" style={{ flex: 1 }}>
                 <label>Valor Recorrente do Contrato (R$) *</label>
@@ -482,7 +482,15 @@ export const Clients = () => {
                 />
               </div>
               <div className="form-group" style={{ flex: 1 }}>
-                <label>Validade do Contrato *</label>
+                <label>Início do Contrato</label>
+                <input
+                  type="date"
+                  value={formData.contract_start || ''}
+                  onChange={e => set('contract_start', e.target.value)}
+                />
+              </div>
+              <div className="form-group" style={{ flex: 1 }}>
+                <label>Término do Contrato *</label>
                 <input
                   type="date"
                   value={formData.contract_end || ''}
