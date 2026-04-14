@@ -64,14 +64,14 @@ export const DataProvider = ({ children }) => {
       else if (key === 'estimatedValue') newObj.estimated_value = obj[key];
       else if (key === 'clientsLinked') newObj.clients_linked = obj[key];
       else if (key === 'originPortal') newObj.origin_portal = obj[key];
-      else if (key === 'clientId') newObj.client_id = obj[key];
-      else if (key === 'bidId') newObj.bid_id = obj[key];
-      else if (key === 'startDate') newObj.start_date = obj[key];
-      else if (key === 'endDate') newObj.end_date = obj[key];
-      else if (key === 'specificType') newObj.specific_type = obj[key];
-      else if (key === 'referenceMonth') newObj.reference_month = obj[key];
-      else if (key === 'referenceYear') newObj.reference_year = obj[key];
-      else if (key === 'paymentMethod') newObj.payment_method = obj[key];
+      else if (key === 'clientId' && obj[key]) newObj.client_id = obj[key];
+      else if (key === 'bidId' && obj[key]) newObj.bid_id = obj[key];
+      else if (key === 'startDate' && obj[key]) newObj.start_date = obj[key];
+      else if (key === 'endDate' && obj[key]) newObj.end_date = obj[key];
+      else if (key === 'specificType' && obj[key]) newObj.specific_type = obj[key];
+      else if (key === 'referenceMonth' && obj[key] !== undefined) newObj.reference_month = obj[key];
+      else if (key === 'referenceYear' && obj[key] !== undefined) newObj.reference_year = obj[key];
+      else if (key === 'paymentMethod' && obj[key]) newObj.payment_method = obj[key];
       else newObj[key] = obj[key];
     }
     return newObj;

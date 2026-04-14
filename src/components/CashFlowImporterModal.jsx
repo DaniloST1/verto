@@ -131,11 +131,25 @@ export const CashFlowImporterModal = ({ isOpen, onClose, clients, cashFlow, onSa
       Papa.parse(file, {
         header: true,
         skipEmptyLines: true,
+        worker: true,
         complete: (results) => {
+          const fields = results.meta.fields || [];
+          const dateField = fields.find(f => ['Data', 'Date', 'Data Lançamento'].includes(f)) || fields[0];
+          const descField = fields.find(f => ['Descrição', 'Description', 'Histórico'].includes(f)) || fields[1];
+          const amtField = fields.find(f => ['Valor', 'Amount', 'Valor (R$)'].includes(f)) || fields[2];
+
           const parsed = results.data.map(row => {
-            const rawDate = row['Data'] || row['Date'] || row['Data Lançamento'] || Object.values(row)[0];
-            const rawDesc = row['Descrição'] || row['Description'] || row['Histórico'] || Object.values(row)[1];
-            const rawAmt = row['Valor'] || row['Amount'] || row['Valor (R$)'] || Object.values(row)[2];
+            let rawDate = row[dateField];
+            let rawDesc = row[descField];
+            let rawAmt = row[amtField];
+
+            // Fallback apenas se as colunas nomeadas não tiverem sido encontradas
+            if (rawDate === undefined || rawDesc === undefined || rawAmt === undefined) {
+               const vals = Object.values(row);
+               if (rawDate === undefined) rawDate = vals[0];
+               if (rawDesc === undefined) rawDesc = vals[1];
+               if (rawAmt === undefined) rawAmt = vals[2];
+            }
             
             let val = 0;
             if (rawAmt) {
