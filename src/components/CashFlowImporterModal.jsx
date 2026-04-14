@@ -65,6 +65,15 @@ export const CashFlowImporterModal = ({ isOpen, onClose, clients, cashFlow, onSa
   const [resolutionQueue, setResolutionQueue] = useState([]); // Array of { action: 'keep_new' | 'keep_existing' | 'keep_both', newTx, existingTx }
   const fileInputRef = useRef(null);
 
+  const handleCloseModal = () => {
+    setStep('upload');
+    setTransactions([]);
+    setConflicts([]);
+    setResolutionQueue([]);
+    setLoading(false);
+    onClose();
+  };
+
   if (!isOpen) return null;
 
   const applyIntelligence = (txs) => {
@@ -127,7 +136,7 @@ export const CashFlowImporterModal = ({ isOpen, onClose, clients, cashFlow, onSa
       };
       reader.readAsText(file);
     } 
-    else if (file.name.toLowerCase().endsWith('.csv') || file.name.toLowerCase().endsWith('.txt')) {
+    else if (file.name.toLowerCase().endsWith('.csv')) {
       Papa.parse(file, {
         header: true,
         skipEmptyLines: true,
@@ -184,11 +193,8 @@ export const CashFlowImporterModal = ({ isOpen, onClose, clients, cashFlow, onSa
           setLoading(false);
         }
       });
-    } else if (file.name.toLowerCase().endsWith('.pdf')) {
-      alert('A leitura nativa de PDFs bancários ainda é experimental e pode falhar dependendo do banco. Recomendamos converter seu extrato para CSV ou copiar e colar os dados num arquivo TXT.');
-      setLoading(false);
     } else {
-      alert('Formato não suportado. Por favor, utilize CSV, TXT ou OFX.');
+      alert('Formato não suportado nativamente ainda. Por favor, grave em CSV ou OFX.');
       setLoading(false);
     }
     // reset input
@@ -286,7 +292,7 @@ export const CashFlowImporterModal = ({ isOpen, onClose, clients, cashFlow, onSa
     <Modal 
       title={<span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><UploadCloud size={20} className="text-primary" /> Importação Inteligente de Extratos</span>} 
       maxWidth={step === 'resolveConflicts' ? '800px' : (step === 'review' ? '1200px' : '600px')} 
-      onClose={onClose}
+      onClose={handleCloseModal}
     >
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         <div style={{ flex: 1 }}>
@@ -294,7 +300,7 @@ export const CashFlowImporterModal = ({ isOpen, onClose, clients, cashFlow, onSa
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px', padding: '40px 20px' }}>
               <div style={{ textAlign: 'center' }}>
                 <h3 style={{ margin: '0 0 8px 0', color: '#334155' }}>Envie seu extrato bancário</h3>
-                <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem' }}>Formatos suportados: CSV, TXT, OFX e PDF</p>
+                <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem' }}>Formatos suportados: CSV e OFX</p>
               </div>
               
               <div 
@@ -327,7 +333,7 @@ export const CashFlowImporterModal = ({ isOpen, onClose, clients, cashFlow, onSa
                   type="file" 
                   ref={fileInputRef} 
                   style={{ display: 'none' }} 
-                  accept=".csv,.ofx,.txt,.pdf"
+                  accept=".csv,.ofx"
                   onChange={handleFileUpload} 
                 />
               </div>
@@ -505,7 +511,7 @@ export const CashFlowImporterModal = ({ isOpen, onClose, clients, cashFlow, onSa
         </div>
 
         <div className="modal-footer" style={{ borderTop: '1px solid #e2e8f0', padding: '16px 24px', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-          <button className="btn btn-secondary" onClick={onClose} style={{ background: '#fff', border: '1px solid #cbd5e1' }}>Cancelar</button>
+          <button className="btn btn-secondary" onClick={handleCloseModal} style={{ background: '#fff', border: '1px solid #cbd5e1' }}>Cancelar</button>
           
           {step === 'review' && transactions.length > 0 && (
             <button className="btn btn-primary" onClick={handleConfirm} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
