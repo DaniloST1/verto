@@ -185,25 +185,34 @@ export const Clients = () => {
 
     const formatCurrency = (val) => `R$ ${Number(val).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
     
-    // Extract real revenue from Client Payments registry
-    let paidList = [];
-    clientPayments.filter(cp => cp.clientId === c.id).forEach(cp => {
-       if (cp.months) {
-           Object.entries(cp.months).forEach(([mIdx, monthData]) => {
-              if (monthData && monthData.status === 'pago') {
-                 paidList.push({ year: cp.year, monthIndex: parseInt(mIdx), value: Number(monthData.value) || 0 });
-              }
-           });
-       }
-    });
+    // Extract real revenue from Cash Flow registry
+    const clientRevenueTxs = cashFlow.filter(tx => 
+      tx.clientId === c.id && 
+      tx.type === 'receita' && 
+      (!tx.status || tx.status.toLowerCase() === 'pago' || tx.status.toLowerCase() === 'pago / recebido')
+    );
 
-    const totalRevenue = paidList.reduce((acc, curr) => acc + curr.value, 0);
+    const totalRevenue = clientRevenueTxs.reduce((acc, curr) => acc + (Number(curr.value) || 0), 0);
 
-    const monthlyData = paidList.reduce((acc, curr) => {
-      const sortKeyDate = new Date(curr.year, curr.monthIndex, 1);
+    const monthlyData = clientRevenueTxs.reduce((acc, curr) => {
+      let mIdx, yVal;
+
+      if (curr.specificType === 'assessoria recorrente' && curr.referenceMonth !== undefined && curr.referenceMonth !== null && curr.referenceYear) {
+        mIdx = parseInt(curr.referenceMonth);
+        yVal = parseInt(curr.referenceYear);
+      } else {
+        const d = new Date(curr.date);
+        mIdx = d.getMonth();
+        yVal = d.getFullYear();
+      }
+
+      if (isNaN(mIdx) || isNaN(yVal)) return acc;
+
+      const sortKeyDate = new Date(yVal, mIdx, 1);
       const monthYear = sortKeyDate.toLocaleString('pt-BR', { month: 'short', year: 'numeric' });
+      
       if (!acc[monthYear]) acc[monthYear] = { name: monthYear, Receita: 0, sortKey: sortKeyDate.getTime() };
-      acc[monthYear].Receita += curr.value;
+      acc[monthYear].Receita += (Number(curr.value) || 0);
       return acc;
     }, {});
     
