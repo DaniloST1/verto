@@ -43,7 +43,12 @@ export const Disputes = () => {
     setShowModal(false);
   };
 
-  const getResponsibleName = (id) => users.find(u => u.id === id)?.name || 'Desconhecido';
+  const getResponsibleName = (id) => {
+    const u = users.find(usr => usr.id === id);
+    if (!u) return 'Desconhecido';
+    const abr = { admin: 'Admin', finance: 'Financ', supervisor: 'Superv', employee: 'Func' };
+    return `${u.name} (${abr[u.role] || u.role})`;
+  };
   const getClient = (id) => clients.find(c => c.id === id);
   const getBidNumber = (id) => bids.find(b => b.id === id)?.number || 'Desconhecido';
 

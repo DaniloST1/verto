@@ -87,6 +87,13 @@ export const Clients = () => {
     setFilterStatus('Todos');
   };
 
+  const getResponsibleStr = (id) => {
+    const u = users.find(usr => usr.id === id);
+    if (!u) return 'Não atribuído';
+    const abr = { admin: 'Admin', finance: 'Financ', supervisor: 'Superv', employee: 'Func' };
+    return `${u.name} (${abr[u.role] || u.role})`;
+  };
+
   const filteredClients = useMemo(() => {
     const digits = (s = '') => s.replace(/\D/g, '');
     return clients.filter(c => {
@@ -223,7 +230,7 @@ export const Clients = () => {
               <div><strong style={{ color: '#64748b' }}>Inscrição Estadual:</strong> {c.state_registration || '-'}</div>
               <div><strong style={{ color: '#64748b' }}>Telefone:</strong> {c.contact || '-'}</div>
               <div><strong style={{ color: '#64748b' }}>Email:</strong> {c.email || '-'}</div>
-              <div><strong style={{ color: '#64748b' }}>Responsável de Gestão (Verto):</strong> {users.find(u => u.id === c.responsible)?.name || 'Não atribuído'}</div>
+              <div><strong style={{ color: '#64748b' }}>Responsável de Gestão (Verto):</strong> {getResponsibleStr(c.responsible_id || c.responsible)}</div>
               <div><strong style={{ color: '#64748b' }}>Mês/Dia de Cobrança:</strong> Dia {c.due_day || 10}</div>
               <div><strong style={{ color: '#64748b' }}>Valor de Honorário:</strong> {formatCurrency(c.cash_value || 0)}</div>
               <div><strong style={{ color: '#64748b' }}>Início do Contrato:</strong> {(() => {
@@ -392,7 +399,7 @@ export const Clients = () => {
                   </span>
                 </td>
                 <td style={{ color: '#475569', fontSize: '0.9rem', fontWeight: 500 }}>
-                  {users.find(u => u.id === c.responsible)?.name || 'Não atribuído'}
+                  {getResponsibleStr(c.responsible_id || c.responsible)}
                 </td>
                 <td style={{ textAlign: 'center' }}>
                   <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>

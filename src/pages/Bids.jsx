@@ -43,6 +43,13 @@ export const Bids = () => {
     setFilterCriterion('Todos'); setFilterDispute('Todos');
   };
 
+  const getResponsibleStr = (id) => {
+    const u = users.find(usr => usr.id === id);
+    if (!u) return 'Não atribuído';
+    const abr = { admin: 'Admin', finance: 'Financ', supervisor: 'Superv', employee: 'Func' };
+    return `${u.name} (${abr[u.role] || u.role})`;
+  };
+
   const filteredBids = useMemo(() => {
     return bids.filter(b => {
       if (filterName && !b.object?.toLowerCase().includes(filterName.toLowerCase()) && !b.organ?.toLowerCase().includes(filterName.toLowerCase())) return false;
@@ -209,7 +216,7 @@ export const Bids = () => {
                 <div style={{ textAlign: 'right' }}>
                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>RESPONSÁVEL</p>
                    <p style={{ fontWeight: 500, color: '#475569', fontSize: '0.9rem' }}>
-                    {users.find(u => u.id === bid.responsible)?.name || 'Não atribuído'}
+                    {getResponsibleStr(bid.responsible)}
                    </p>
                 </div>
               </div>

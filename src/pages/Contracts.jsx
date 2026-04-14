@@ -58,7 +58,9 @@ export const Contracts = () => {
 
   const getResponsibleName = (id) => {
     const u = users.find(u => u.id === id);
-    return u ? `${u.name} (${ROLE_NAMES[u.role] || u.role})` : 'Desconhecido';
+    if (!u) return 'Desconhecido';
+    const abr = { admin: 'Admin', finance: 'Financ', supervisor: 'Superv', employee: 'Func' };
+    return `${u.name} (${abr[u.role] || u.role})`;
   };
   const getClientName = (id) => clients.find(c => c.id === id)?.name || '—';
   const getBidNumber = (id) => bids.find(b => b.id === id)?.number || '—';
