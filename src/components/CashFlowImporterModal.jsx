@@ -127,11 +127,10 @@ export const CashFlowImporterModal = ({ isOpen, onClose, clients, cashFlow, onSa
       };
       reader.readAsText(file);
     } 
-    else if (file.name.toLowerCase().endsWith('.csv')) {
+    else if (file.name.toLowerCase().endsWith('.csv') || file.name.toLowerCase().endsWith('.txt')) {
       Papa.parse(file, {
         header: true,
         skipEmptyLines: true,
-        worker: true,
         complete: (results) => {
           const fields = results.meta.fields || [];
           const dateField = fields.find(f => ['Data', 'Date', 'Data Lançamento'].includes(f)) || fields[0];
@@ -185,8 +184,11 @@ export const CashFlowImporterModal = ({ isOpen, onClose, clients, cashFlow, onSa
           setLoading(false);
         }
       });
+    } else if (file.name.toLowerCase().endsWith('.pdf')) {
+      alert('A leitura nativa de PDFs bancários ainda é experimental e pode falhar dependendo do banco. Recomendamos converter seu extrato para CSV ou copiar e colar os dados num arquivo TXT.');
+      setLoading(false);
     } else {
-      alert('Formato não suportado nativamente ainda. Por favor, grave em CSV ou OFX.');
+      alert('Formato não suportado. Por favor, utilize CSV, TXT ou OFX.');
       setLoading(false);
     }
     // reset input
@@ -292,7 +294,7 @@ export const CashFlowImporterModal = ({ isOpen, onClose, clients, cashFlow, onSa
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px', padding: '40px 20px' }}>
               <div style={{ textAlign: 'center' }}>
                 <h3 style={{ margin: '0 0 8px 0', color: '#334155' }}>Envie seu extrato bancário</h3>
-                <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem' }}>Formatos suportados: CSV e OFX</p>
+                <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem' }}>Formatos suportados: CSV, TXT, OFX e PDF</p>
               </div>
               
               <div 
@@ -325,7 +327,7 @@ export const CashFlowImporterModal = ({ isOpen, onClose, clients, cashFlow, onSa
                   type="file" 
                   ref={fileInputRef} 
                   style={{ display: 'none' }} 
-                  accept=".csv,.ofx" 
+                  accept=".csv,.ofx,.txt,.pdf"
                   onChange={handleFileUpload} 
                 />
               </div>
