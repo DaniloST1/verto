@@ -77,7 +77,11 @@ export const CashFlow = () => {
         await addCashFlow(tx);
       }
       addToast('Processamento concluído com sucesso!', 'success');
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
     } catch (e) {
+      setIsImporterOpen(false);
       addToast('Ocorreu um erro ao concluir a importação inteligente.', 'error');
       console.error(e);
     }
