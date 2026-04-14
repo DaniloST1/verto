@@ -28,6 +28,12 @@ export const Settings = () => {
   const [avatarPreview, setAvatarPreview] = useState(null);
   const [avatarFile, setAvatarFile] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredUsers = users.filter(u => {
+    const roleName = ROLE_NAMES[u.role] || u.role;
+    return u.name.toLowerCase().includes(searchQuery.toLowerCase()) || roleName.toLowerCase().includes(searchQuery.toLowerCase());
+  });
 
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
@@ -200,11 +206,20 @@ export const Settings = () => {
         </div>
 
         {/* Users Table Panel */}
-        <div className="glass-panel" style={{ padding: '32px', borderRadius: '12px' }}>
-          <h3 style={{ marginBottom: '24px', color: '#1e293b' }}>Usuários Cadastrados</h3>
+        <div className="glass-panel" style={{ padding: '32px', borderRadius: '12px', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
+            <h3 style={{ margin: 0, color: '#1e293b' }}>Usuários Cadastrados</h3>
+            <input 
+              type="text" 
+              placeholder="Pesquisar por nome ou cargo..." 
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              style={{ width: '100%', maxWidth: '300px', padding: '8px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.9rem' }}
+            />
+          </div>
           <div className="table-container" style={{ maxHeight: '600px', overflowY: 'auto', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
             <table style={{ fontSize: '0.9rem', width: '100%' }}>
-              <thead style={{ background: '#f8fafc' }}>
+              <thead style={{ position: 'sticky', top: 0, background: '#f8fafc', zIndex: 1 }}>
                 <tr>
                   <th style={{ padding: '16px' }}>USUÁRIO</th>
                   <th>E-MAIL</th>
@@ -213,7 +228,7 @@ export const Settings = () => {
                 </tr>
               </thead>
               <tbody>
-                {users.map(u => (
+                {filteredUsers.map(u => (
                   <tr key={u.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
                     <td style={{ padding: '12px 16px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
