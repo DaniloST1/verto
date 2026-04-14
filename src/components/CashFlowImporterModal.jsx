@@ -57,10 +57,12 @@ const guessDate = (raw) => {
   return new Date().toISOString();
 };
 
-export const CashFlowImporterModal = ({ isOpen, onClose, clients, onSave }) => {
-  const [step, setStep] = useState('upload'); // 'upload' | 'review'
+export const CashFlowImporterModal = ({ isOpen, onClose, clients, cashFlow, onSave }) => {
+  const [step, setStep] = useState('upload'); // 'upload' | 'review' | 'resolveConflicts'
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [conflicts, setConflicts] = useState([]); // Array of { newTx, existingTx }
+  const [resolutionQueue, setResolutionQueue] = useState([]); // Array of { action: 'keep_new' | 'keep_existing' | 'keep_both', newTx, existingTx }
   const fileInputRef = useRef(null);
 
   if (!isOpen) return null;
@@ -180,14 +182,84 @@ export const CashFlowImporterModal = ({ isOpen, onClose, clients, onSave }) => {
       alert('Nenhuma transação para importar.');
       return;
     }
-    onSave(transactions);
-    onClose();
+
+    // Identify duplicates
+    const foundConflicts = [];
+    transactions.forEach(newTx => {
+      const nDate = new Date(newTx.date);
+      const nDay = nDate.getUTCDate();
+      const nMonth = nDate.getUTCMonth();
+      const nYear = nDate.getUTCFullYear();
+      const nValue = Math.round(Math.abs(newTx.value) * 100) / 100;
+
+      const match = cashFlow.find(oldTx => {
+        const oDate = new Date(oldTx.date);
+        // We use UTC methods because we force Z or T12:00:00Z in our parsing
+        const oDay = oDate.getUTCDate();
+        const oMonth = oDate.getUTCMonth();
+        const oYear = oDate.getUTCFullYear();
+        const oValue = Math.round(Math.abs(oldTx.value) * 100) / 100;
+
+        return oDay === nDay && oMonth === nMonth && oYear === nYear && 
+               oValue === nValue && oldTx.type === newTx.type;
+      });
+      
+      if (match) {
+        foundConflicts.push({ newTx, existingTx: match });
+      }
+    });
+
+    if (foundConflicts.length > 0) {
+      setConflicts(foundConflicts);
+      setResolutionQueue([]);
+      setStep('resolveConflicts');
+    } else {
+      onSave(transactions);
+      onClose();
+    }
   };
+
+  const handleResolve = (conflictIndex, decision) => {
+    const conflict = conflicts[conflictIndex];
+    const newResolution = { action: decision, ...conflict };
+    const updatedQueue = [...resolutionQueue, newResolution];
+    setResolutionQueue(updatedQueue);
+
+    if (updatedQueue.length === conflicts.length) {
+      // All resolved, finish import
+      const txsToSave = [];
+      const idsToDelete = [];
+
+      // Add non-conflicted transactions
+      transactions.forEach(tx => {
+        if (!conflicts.find(c => c.newTx.id === tx.id)) {
+          txsToSave.push(tx);
+        }
+      });
+
+      // Add resolved transactions
+      updatedQueue.forEach(res => {
+        if (res.action === 'keep_new') {
+          txsToSave.push(res.newTx);
+          idsToDelete.push(res.existingTx.id);
+        } else if (res.action === 'keep_both') {
+          txsToSave.push(res.newTx);
+        }
+        // 'keep_existing' means we do nothing (don't add new, don't delete old)
+      });
+
+      onSave(txsToSave, idsToDelete);
+      onClose();
+    }
+  };
+
+  const currentConflictIndex = resolutionQueue.length;
+  const currentConflict = conflicts[currentConflictIndex];
 
   return (
     <Modal 
       title={<span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><UploadCloud size={20} className="text-primary" /> Importação Inteligente de Extratos</span>} 
-      maxWidth={step === 'review' ? '1200px' : '600px'} 
+      maxWidth={step === 'resolveConflicts' ? '800px' : (step === 'review' ? '1200px' : '600px')} 
       onClose={onClose}
     >
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -352,6 +424,55 @@ export const CashFlowImporterModal = ({ isOpen, onClose, clients, onSave }) => {
                     Todos os lançamentos foram removidos. <button style={{ background: 'none', border: 'none', color: '#3b82f6', cursor: 'pointer', textDecoration: 'underline' }} onClick={() => setStep('upload')}>Importar outro arquivo</button>
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+
+          {step === 'resolveConflicts' && currentConflict && (
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ marginBottom: '24px', background: '#fff9eb', padding: '16px', borderRadius: '12px', border: '1px solid #feebc8' }}>
+                <h3 style={{ color: '#92400e', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', margin: '0 0 8px 0' }}>
+                  <AlertCircle size={24} /> Conflito Detectado ({currentConflictIndex + 1}/{conflicts.length})
+                </h3>
+                <p style={{ margin: 0, color: '#92400e', fontSize: '0.95rem' }}>Já existe um lançamento idêntico no seu sistema. O que deseja fazer?</p>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '32px' }}>
+                {/* Existing Card */}
+                <div style={{ padding: '20px', border: '2px solid #e2e8f0', borderRadius: '16px', textAlign: 'left', background: '#f8fafc' }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Opção A: No Sistema</span>
+                  <div style={{ marginTop: '12px' }}>
+                    <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1e293b' }}>{currentConflict.existingTx.name}</div>
+                    <div style={{ color: '#64748b', marginTop: '4px' }}>{new Date(currentConflict.existingTx.date).toLocaleDateString('pt-BR')}</div>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 800, color: currentConflict.existingTx.type === 'receita' ? '#10b981' : '#ef4444', marginTop: '12px' }}>
+                      R$ {currentConflict.existingTx.value.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    </div>
+                  </div>
+                </div>
+
+                {/* New Card */}
+                <div style={{ padding: '20px', border: '2px solid #3b82f6', borderRadius: '16px', textAlign: 'left', background: '#eff6ff' }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#3b82f6', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Opção B: Do Extrato</span>
+                  <div style={{ marginTop: '12px' }}>
+                    <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1e293b' }}>{currentConflict.newTx.name}</div>
+                    <div style={{ color: '#64748b', marginTop: '4px' }}>{new Date(currentConflict.newTx.date).toLocaleDateString('pt-BR')}</div>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 800, color: currentConflict.newTx.type === 'receita' ? '#10b981' : '#ef4444', marginTop: '12px' }}>
+                      R$ {currentConflict.newTx.value.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <button className="btn" onClick={() => handleResolve(currentConflictIndex, 'keep_existing')} style={{ width: '100%', padding: '14px', background: '#fff', border: '1px solid #e2e8f0', color: '#1e293b', fontWeight: 600 }}>
+                  Manter apenas o que já está no Sistema (Ignorar novo)
+                </button>
+                <button className="btn" onClick={() => handleResolve(currentConflictIndex, 'keep_new')} style={{ width: '100%', padding: '14px', background: '#1d3e83', color: '#fff', fontWeight: 600 }}>
+                  Substituir pelo novo do Extrato (Excluir antigo)
+                </button>
+                <button className="btn" onClick={() => handleResolve(currentConflictIndex, 'keep_both')} style={{ width: '100%', padding: '14px', background: '#f8fafc', border: '1px solid #cbd5e1', color: '#64748b' }}>
+                  Os dois estão corretos (Lançar ambos)
+                </button>
               </div>
             </div>
           )}

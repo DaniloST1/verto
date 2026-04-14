@@ -29,6 +29,32 @@ export const CashFlow = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    // Verificação de duplicidade para novos lançamentos manuais
+    if (!editingId) {
+      const nDate = new Date(formData.date);
+      // Normalizamos para UTC para comparação consistente
+      const nD = nDate.getUTCDate();
+      const nM = nDate.getUTCMonth();
+      const nY = nDate.getUTCFullYear();
+      const nV = Math.round(Math.abs(formData.value) * 100) / 100;
+
+      const duplicate = cashFlow.find(oldTx => {
+        const oDate = new Date(oldTx.date);
+        const oD = oDate.getUTCDate();
+        const oM = oDate.getUTCMonth();
+        const oY = oDate.getUTCFullYear();
+        const oV = Math.round(Math.abs(oldTx.value) * 100) / 100;
+
+        return oD === nD && oM === nM && oY === nY && oV === nV && oldTx.type === formData.type;
+      });
+
+      if (duplicate) {
+        const confirmMsg = `Atenção: Já existe um lançamento de ${formData.type === 'receita' ? 'RECEITA' : 'DESPESA'} no valor de R$ ${nV.toLocaleString()} cadastrado para o dia ${nD}/${nM + 1}/${nY}.\n\nDeseja realizar este lançamento duplicado mesmo assim?`;
+        if (!window.confirm(confirmMsg)) return;
+      }
+    }
+
     if (editingId) {
       updateCashFlow(editingId, formData);
     } else {
@@ -37,13 +63,20 @@ export const CashFlow = () => {
     setShowModal(false);
   };
 
-  const handleImportSave = async (txs) => {
+  const handleImportSave = async (txs, idsToDelete = []) => {
     try {
+      if (idsToDelete.length > 0) {
+        addToast(`Removendo ${idsToDelete.length} lançamentos antigos...`, 'info');
+        for (const id of idsToDelete) {
+          await deleteCashFlow(id);
+        }
+      }
+
       addToast(`Importando ${txs.length} lançamentos... Isto pode levar alguns segundos.`, 'success');
       for (const tx of txs) {
         await addCashFlow(tx);
       }
-      addToast('Extrato importado com sucesso!', 'success');
+      addToast('Processamento concluído com sucesso!', 'success');
     } catch (e) {
       addToast('Ocorreu um erro ao concluir a importação inteligente.', 'error');
       console.error(e);
@@ -429,6 +462,7 @@ export const CashFlow = () => {
         isOpen={isImporterOpen} 
         onClose={() => setIsImporterOpen(false)} 
         clients={clients} 
+        cashFlow={cashFlow}
         onSave={handleImportSave} 
       />
     </div>
