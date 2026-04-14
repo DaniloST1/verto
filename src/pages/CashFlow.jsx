@@ -20,6 +20,7 @@ export const CashFlow = () => {
     paymentMethod: 'Boleto bancário'
   });
   const [cnpjInput, setCnpjInput] = useState('');
+  const [showClientSuggestions, setShowClientSuggestions] = useState(false);
 
   const [filterQuery, setFilterQuery] = useState('');
   const [filterMonth, setFilterMonth] = useState('Todos');
@@ -93,13 +94,30 @@ export const CashFlow = () => {
   const handleCnpjChange = (e) => {
     const val = e.target.value;
     setCnpjInput(val);
-    if (!val) return;
-    const cleanVal = val.replace(/\D/g, '');
-    const found = clients.find(c => c.cnpj && c.cnpj.replace(/\D/g, '') === cleanVal);
-    if (found) {
-      setFormData(prev => ({ ...prev, name: `Mensalidade: ${found.name}`, type: 'receita', specificType: 'assessoria recorrente', clientId: found.id }));
-    }
+    setShowClientSuggestions(true);
   };
+
+  const handleSelectClient = (client) => {
+    setCnpjInput(`${client.name} ${client.cnpj ? ' - ' + client.cnpj : ''}`);
+    setShowClientSuggestions(false);
+    setFormData(prev => ({ 
+      ...prev, 
+      name: `Mensalidade: ${client.name}`, 
+      type: 'receita', 
+      specificType: 'assessoria recorrente', 
+      clientId: client.id 
+    }));
+  };
+
+  const clientSuggestions = useMemo(() => {
+    if (!cnpjInput || !showClientSuggestions) return [];
+    const lower = cnpjInput.toLowerCase();
+    const clean = cnpjInput.replace(/\D/g, '');
+    return clients.filter(c => 
+      (c.name && c.name.toLowerCase().includes(lower)) || 
+      (clean && c.cnpj && c.cnpj.replace(/\D/g, '').includes(clean))
+    ).slice(0, 5); // Limit to 5
+  }, [cnpjInput, clients, showClientSuggestions]);
 
   const filteredCashFlow = useMemo(() => {
     return cashFlow.filter(item => {
@@ -406,11 +424,34 @@ export const CashFlow = () => {
           {showModal && (
             <Modal title={editingId ? "Editar Lançamento" : "Novo Lançamento"} onClose={() => setShowModal(false)}>
               <form onSubmit={handleSubmit}>
-                <div className="form-group">
-                  <label>Vincular Cliente via CNPJ (Opcional)</label>
-                  <input type="text" placeholder="Digite o CNPJ..." value={cnpjInput} onChange={handleCnpjChange} />
-                  {cnpjInput && clients.some(c => c.cnpj && c.cnpj.replace(/\D/g, '') === cnpjInput.replace(/\D/g, '')) && (
-                    <div style={{ fontSize: '0.8rem', color: '#10b981', marginTop: '4px' }}>Cliente encontrado! Dados preenchidos automaticamente.</div>
+                <div className="form-group" style={{ position: 'relative' }}>
+                  <label>Vincular Cliente (Busque por Nome ou CNPJ)</label>
+                  <input 
+                    type="text" 
+                    placeholder="Digite o nome da empresa ou CNPJ..." 
+                    value={cnpjInput} 
+                    onChange={handleCnpjChange}
+                    onFocus={() => setShowClientSuggestions(true)}
+                    onBlur={() => setTimeout(() => setShowClientSuggestions(false), 200)}
+                  />
+                  {showClientSuggestions && clientSuggestions.length > 0 && (
+                    <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', zIndex: 10, boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', overflow: 'hidden' }}>
+                      {clientSuggestions.map(col => (
+                        <div 
+                          key={col.id} 
+                          onClick={() => handleSelectClient(col)}
+                          style={{ padding: '10px 12px', cursor: 'pointer', borderBottom: '1px solid #f1f5f9', display: 'flex', flexDirection: 'column' }}
+                          onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
+                          onMouseLeave={e => e.currentTarget.style.background = '#fff'}
+                        >
+                          <strong style={{ fontSize: '0.9rem', color: '#1e293b' }}>{col.name}</strong>
+                          <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{col.cnpj || 'Sem CNPJ'}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {formData.clientId && !showClientSuggestions && (
+                    <div style={{ fontSize: '0.8rem', color: '#10b981', marginTop: '4px' }}>✓ Cliente vinculado e dados preenchidos.</div>
                   )}
                 </div>
 
