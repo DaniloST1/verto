@@ -360,7 +360,7 @@ export const CashFlowImporterModal = ({ isOpen, onClose, clients, cashFlow, onSa
                   <thead style={{ position: 'sticky', top: 0, background: '#f8fafc', zIndex: 1 }}>
                     <tr>
                       <th style={{ width: '120px' }}>Data</th>
-                      <th>Descrição Original</th>
+                      <th style={{ width: '350px', minWidth: '250px' }}>Descrição Original</th>
                       <th style={{ width: '150px' }}>Valor</th>
                       <th style={{ width: '160px' }}>Tipo</th>
                       <th style={{ width: '200px' }}>Categoria</th>
