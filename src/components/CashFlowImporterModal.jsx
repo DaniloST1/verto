@@ -68,18 +68,27 @@ export const CashFlowImporterModal = ({ isOpen, onClose, clients, cashFlow, onSa
   if (!isOpen) return null;
 
   const applyIntelligence = (txs) => {
+    // Pre-process clients for faster lookup
+    const clientMap = clients.map(c => ({
+      id: c.id,
+      name: (c.name || '').trim().toLowerCase(),
+      cnpj: (c.cnpj || '').replace(/\D/g, '')
+    })).filter(c => c.name || c.cnpj);
+
     return txs.map(tx => {
       let guessClient = null;
       let guessCategory = tx.specificType;
       
       const desc = (tx.name || '').toLowerCase();
       
-      for (const c of clients) {
-         if (c.name && desc.includes(c.name.toLowerCase())) {
+      // Fast path: search for client
+      for (let i = 0; i < clientMap.length; i++) {
+         const c = clientMap[i];
+         if (c.cnpj && desc.includes(c.cnpj)) {
             guessClient = c.id;
             break;
          }
-         if (c.cnpj && desc.includes(c.cnpj.replace(/\D/g, ''))) {
+         if (c.name && desc.includes(c.name)) {
             guessClient = c.id;
             break;
          }
@@ -93,7 +102,8 @@ export const CashFlowImporterModal = ({ isOpen, onClose, clients, cashFlow, onSa
       // If we found a client and it's a receipt, ensure it's recurring by default to link to client
       if (guessClient && tx.type === 'receita') {
         guessCategory = 'assessoria recorrente';
-        tx.name = `Mensalidade: ${clients.find(c => c.id === guessClient)?.name}`;
+        const clientName = clients.find(cl => cl.id === guessClient)?.name;
+        tx.name = `Mensalidade: ${clientName || 'Cliente Identificado'}`;
       }
 
       return { ...tx, clientId: guessClient, specificType: guessCategory };

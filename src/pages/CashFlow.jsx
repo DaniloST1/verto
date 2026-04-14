@@ -72,10 +72,12 @@ export const CashFlow = () => {
         }
       }
 
-      addToast(`Importando ${txs.length} lançamentos... Isto pode levar alguns segundos.`, 'success');
-      for (const tx of txs) {
-        await addCashFlow(tx);
-      }
+      addToast(`Importando ${txs.length} lançamentos... Isto deve levar alguns segundos.`, 'success');
+      
+      // Parallelize the addCashFlow calls for significant speed boost
+      // Using Promise.all allows sending multiple requests concurrently
+      await Promise.all(txs.map(tx => addCashFlow(tx)));
+
       addToast('Processamento concluído com sucesso!', 'success');
       setTimeout(() => {
         window.location.reload();
