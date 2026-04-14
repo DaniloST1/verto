@@ -185,16 +185,15 @@ export const Clients = () => {
 
     const formatCurrency = (val) => `R$ ${Number(val).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
     
-    // Extract real revenue from Cash Flow registry
-    const clientRevenueTxs = cashFlow.filter(tx => 
+    // Extract financial data (Receita / Despesa) from Cash Flow
+    const clientTxs = cashFlow.filter(tx => 
       tx.clientId === c.id && 
-      tx.type === 'receita' && 
       (!tx.status || tx.status.toLowerCase() === 'pago' || tx.status.toLowerCase() === 'pago / recebido')
     );
 
-    const totalRevenue = clientRevenueTxs.reduce((acc, curr) => acc + (Number(curr.value) || 0), 0);
+    const totalRevenue = clientTxs.filter(tx => tx.type === 'receita').reduce((acc, curr) => acc + (Number(curr.value) || 0), 0);
 
-    const monthlyData = clientRevenueTxs.reduce((acc, curr) => {
+    const monthlyData = clientTxs.reduce((acc, curr) => {
       let mIdx, yVal;
 
       if (curr.specificType === 'assessoria recorrente' && curr.referenceMonth !== undefined && curr.referenceMonth !== null && curr.referenceYear) {
@@ -211,8 +210,13 @@ export const Clients = () => {
       const sortKeyDate = new Date(yVal, mIdx, 1);
       const monthYear = sortKeyDate.toLocaleString('pt-BR', { month: 'short', year: 'numeric' });
       
-      if (!acc[monthYear]) acc[monthYear] = { name: monthYear, Receita: 0, sortKey: sortKeyDate.getTime() };
-      acc[monthYear].Receita += (Number(curr.value) || 0);
+      if (!acc[monthYear]) acc[monthYear] = { name: monthYear, Receita: 0, Despesa: 0, sortKey: sortKeyDate.getTime() };
+      
+      if (curr.type === 'receita') {
+        acc[monthYear].Receita += (Number(curr.value) || 0);
+      } else {
+        acc[monthYear].Despesa += (Number(curr.value) || 0);
+      }
       return acc;
     }, {});
     
@@ -287,18 +291,20 @@ export const Clients = () => {
             </div>
 
             <div style={{ flex: 1, minHeight: '280px', width: '100%' }}>
-              <h4 style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '16px', fontWeight: 600 }}>Evolução de Receita (Meses Históricos)</h4>
+              <h4 style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '16px', fontWeight: 600 }}>Evolução Financeira (Meses Históricos)</h4>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" opacity={0.2} vertical={false}/>
                   <XAxis dataKey="name" stroke="#94a3b8" tick={{fontSize: 12}} />
                   <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} cursor={{fill: 'rgba(0,0,0,0.05)'}}/>
+                  <Legend verticalAlign="top" height={36} wrapperStyle={{ fontSize: '0.85rem' }}/>
                   <Bar dataKey="Receita" fill="#10b981" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="Despesa" fill="#ef4444" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
               {chartData.length === 0 && (
                 <div style={{ position: 'absolute', top: '70%', left: '50%', transform: 'translate(-50%, -50%)', color: '#94a3b8', fontSize: '0.9rem' }}>
-                  Sem histórico de pagamentos registrados ainda.
+                  Sem histórico financeiro registrado ainda.
                 </div>
               )}
             </div>
