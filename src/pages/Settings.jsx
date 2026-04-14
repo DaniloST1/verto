@@ -1,8 +1,9 @@
 import React, { useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Plus, Edit2, Upload, User } from 'lucide-react';
+import { Plus, Edit2, Upload, User, Eye } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { useToast } from '../context/ToastContext';
+import { Modal } from '../components/Modal';
 
 const ROLE_NAMES = {
   admin: 'Administrador',
@@ -23,6 +24,7 @@ export const Settings = () => {
   });
   
   const [editingId, setEditingId] = useState(null);
+  const [viewingUser, setViewingUser] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(null);
   const [avatarFile, setAvatarFile] = useState(null);
   const [uploading, setUploading] = useState(false);
@@ -237,9 +239,14 @@ export const Settings = () => {
                       </span>
                     </td>
                     <td style={{ textAlign: 'center' }}>
-                      <button className="btn" style={{ padding: '6px', background: '#fff', border: '1px solid #cbd5e1', color: '#3b82f6', borderRadius: '6px' }} onClick={() => handleEditClick(u)}>
-                        <Edit2 size={16} />
-                      </button>
+                      <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
+                        <button className="btn" style={{ padding: '6px', background: '#fff', border: '1px solid #cbd5e1', color: '#10b981', borderRadius: '6px' }} onClick={() => setViewingUser(u)} title="Ver dados">
+                          <Eye size={16} />
+                        </button>
+                        <button className="btn" style={{ padding: '6px', background: '#fff', border: '1px solid #cbd5e1', color: '#3b82f6', borderRadius: '6px' }} onClick={() => handleEditClick(u)} title="Editar">
+                          <Edit2 size={16} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -248,6 +255,41 @@ export const Settings = () => {
           </div>
         </div>
       </div>
+
+      {viewingUser && (
+        <Modal title="Detalhes do Usuário" onClose={() => setViewingUser(null)} maxWidth="500px">
+          <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '24px', paddingBottom: '16px', borderBottom: '1px solid #e2e8f0' }}>
+              <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: '#f1f5f9', overflow: 'hidden', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {viewingUser.avatar_url ? (
+                  <img src={viewingUser.avatar_url} alt={viewingUser.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  <User size={40} color="#94a3b8" />
+                )}
+              </div>
+              <div>
+                <h3 style={{ margin: '0 0 4px 0', fontSize: '1.25rem', color: '#1e293b' }}>{viewingUser.name}</h3>
+                <span className="badge badge-info" style={{ background: '#e0f2fe', color: '#0369a1', padding: '4px 8px', borderRadius: '4px' }}>
+                  {ROLE_NAMES[viewingUser.role] || viewingUser.role}
+                </span>
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div>
+                <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600 }}>E-mail</label>
+                <div style={{ color: '#1e293b' }}>{viewingUser.email}</div>
+              </div>
+              <div>
+                <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600 }}>Documento (CPF/CNPJ)</label>
+                <div style={{ color: '#1e293b' }}>{viewingUser.document}</div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px' }}>
+              <button className="btn btn-primary" onClick={() => setViewingUser(null)}>Fechar</button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 };
