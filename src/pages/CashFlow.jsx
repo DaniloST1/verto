@@ -17,7 +17,7 @@ export const CashFlow = () => {
   const [formData, setFormData] = useState({
     name: '', date: new Date().toISOString(), value: 0, type: 'despesa', specificType: 'equipe', status: 'pago',
     referenceMonth: new Date().getMonth().toString(), referenceYear: new Date().getFullYear().toString(),
-    paymentMethod: 'Boleto bancário'
+    paymentMethod: 'Boleto bancário', paymentMethodOther: ''
   });
   const [cnpjInput, setCnpjInput] = useState('');
   const [showClientSuggestions, setShowClientSuggestions] = useState(false);
@@ -225,7 +225,7 @@ export const CashFlow = () => {
                 <button className="btn btn-primary" onClick={() => {
                   setCnpjInput('');
                   setEditingId(null);
-                  setFormData({ name: '', date: new Date().toISOString(), value: 0, type: 'despesa', specificType: 'equipe', status: 'pago', referenceMonth: new Date().getMonth().toString(), referenceYear: new Date().getFullYear().toString(), paymentMethod: 'Boleto bancário' });
+                  setFormData({ name: '', date: new Date().toISOString(), value: 0, type: 'despesa', specificType: 'equipe', status: 'pago', referenceMonth: new Date().getMonth().toString(), referenceYear: new Date().getFullYear().toString(), paymentMethod: 'Boleto bancário', paymentMethodOther: '' });
                   setShowModal(true);
                 }}><Plus size={18} /> Novo Lançamento</button>
               </div>
@@ -534,12 +534,23 @@ export const CashFlow = () => {
                   {formData.type === 'receita' && formData.specificType === 'assessoria recorrente' && (
                     <div style={{ flex: 1 }}>
                       <label>Forma de Pagamento</label>
-                      <select value={formData.paymentMethod || 'Boleto bancário'} onChange={e => setFormData({ ...formData, paymentMethod: e.target.value })}>
+                      <select value={formData.paymentMethod || 'Boleto bancário'} onChange={e => setFormData({ ...formData, paymentMethod: e.target.value, paymentMethodOther: '' })}>
                         <option value="Boleto bancário">Boleto bancário</option>
                         <option value="Pix">Pix</option>
                         <option value="Cartão de Crédito">Cartão de Crédito</option>
+                        <option value="Cartão de Débito">Cartão de Débito</option>
                         <option value="Transferência">Transferência</option>
+                        <option value="Outros">Outros</option>
                       </select>
+                      {formData.paymentMethod === 'Outros' && (
+                        <input
+                          type="text"
+                          placeholder="Descreva a forma de pagamento..."
+                          value={formData.paymentMethodOther || ''}
+                          onChange={e => setFormData({ ...formData, paymentMethodOther: e.target.value })}
+                          style={{ marginTop: '8px' }}
+                        />
+                      )}
                     </div>
                   )}
                 </div>

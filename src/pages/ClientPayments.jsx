@@ -56,7 +56,7 @@ export const ClientPayments = () => {
 
   const [editingRecord, setEditingRecord] = useState(null);
   const [editForm, setEditForm] = useState({
-    dueDate: '', value: 0, status: 'pendente', paymentMethod: 'Boleto bancário'
+    dueDate: '', value: 0, status: 'pendente', paymentMethod: 'Boleto bancário', paymentMethodOther: ''
   });
 
   // Lock body scroll when modal open
@@ -180,7 +180,8 @@ export const ClientPayments = () => {
       dueDate: record.dueDate,
       value: record.value,
       status: record.status,
-      paymentMethod: record.paymentMethod
+      paymentMethod: record.paymentMethod,
+      paymentMethodOther: ''
     });
   };
 
@@ -190,7 +191,9 @@ export const ClientPayments = () => {
       dueDate: editForm.dueDate,
       value: editForm.value,
       status: editForm.status,
-      paymentMethod: editForm.paymentMethod
+      paymentMethod: editForm.paymentMethod === 'Outros' 
+        ? (editForm.paymentMethodOther || 'Outros') 
+        : editForm.paymentMethod
     });
     setEditingRecord(null);
   };
@@ -456,12 +459,23 @@ export const ClientPayments = () => {
             </div>
             <div className="form-group">
               <label>Forma de Pagamento</label>
-              <select value={editForm.paymentMethod} onChange={e => setEditForm({...editForm, paymentMethod: e.target.value})}>
+              <select value={editForm.paymentMethod} onChange={e => setEditForm({...editForm, paymentMethod: e.target.value, paymentMethodOther: ''})}>
                 <option value="Boleto bancário">Boleto bancário</option>
                 <option value="PIX">PIX</option>
                 <option value="Transferência">Transferência</option>
-                <option value="Dinheiro">Dinheiro</option>
+                <option value="Cartão de Crédito">Cartão de Crédito</option>
+                <option value="Cartão de Débito">Cartão de Débito</option>
+                <option value="Outros">Outros</option>
               </select>
+              {editForm.paymentMethod === 'Outros' && (
+                <input
+                  type="text"
+                  placeholder="Descreva a forma de pagamento..."
+                  value={editForm.paymentMethodOther || ''}
+                  onChange={e => setEditForm({...editForm, paymentMethodOther: e.target.value})}
+                  style={{ marginTop: '8px' }}
+                />
+              )}
             </div>
             <div className="form-group">
               <label>Status</label>
