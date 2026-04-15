@@ -531,28 +531,26 @@ export const CashFlow = () => {
                       <option value="pendente">Pendente</option>
                     </select>
                   </div>
-                  {formData.type === 'receita' && formData.specificType === 'assessoria recorrente' && (
-                    <div style={{ flex: 1 }}>
-                      <label>Forma de Pagamento</label>
-                      <select value={formData.paymentMethod || 'Boleto bancário'} onChange={e => setFormData({ ...formData, paymentMethod: e.target.value, paymentMethodOther: '' })}>
-                        <option value="Boleto bancário">Boleto bancário</option>
-                        <option value="Pix">Pix</option>
-                        <option value="Cartão de Crédito">Cartão de Crédito</option>
-                        <option value="Cartão de Débito">Cartão de Débito</option>
-                        <option value="Transferência">Transferência</option>
-                        <option value="Outros">Outros</option>
-                      </select>
-                      {formData.paymentMethod === 'Outros' && (
-                        <input
-                          type="text"
-                          placeholder="Descreva a forma de pagamento..."
-                          value={formData.paymentMethodOther || ''}
-                          onChange={e => setFormData({ ...formData, paymentMethodOther: e.target.value })}
-                          style={{ marginTop: '8px' }}
-                        />
-                      )}
-                    </div>
-                  )}
+                  <div style={{ flex: 1 }}>
+                    <label>Forma de Pagamento</label>
+                    <select value={formData.paymentMethod || 'Boleto bancário'} onChange={e => setFormData({ ...formData, paymentMethod: e.target.value, paymentMethodOther: '' })}>
+                      <option value="Boleto bancário">Boleto bancário</option>
+                      <option value="Pix">Pix</option>
+                      <option value="Cartão de Crédito">Cartão de Crédito</option>
+                      <option value="Cartão de Débito">Cartão de Débito</option>
+                      <option value="Transferência">Transferência</option>
+                      <option value="Outros">Outros</option>
+                    </select>
+                    {formData.paymentMethod === 'Outros' && (
+                      <input
+                        type="text"
+                        placeholder="Descreva a forma de pagamento..."
+                        value={formData.paymentMethodOther || ''}
+                        onChange={e => setFormData({ ...formData, paymentMethodOther: e.target.value })}
+                        style={{ marginTop: '8px' }}
+                      />
+                    )}
+                  </div>
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
