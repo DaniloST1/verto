@@ -90,7 +90,7 @@ export const Clients = () => {
   const getResponsibleStr = (id) => {
     const u = users.find(usr => usr.id === id);
     if (!u) return 'Não atribuído';
-    const abr = { admin: 'Admin', finance: 'Financ', supervisor: 'Superv', employee: 'Func' };
+    const abr = { admin: 'Admin', finance: 'Financ', supervisor: 'Superv', employee: 'Colab' };
     return `${u.name} (${abr[u.role] || u.role})`;
   };
 

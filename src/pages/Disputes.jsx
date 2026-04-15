@@ -46,7 +46,7 @@ export const Disputes = () => {
   const getResponsibleName = (id) => {
     const u = users.find(usr => usr.id === id);
     if (!u) return 'Desconhecido';
-    const abr = { admin: 'Admin', finance: 'Financ', supervisor: 'Superv', employee: 'Func' };
+    const abr = { admin: 'Admin', finance: 'Financ', supervisor: 'Superv', employee: 'Colab' };
     return `${u.name} (${abr[u.role] || u.role})`;
   };
   const getClient = (id) => clients.find(c => c.id === id);
