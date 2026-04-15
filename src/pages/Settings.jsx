@@ -9,7 +9,7 @@ const ROLE_NAMES = {
   admin: 'Administrador',
   supervisor: 'Supervisor',
   finance: 'Financeiro',
-  employee: 'Funcionário',
+  employee: 'Colaborador',
 };
 
 const BUCKET = 'Verto imagens';
@@ -191,7 +191,7 @@ export const Settings = () => {
                 <option value="admin">Administrador</option>
                 <option value="finance">Financeiro</option>
                 <option value="supervisor">Supervisor</option>
-                <option value="employee">Funcionário</option>
+                <option value="employee">Colaborador</option>
               </select>
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>

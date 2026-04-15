@@ -9,7 +9,7 @@ const ROLE_NAMES = {
   admin: 'Administrador',
   supervisor: 'Supervisor',
   finance: 'Financeiro',
-  employee: 'Funcionário',
+  employee: 'Colaborador',
 };
 
 export const Disputes = () => {
