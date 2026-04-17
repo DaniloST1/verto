@@ -65,11 +65,20 @@ export const Bids = () => {
     return { bg: '#f1f5f9', color: '#475569' };
   };
 
+  const getStatusStyle = (status) => {
+    const s = status?.toLowerCase() || '';
+    if (s.includes('vitória') || s.includes('vitoria') || s.includes('homologado')) return { bg: '#dcfce7', color: '#166534' };
+    if (s.includes('disputa') || s.includes('seleção')) return { bg: '#dbeafe', color: '#1e40af' };
+    if (s.includes('proposta') || s.includes('análise') || s.includes('analise')) return { bg: '#fef3c7', color: '#92400e' };
+    if (s.includes('desclassificado')) return { bg: '#fee2e2', color: '#991b1b' };
+    return { bg: '#f1f5f9', color: '#475569' };
+  };
+
   const filteredBids = useMemo(() => {
     return bids.filter(b => {
       if (filterName && !b.object?.toLowerCase().includes(filterName.toLowerCase()) && !b.organ?.toLowerCase().includes(filterName.toLowerCase())) return false;
       if (filterNumber && !b.number?.includes(filterNumber)) return false;
-      if (filterDispute !== 'Todos' && b.status !== filterDispute.toLowerCase()) return false;
+      if (filterDispute !== 'Todos' && b.status !== filterDispute) return false;
       if (filterDate && b.disputeDate !== filterDate) return false;
       return true;
     });
@@ -177,11 +186,16 @@ export const Bids = () => {
             </select>
           </div>
           <div className="filter-item">
-            <label>Disputa</label>
+            <label>Status</label>
             <select value={filterDispute} onChange={e => setFilterDispute(e.target.value)}>
               <option value="Todos">Todos</option>
-              <option value="Aberto">Aberto</option>
-              <option value="Fechado">Fechado</option>
+              <option value="Em análise">Em análise</option>
+              <option value="Proposta inicial cadastrada">Proposta inicial cadastrada</option>
+              <option value="Em disputa">Em disputa</option>
+              <option value="Seleção de Fornecedores">Seleção de Fornecedores</option>
+              <option value="Homologado">Homologado</option>
+              <option value="Vitória">Vitória</option>
+              <option value="Desclassificado">Desclassificado</option>
             </select>
           </div>
           <div className="filter-actions">
