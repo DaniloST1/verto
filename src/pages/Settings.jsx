@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Plus, Edit2, Upload, User, Eye, MessageCircle } from 'lucide-react';
+import { Plus, Edit2, Upload, User, Eye, MessageCircle, Trash2 } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { useToast } from '../context/ToastContext';
 import { Modal } from '../components/Modal';
@@ -24,7 +24,7 @@ const maskPhone = (v = '') => {
 };
 
 export const Settings = () => {
-  const { user, users, addUser, editUser, fetchUsers } = useAuth();
+  const { user, users, addUser, editUser, deleteUser, fetchUsers } = useAuth();
   const { addToast } = useToast();
   const fileInputRef = useRef(null);
   
@@ -296,9 +296,21 @@ export const Settings = () => {
                           <Eye size={16} />
                         </button>
                         {isAdmin && (
-                          <button className="btn" style={{ padding: '6px', background: '#fff', border: '1px solid #cbd5e1', color: '#3b82f6', borderRadius: '6px' }} onClick={() => handleEditClick(u)} title="Editar">
-                            <Edit2 size={16} />
-                          </button>
+                          <>
+                            <button className="btn" style={{ padding: '6px', background: '#fff', border: '1px solid #cbd5e1', color: '#3b82f6', borderRadius: '6px' }} onClick={() => handleEditClick(u)} title="Editar">
+                              <Edit2 size={16} />
+                            </button>
+                            <button className="btn" style={{ padding: '6px', background: '#fff', border: '1px solid #cbd5e1', color: '#ef4444', borderRadius: '6px' }} 
+                              onClick={() => {
+                                if (window.confirm(`Tem certeza que deseja excluir o usuário ${u.name}? Esta ação não pode ser desfeita.`)) {
+                                  deleteUser(u.id);
+                                }
+                              }} 
+                              title="Excluir Usuário"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </>
                         )}
                       </div>
                     </td>

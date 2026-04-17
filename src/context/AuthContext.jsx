@@ -123,8 +123,23 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const deleteUser = async (id) => {
+    if (user?.role !== 'admin') return;
+    if (user.id === id) {
+      addToast('Você não pode excluir sua própria conta.', 'warning');
+      return;
+    }
+    const { error } = await supabase.from('users').delete().eq('id', id);
+    if (error) {
+      addToast('Erro ao excluir usuário: ' + error.message, 'error');
+    } else {
+      setUsers(prev => prev.filter(u => u.id !== id));
+      addToast('Usuário excluído.', 'success');
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, users, login, logout, addUser, editUser, fetchUsers }}>
+    <AuthContext.Provider value={{ user, users, login, logout, addUser, editUser, deleteUser, fetchUsers }}>
       {children}
     </AuthContext.Provider>
   );
