@@ -23,6 +23,18 @@ const maskPhone = (v = '') => {
   return `(${v.slice(0,2)}) ${v.slice(2,7)}-${v.slice(7)}`;
 };
 
+const maskCpfCnpj = (v = '') => {
+  v = v.replace(/\D/g, '').slice(0, 14);
+  if (v.length <= 11) {
+    return v.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
+            .replace(/(\d{3})(\d{3})(\d{3})/, '$1.$2.$3')
+            .replace(/(\d{3})(\d{3})/, '$1.$2');
+  }
+  return v.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5')
+          .replace(/(\d{2})(\d{3})(\d{3})(\d{4})/, '$1.$2.$3/$4')
+          .replace(/(\d{2})(\d{3})(\d{3})/, '$1.$2.$3');
+};
+
 export const Settings = () => {
   const { user, users, addUser, editUser, deleteUser, fetchUsers } = useAuth();
   const { addToast } = useToast();
@@ -79,15 +91,20 @@ export const Settings = () => {
       addToast('Usuário atualizado com sucesso!', 'success');
       setEditingId(null);
     } else {
-      // Create user first (without avatar_url) to get the ID
+      // Use addUser for central logic and notification
       const tempUser = {
         name: formData.name, email: formData.email,
-        document: formData.document, phone: formData.phone,
+        document: formData.document.replace(/\D/g, ''), 
+        phone: formData.phone,
         password: formData.password,
         role: formData.role
       };
+      
       const { data: created, error } = await supabase.from('users').insert([tempUser]).select().single();
-      if (error) { console.error(error); return; }
+      if (error) { 
+        addToast('Erro ao criar usuário: ' + error.message, 'error'); 
+        return; 
+      }
       
       // Upload avatar if provided
       if (avatarFile && created?.id) {
@@ -96,6 +113,9 @@ export const Settings = () => {
           await supabase.from('users').update({ avatar_url }).eq('id', created.id);
         }
       }
+      
+      await fetchUsers();
+      addToast('Novo usuário cadastrado com sucesso!', 'success');
     }
     setFormData({ name: '', email: '', document: '', phone: '', password: '', role: 'employee', avatar_url: '' });
     setAvatarPreview(null);
@@ -197,11 +217,24 @@ export const Settings = () => {
               <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
                 <div className="form-group" style={{ flex: '1 1 200px' }}>
                   <label>Documento (CPF/CNPJ)</label>
-                  <input type="text" placeholder="000.000.000-00" value={formData.document} onChange={e => setFormData({ ...formData, document: e.target.value })} required />
+                  <input 
+                    type="text" 
+                    placeholder="000.000.000-00" 
+                    value={formData.document} 
+                    onChange={e => setFormData({ ...formData, document: maskCpfCnpj(e.target.value) })} 
+                    maxLength={18}
+                    required 
+                  />
                 </div>
                 <div className="form-group" style={{ flex: '1 1 200px' }}>
                   <label>Telefone</label>
-                  <input type="text" placeholder="(00) 00000-0000" value={formData.phone || ''} onChange={e => setFormData({ ...formData, phone: maskPhone(e.target.value) })} />
+                  <input 
+                    type="text" 
+                    placeholder="(00) 00000-0000" 
+                    value={formData.phone || ''} 
+                    onChange={e => setFormData({ ...formData, phone: maskPhone(e.target.value) })} 
+                    maxLength={15}
+                  />
                 </div>
               </div>
 
