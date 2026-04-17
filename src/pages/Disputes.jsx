@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -20,6 +20,32 @@ export const Disputes = () => {
   const [viewMode, setViewMode] = useState('list');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [activeDayDate, setActiveDayDate] = useState(null);
+  
+  // Filter states
+  const [filterSearch, setFilterSearch] = useState('');
+  const [filterClient, setFilterClient] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
+  const [filterResult, setFilterResult] = useState('');
+  const [filterDate, setFilterDate] = useState('');
+
+  const filteredDisputes = useMemo(() => {
+    return disputes.filter(d => {
+      if (filterDate && d.date !== filterDate) return false;
+      if (filterStatus && d.status !== filterStatus) return false;
+      if (filterResult && d.result !== filterResult) return false;
+      if (filterClient && d.clientId !== filterClient) return false;
+      if (filterSearch && !d.name.toLowerCase().includes(filterSearch.toLowerCase())) return false;
+      return true;
+    });
+  }, [disputes, filterSearch, filterClient, filterStatus, filterResult, filterDate]);
+
+  const clearFilters = () => {
+    setFilterSearch('');
+    setFilterClient('');
+    setFilterStatus('');
+    setFilterResult('');
+    setFilterDate('');
+  };
   
   const [formData, setFormData] = useState({
     name: '', clientId: '', bidId: '', date: '', start_time: '', end_time: '', status: 'agendada', result: 'pendente', responsible: user.id
@@ -156,7 +182,7 @@ export const Disputes = () => {
     
     for (let d = 1; d <= daysInMonth; d++) {
        const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-       const dayDisputes = disputes.filter(disp => {
+       const dayDisputes = filteredDisputes.filter(disp => {
           if(!disp.date) return false;
           return disp.date.startsWith(dateStr);
        }).sort((a,b) => new Date(a.date) - new Date(b.date));
@@ -252,6 +278,71 @@ export const Disputes = () => {
         </div>
       </div>
 
+      <div className="glass-panel" style={{ padding: '20px', marginBottom: '24px', borderRadius: '12px', background: '#fff', boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'flex-end' }}>
+          <div style={{ flex: 1, minWidth: '200px' }}>
+            <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748b', display: 'block', marginBottom: '6px' }}>Buscar por Nome</label>
+            <input 
+              type="text" 
+              placeholder="Ex: Pregão 001..." 
+              value={filterSearch} 
+              onChange={e => setFilterSearch(e.target.value)} 
+              style={{ padding: '10px', fontSize: '0.9rem' }} 
+            />
+          </div>
+          <div style={{ width: '180px' }}>
+            <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748b', display: 'block', marginBottom: '6px' }}>Data</label>
+            <input 
+              type="date" 
+              value={filterDate} 
+              onChange={e => setFilterDate(e.target.value)} 
+              style={{ padding: '10px', fontSize: '0.9rem' }} 
+            />
+          </div>
+          <div style={{ width: '220px' }}>
+            <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748b', display: 'block', marginBottom: '6px' }}>Cliente</label>
+            <select 
+              value={filterClient} 
+              onChange={e => setFilterClient(e.target.value)} 
+              style={{ padding: '10px', fontSize: '0.9rem' }}
+            >
+              <option value="">Todos os Clientes</option>
+              {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </div>
+          <div style={{ width: '160px' }}>
+            <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748b', display: 'block', marginBottom: '6px' }}>Status</label>
+            <select 
+              value={filterStatus} 
+              onChange={e => setFilterStatus(e.target.value)} 
+              style={{ padding: '10px', fontSize: '0.9rem' }}
+            >
+              <option value="">Status: Todos</option>
+              <option value="agendada">Agendada</option>
+              <option value="em andamento">Em andamento</option>
+              <option value="finalizada">Finalizada</option>
+            </select>
+          </div>
+          <div style={{ width: '160px' }}>
+            <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748b', display: 'block', marginBottom: '6px' }}>Resultado</label>
+            <select 
+              value={filterResult} 
+              onChange={e => setFilterResult(e.target.value)} 
+              style={{ padding: '10px', fontSize: '0.9rem' }}
+            >
+              <option value="">Resultado: Todos</option>
+              <option value="pendente">Pendente</option>
+              <option value="ganha">Ganha</option>
+              <option value="perdida">Perdida</option>
+              <option value="desclassificado">Desclassificado</option>
+            </select>
+          </div>
+          <button className="btn btn-secondary" onClick={clearFilters} style={{ padding: '11px 20px', borderRadius: '8px', background: '#fff', border: '1px solid #e2e8f0' }}>
+            Limpar
+          </button>
+        </div>
+      </div>
+
       {viewMode === 'calendar' ? renderCalendar() : (
       <div className="table-container animate-fade-in">
         <table>
@@ -268,7 +359,7 @@ export const Disputes = () => {
             </tr>
           </thead>
           <tbody>
-            {disputes.map(dispute => (
+            {filteredDisputes.map(dispute => (
               <tr key={dispute.id}>
                 <td style={{ fontWeight: 600 }}>{dispute.name}</td>
                 <td>
