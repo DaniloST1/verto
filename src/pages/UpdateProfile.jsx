@@ -19,6 +19,15 @@ const maskCpfCnpj = (v = '') => {
   return v.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
 };
 
+const isValidPassword = (pass) => {
+  if (!pass) return false;
+  const hasUpper = /[A-Z]/.test(pass);
+  const hasLower = /[a-z]/.test(pass);
+  const hasNumber = /\d/.test(pass);
+  const hasSpecial = /[@$!%*?&]/.test(pass);
+  return pass.length >= 8 && hasUpper && hasLower && hasNumber && hasSpecial;
+};
+
 export const UpdateProfile = () => {
   const { user, setUser } = useAuth();
   const { addToast } = useToast();
@@ -46,6 +55,10 @@ export const UpdateProfile = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (formData.password && !isValidPassword(formData.password)) {
+      addToast('A senha deve ter no mínimo 8 caracteres, incluir letras maiúsculas, minúsculas, números e caracteres especiais.', 'error');
+      return;
+    }
     if (formData.password && formData.password !== formData.confirmPassword) {
       addToast('As senhas não coincidem.', 'error');
       return;
@@ -157,8 +170,8 @@ export const UpdateProfile = () => {
           <div className="nav-divider" style={{ margin: '8px 0' }}></div>
 
           <div className="form-group">
-            <label>Definir Nova Senha</label>
-            <input type="password" placeholder="Mínimo 6 caracteres" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} minLength={6} required />
+            <label>Definir Nova Senha Forte</label>
+            <input type="password" placeholder="Mín. 8 caracteres, A-z, 0-9, @#$" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} minLength={8} required />
           </div>
           
           <div className="form-group">

@@ -35,6 +35,15 @@ const maskCpfCnpj = (v = '') => {
           .replace(/(\d{2})(\d{3})(\d{3})/, '$1.$2.$3');
 };
 
+const isValidPassword = (pass) => {
+  if (!pass) return false;
+  const hasUpper = /[A-Z]/.test(pass);
+  const hasLower = /[a-z]/.test(pass);
+  const hasNumber = /\d/.test(pass);
+  const hasSpecial = /[@$!%*?&]/.test(pass);
+  return pass.length >= 8 && hasUpper && hasLower && hasNumber && hasSpecial;
+};
+
 export const Settings = () => {
   const { user, users, addUser, editUser, deleteUser, fetchUsers } = useAuth();
   const { addToast } = useToast();
@@ -77,6 +86,12 @@ export const Settings = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (formData.password && !isValidPassword(formData.password)) {
+      addToast('A senha deve ter no mínimo 8 caracteres, incluir letras maiúsculas, minúsculas, números e caracteres especiais.', 'error');
+      return;
+    }
+
     if (editingId) {
       const avatar_url = await uploadAvatar(editingId);
       await editUser(editingId, {
