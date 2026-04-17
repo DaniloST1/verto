@@ -154,7 +154,23 @@ export const DataProvider = ({ children }) => {
 
   const addClient = (data) => addItem('clients', setClients, data, 'Cliente', ['employee', 'supervisor', 'admin']);
   const updateClient = (id, data) => updateItem('clients', setClients, id, data, 'Cliente', ['employee', 'supervisor', 'admin']);
-  const deleteClient = (id) => deleteItem('clients', setClients, id, 'Cliente', ['admin', 'supervisor']);
+  const deleteClient = async (id) => {
+    if (!checkPermission(['admin', 'supervisor'], 'Cliente')) return;
+    
+    // Unbind from related tables to avoid foreign key constraints
+    const tablesToClean = ['disputes', 'contracts', 'cash_flow'];
+    for (const table of tablesToClean) {
+      await supabase.from(table).update({ client_id: null }).eq('client_id', id);
+    }
+
+    const { error } = await supabase.from('clients').delete().eq('id', id);
+    if (error) {
+      addToast(`Erro ao excluir Cliente: ${error.message}`, 'error');
+    } else {
+      setClients(prev => prev.filter(item => item.id !== id));
+      addToast(`Cliente excluído com sucesso.`, 'info');
+    }
+  };
 
   const addBid = async (item) => {
     if (!checkPermission(['supervisor', 'employee', 'admin'], 'Edital')) return;
