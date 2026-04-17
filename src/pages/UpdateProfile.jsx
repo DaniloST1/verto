@@ -36,11 +36,22 @@ export const UpdateProfile = () => {
 
   const [formData, setFormData] = useState({
     name: user?.name || '',
+    email: user?.email || '',
     document: user?.document || '',
     phone: user?.phone || '',
     password: '',
     confirmPassword: ''
   });
+
+  const requirements = [
+    { label: 'Ter no mínimo 8 caracteres', satisfied: formData.password.length >= 8 },
+    { label: 'Ter no mínimo 1 número', satisfied: /\d/.test(formData.password) },
+    { label: 'Ter no mínimo 1 letra maiúscula', satisfied: /[A-Z]/.test(formData.password) },
+    { label: 'Ter no mínimo 1 letra minúscula', satisfied: /[a-z]/.test(formData.password) },
+    { label: 'Ter no mínimo 1 caractere especial', satisfied: /[@$!%*?&]/.test(formData.password) },
+  ];
+
+  const allSatisfied = requirements.every(r => r.satisfied);
 
   const [avatarPreview, setAvatarPreview] = useState(user?.avatar_url || null);
   const [avatarFile, setAvatarFile] = useState(null);
@@ -55,8 +66,8 @@ export const UpdateProfile = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formData.password && !isValidPassword(formData.password)) {
-      addToast('A senha deve ter no mínimo 8 caracteres, incluir letras maiúsculas, minúsculas, números e caracteres especiais.', 'error');
+    if (formData.password && !allSatisfied) {
+      addToast('Sua senha não atende a todos os requisitos de segurança.', 'error');
       return;
     }
     if (formData.password && formData.password !== formData.confirmPassword) {
@@ -82,6 +93,7 @@ export const UpdateProfile = () => {
 
       const updates = {
         name: formData.name,
+        email: formData.email,
         document: formData.document.replace(/\D/g, ''),
         phone: formData.phone,
         avatar_url,
@@ -156,6 +168,11 @@ export const UpdateProfile = () => {
             <input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required />
           </div>
 
+          <div className="form-group">
+            <label>Confirmar E-mail Corporativo</label>
+            <input type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} required />
+          </div>
+
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
             <div className="form-group">
               <label>CPF/CNPJ</label>
@@ -171,12 +188,52 @@ export const UpdateProfile = () => {
 
           <div className="form-group">
             <label>Definir Nova Senha Forte</label>
-            <input type="password" placeholder="Mín. 8 caracteres, A-z, 0-9, @#$" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} minLength={8} required />
+            <input 
+              type="password" 
+              placeholder="Digite sua nova senha" 
+              value={formData.password} 
+              onChange={e => setFormData({...formData, password: e.target.value})} 
+              required 
+            />
+            
+            <div style={{ 
+              marginTop: '12px', padding: '16px', background: '#f8fafc', 
+              borderRadius: '12px', border: '1px solid #e2e8f0',
+              display: 'flex', flexDirection: 'column', gap: '8px'
+            }}>
+              <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: 600, color: '#475569', marginBottom: '4px' }}>
+                Sua senha deve:
+              </p>
+              {requirements.map((req, i) => (
+                <div key={i} style={{ 
+                  display: 'flex', alignItems: 'center', gap: '8px', 
+                  fontSize: '0.8rem', color: req.satisfied ? '#10b981' : '#94a3b8',
+                  transition: 'color 0.2s'
+                }}>
+                  <div style={{ 
+                    width: '16px', height: '16px', borderRadius: '50%', 
+                    border: `1px solid ${req.satisfied ? '#10b981' : '#cbd5e1'}`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: req.satisfied ? '#10b981' : 'transparent',
+                    color: '#fff', transition: 'all 0.2s'
+                  }}>
+                    {req.satisfied && <CheckCircle size={10} />}
+                  </div>
+                  {req.label}
+                </div>
+              ))}
+            </div>
           </div>
           
           <div className="form-group">
             <label>Confirmar Nova Senha</label>
-            <input type="password" placeholder="Repita a nova senha" value={formData.confirmPassword} onChange={e => setFormData({...formData, confirmPassword: e.target.value})} required />
+            <input 
+              type="password" 
+              placeholder="Repita a nova senha" 
+              value={formData.confirmPassword} 
+              onChange={e => setFormData({...formData, confirmPassword: e.target.value})} 
+              required 
+            />
           </div>
 
           <button type="submit" className="btn btn-primary" style={{ height: '48px', marginTop: '12px', background: '#1d3e83' }} disabled={loading}>

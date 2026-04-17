@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Plus, Edit2, Upload, User, Eye, MessageCircle, Trash2 } from 'lucide-react';
+import { Plus, Edit2, Upload, User, Eye, MessageCircle, Trash2, CheckCircle } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { useToast } from '../context/ToastContext';
 import { Modal } from '../components/Modal';
@@ -55,9 +55,15 @@ export const Settings = () => {
   
   const [editingId, setEditingId] = useState(null);
   const [viewingUser, setViewingUser] = useState(null);
-  const [avatarPreview, setAvatarPreview] = useState(null);
-  const [avatarFile, setAvatarFile] = useState(null);
-  const [uploading, setUploading] = useState(false);
+  const requirements = [
+    { label: 'Ter no mínimo 8 caracteres', satisfied: formData.password.length >= 8 },
+    { label: 'Ter no mínimo 1 número', satisfied: /\d/.test(formData.password) },
+    { label: 'Ter no mínimo 1 letra maiúscula', satisfied: /[A-Z]/.test(formData.password) },
+    { label: 'Ter no mínimo 1 letra minúscula', satisfied: /[a-z]/.test(formData.password) },
+    { label: 'Ter no mínimo 1 caractere especial', satisfied: /[@$!%*?&]/.test(formData.password) },
+  ];
+
+  const allSatisfied = requirements.every(r => r.satisfied);
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredUsers = users.filter(u => {
@@ -87,8 +93,8 @@ export const Settings = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (formData.password && !isValidPassword(formData.password)) {
-      addToast('A senha deve ter no mínimo 8 caracteres, incluir letras maiúsculas, minúsculas, números e caracteres especiais.', 'error');
+    if (formData.password && !allSatisfied) {
+      addToast('A senha não atende a todos os requisitos de segurança.', 'error');
       return;
     }
 
@@ -255,7 +261,39 @@ export const Settings = () => {
 
               <div className="form-group">
                 <label>Senha de Acesso {editingId && <span style={{ fontWeight: 400, color: '#94a3b8' }}>(deixe vazio para não alterar)</span>}</label>
-                <input type="password" placeholder="••••••••" value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} required={!editingId} />
+                <input 
+                  type="password" 
+                  placeholder="••••••••" 
+                  value={formData.password} 
+                  onChange={e => setFormData({ ...formData, password: e.target.value })} 
+                  required={!editingId} 
+                />
+                
+                {formData.password && (
+                  <div style={{ 
+                    marginTop: '10px', padding: '12px', background: '#f8fafc', 
+                    borderRadius: '8px', border: '1px solid #e2e8f0',
+                    display: 'flex', flexDirection: 'column', gap: '6px'
+                  }}>
+                    {requirements.map((req, i) => (
+                      <div key={i} style={{ 
+                        display: 'flex', alignItems: 'center', gap: '6px', 
+                        fontSize: '0.75rem', color: req.satisfied ? '#10b981' : '#94a3b8'
+                      }}>
+                        <div style={{ 
+                          width: '14px', height: '14px', borderRadius: '50%', 
+                          border: `1px solid ${req.satisfied ? '#10b981' : '#cbd5e1'}`,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          background: req.satisfied ? '#10b981' : 'transparent',
+                          color: '#fff'
+                        }}>
+                          {req.satisfied && <CheckCircle size={8} />}
+                        </div>
+                        {req.label}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="form-group">
