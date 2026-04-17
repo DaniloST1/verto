@@ -15,6 +15,7 @@ const ROLE_NAMES = {
 export const Disputes = () => {
   const { disputes, clients, bids, addDispute, updateDispute, deleteDispute } = useData();
   const { user, users } = useAuth();
+  const { addToast } = useToast();
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [viewMode, setViewMode] = useState('list');
@@ -53,6 +54,23 @@ export const Disputes = () => {
     name: '', clientId: '', bidId: '', date: '', start_time: '', end_time: '', status: 'agendada', result: 'pendente', responsible: user.id
   });
 
+  const getResponsibleStr = (id) => {
+    const u = users.find(usr => usr.id === id);
+    if (!u) return 'Não atribuído';
+    const abr = { admin: 'Admin', finance: 'Financ', supervisor: 'Superv', employee: 'Colab' };
+    return `${u.name} (${abr[u.role] || u.role})`;
+  };
+
+  const responsibleSuggestions = useMemo(() => {
+    if (!responsibleInput || !showRespSuggestions) return [];
+    const lower = responsibleInput.toLowerCase();
+    const abr = { admin: 'Admin', finance: 'Financ', supervisor: 'Superv', employee: 'Colab' };
+    return users.filter(u => {
+      const roleStr = abr[u.role] || u.role;
+      return u.name.toLowerCase().includes(lower) || roleStr.toLowerCase().includes(lower);
+    }).slice(0, 5);
+  }, [responsibleInput, users, showRespSuggestions]);
+
   const openModal = (dispute = null) => {
     if (dispute) {
       setEditingId(dispute.id);
@@ -68,36 +86,17 @@ export const Disputes = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
-    // Validação de horário
     if (formData.start_time && formData.end_time) {
       if (formData.end_time <= formData.start_time) {
         addToast("O horário de término não pode ser menor ou igual ao de início.", 'error');
         return;
       }
     }
-
     if (editingId) updateDispute(editingId, formData);
     else addDispute(formData);
     setShowModal(false);
   };
 
-  const getResponsibleName = (id) => {
-    const u = users.find(usr => usr.id === id);
-    if (!u) return 'Desconhecido';
-    const abr = { admin: 'Admin', finance: 'Financ', supervisor: 'Superv', employee: 'Colab' };
-    return `${u.name} (${abr[u.role] || u.role})`;
-  };
-
-  const responsibleSuggestions = useMemo(() => {
-    if (!responsibleInput || !showRespSuggestions) return [];
-    const lower = responsibleInput.toLowerCase();
-    const abr = { admin: 'Admin', finance: 'Financ', supervisor: 'Superv', employee: 'Colab' };
-    return users.filter(u => {
-      const roleStr = abr[u.role] || u.role;
-      return u.name.toLowerCase().includes(lower) || roleStr.toLowerCase().includes(lower);
-    }).slice(0, 5);
-  }, [responsibleInput, users, showRespSuggestions]);
   const getClient = (id) => clients.find(c => c.id === id);
   const getBidNumber = (id) => bids.find(b => b.id === id)?.number || 'Desconhecido';
 
@@ -209,26 +208,17 @@ export const Disputes = () => {
     const month = currentDate.getMonth();
     const daysInMonth = getDaysInMonth(year, month);
     const firstDay = getFirstDayOfMonth(year, month);
-
     const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
     const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
-
     const weeks = [];
     let days = [];
-    
     for (let i = 0; i < firstDay; i++) {
        days.push(<td key={`empty-${i}`} style={{ border: '1px solid #f1f5f9', background: '#fafafa' }}></td>);
     }
-    
     for (let d = 1; d <= daysInMonth; d++) {
        const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-       const dayDisputes = filteredDisputes.filter(disp => {
-          if(!disp.date) return false;
-          return disp.date.startsWith(dateStr);
-       }).sort((a,b) => new Date(a.date) - new Date(b.date));
-
+       const dayDisputes = filteredDisputes.filter(disp => disp.date && disp.date.startsWith(dateStr)).sort((a,b) => new Date(a.date) - new Date(b.date));
        const isToday = new Date().toISOString().startsWith(dateStr);
-
        days.push(
          <td key={d} style={{ verticalAlign: 'top', padding: '8px', border: '1px solid #e2e8f0', minHeight: '120px', height: '120px', width: '14.28%', background: isToday ? '#f0fdfa' : '#fff' }}>
            <div style={{ fontWeight: 600, color: isToday ? '#0f766e' : '#64748b', marginBottom: '8px', textAlign: 'right' }}>
@@ -236,7 +226,7 @@ export const Disputes = () => {
            </div>
            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '80px', overflowY: 'auto' }}>
              {dayDisputes.map(disp => {
-               const timeStr = disp.start_time || (disp.date && disp.date.includes('T') ? new Date(disp.date).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}) : '00:00');
+               const timeKey = disp.start_time || (disp.date && disp.date.includes('T') ? new Date(disp.date).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}) : '00:00');
                const statusColors = {
                  'agendada': { bg: '#ecfeff', color: '#0891b2', border: '#06b6d4' },
                  'em andamento': { bg: '#fffbeb', color: '#d97706', border: '#f59e0b' },
@@ -244,30 +234,26 @@ export const Disputes = () => {
                };
                const c = statusColors[disp.status] || statusColors['agendada'];
                return (
-                 <div key={disp.id} onClick={() => openModal(disp)} style={{ fontSize: '0.7rem', padding: '4px 6px', background: c.bg, color: c.color, borderRadius: '4px', cursor: 'pointer', borderLeft: `3px solid ${c.border}`, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={`${timeStr} - ${disp.name}`}>
-                   <strong>{timeStr}</strong> {getClient(disp.clientId)?.name?.split(' ')[0] || ''}
+                 <div key={disp.id} onClick={() => openModal(disp)} style={{ fontSize: '0.7rem', padding: '4px 6px', background: c.bg, color: c.color, borderRadius: '4px', cursor: 'pointer', borderLeft: `3px solid ${c.border}`, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={`${timeKey} - ${disp.name}`}>
+                   <strong>{timeKey}</strong> {getClient(disp.clientId)?.name?.split(' ')[0] || ''}
                  </div>
                );
              })}
            </div>
          </td>
        );
-       
        if (days.length === 7) {
          weeks.push(<tr key={`week-${weeks.length}`}>{days}</tr>);
          days = [];
        }
     }
-    
     if (days.length > 0) {
       while (days.length < 7) {
         days.push(<td key={`empty-end-${days.length}`} style={{ border: '1px solid #f1f5f9', background: '#fafafa' }}></td>);
       }
       weeks.push(<tr key={`week-${weeks.length}`}>{days}</tr>);
     }
-
     const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-
     return (
        <div className="glass-panel animate-fade-in" style={{ padding: '24px' }}>
          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
@@ -433,7 +419,7 @@ export const Disputes = () => {
                     {dispute.result.toUpperCase()}
                   </span>
                 </td>
-                <td>{getResponsibleName(dispute.responsible)}</td>
+                <td>{getResponsibleStr(dispute.responsible)}</td>
                 <td style={{ textAlign: 'center' }}>
                   <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
                     <button
@@ -501,7 +487,7 @@ export const Disputes = () => {
                       <h4 style={{ margin: '0 0 4px 0', color: '#1e293b' }}>{timeStr} - {disp.name}</h4>
                       <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b' }}>
                         <strong>Cliente:</strong> {getClient(disp.clientId)?.name || 'N/A'}<br/>
-                        <strong>Responsável:</strong> {getResponsibleName(disp.responsible)}<br/>
+                        <strong>Responsável:</strong> {getResponsibleStr(disp.responsible)}<br/>
                         {(disp.start_time || disp.end_time) && <span><strong>Duração:</strong> {disp.start_time || '...'} às {disp.end_time || '...'}</span>}
                       </p>
                     </div>
