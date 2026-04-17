@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Plus, Edit2, Upload, User, Eye } from 'lucide-react';
+import { Plus, Edit2, Upload, User, Eye, MessageCircle } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { useToast } from '../context/ToastContext';
 import { Modal } from '../components/Modal';
@@ -273,6 +273,18 @@ export const Settings = () => {
                     </td>
                     <td style={{ textAlign: 'center' }}>
                       <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
+                        <button
+                          className="btn" 
+                          style={{ padding: '6px', background: '#fff', border: '1px solid #cbd5e1', color: '#25D366', borderRadius: '6px' }} 
+                          onClick={() => {
+                            if (!u.phone) { addToast('Este usuário não possui telefone cadastrado.', 'error'); return; }
+                            const cleanPhone = u.phone.replace(/\D/g, '');
+                            window.open(`https://api.whatsapp.com/send?phone=55${cleanPhone}`, '_blank');
+                          }} 
+                          title="Conversar no WhatsApp"
+                        >
+                          <MessageCircle size={16} />
+                        </button>
                         <button className="btn" style={{ padding: '6px', background: '#fff', border: '1px solid #cbd5e1', color: '#10b981', borderRadius: '6px' }} onClick={() => setViewingUser(u)} title="Ver dados">
                           <Eye size={16} />
                         </button>
