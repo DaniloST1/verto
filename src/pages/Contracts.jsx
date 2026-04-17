@@ -35,7 +35,7 @@ export const Contracts = () => {
   const [editingId, setEditingId] = useState(null);
   
   const [formData, setFormData] = useState({
-    name: '', clientId: '', bidId: '', value: 0, status: 'ativo', startDate: '', endDate: '', responsible: user.id
+    name: '', clientId: '', bidId: '', value: 0, status: 'ativo', startDate: '', endDate: '', responsible: user?.id || ''
   });
 
   const openModal = (contract = null) => {
@@ -44,7 +44,7 @@ export const Contracts = () => {
       setFormData({ ...contract });
     } else {
       setEditingId(null);
-      setFormData({ name: '', clientId: '', bidId: '', value: 0, status: 'ativo', startDate: '', endDate: '', responsible: user.id });
+      setFormData({ name: '', clientId: '', bidId: '', value: 0, status: 'ativo', startDate: '', endDate: '', responsible: user?.id || '' });
     }
     setShowModal(true);
   };
@@ -114,7 +114,7 @@ export const Contracts = () => {
                     <button className="btn" style={{ padding: '6px', background: '#fff', border: '1px solid #e2e8f0', color: '#3b82f6', borderRadius: '8px' }} onClick={() => openModal(contract)}>
                       <Edit2 size={16} />
                     </button>
-                    {(user.role === 'supervisor' || user.role === 'admin') && (
+                    {(user?.role === 'supervisor' || user?.role === 'admin') && (
                       <button className="btn" style={{ padding: '6px', background: '#fef2f2', border: '1px solid #fecaca', color: '#ef4444', borderRadius: '8px' }} onClick={() => deleteContract(contract.id)}>
                         <Trash2 size={16} />
                       </button>
@@ -192,7 +192,7 @@ export const Contracts = () => {
               </div>
             </div>
 
-            {(user.role === 'supervisor' || user.role === 'admin') && (
+            {(user?.role === 'supervisor' || user?.role === 'admin') && (
               <div className="form-group">
                 <label>Responsável</label>
                 <select value={formData.responsible} onChange={e => setFormData({...formData, responsible: e.target.value})}>

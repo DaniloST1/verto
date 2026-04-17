@@ -62,7 +62,7 @@ export const Clients = () => {
   const [showRespSuggestions, setShowRespSuggestions] = useState(false);
 
   const emptyForm = {
-    name: '', cnpj: '', contact: '', email: '', status: 'apto', responsible_id: '',
+    name: '', cnpj: '', contact: '', email: '', status: 'apto', responsible_id: user?.id || '',
     cash_value: 0, notes: '',
     cpf_cnpj_responsible: '', state_registration: '', due_day: 10,
     contract_start: '', contract_end: ''
@@ -466,7 +466,7 @@ export const Clients = () => {
                     <button className="btn" style={{ padding: '6px', background: '#fff', border: '1px solid #e2e8f0', color: '#3b82f6', borderRadius: '8px' }} onClick={() => openForm(c)} title="Editar">
                       <Edit2 size={16} />
                     </button>
-                    {(user.role === 'admin' || user.role === 'supervisor') && (
+                    {(user?.role === 'admin' || user?.role === 'supervisor') && (
                       <button className="btn" style={{ padding: '6px', background: '#fef2f2', border: '1px solid #fecaca', color: '#ef4444', borderRadius: '8px' }} onClick={() => handleDelete(c.id)}>
                         <Trash2 size={16} />
                       </button>

@@ -27,7 +27,7 @@ export const CashFlow = () => {
   const [filterYear, setFilterYear] = useState(new Date().getFullYear().toString());
   const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' });
 
-  const isFinance = user.role === 'finance' || user.role === 'admin';
+  const isFinance = user?.role === 'finance' || user?.role === 'admin';
 
   const handleSubmit = (e) => {
     e.preventDefault();

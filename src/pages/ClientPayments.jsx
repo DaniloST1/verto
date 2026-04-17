@@ -38,7 +38,7 @@ export const ClientPayments = () => {
   const { user } = useAuth();
   const { addToast } = useToast();
 
-  const isFinance = user.role === 'finance' || user.role === 'admin';
+  const isFinance = user?.role === 'finance' || user?.role === 'admin';
 
   const currentMonth = new Date().getMonth() + 1;
   const currentYear = new Date().getFullYear();

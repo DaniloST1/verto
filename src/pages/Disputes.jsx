@@ -51,7 +51,7 @@ export const Disputes = () => {
   };
   
   const [formData, setFormData] = useState({
-    name: '', clientId: '', bidId: '', date: '', start_time: '', end_time: '', status: 'agendada', result: 'pendente', responsible: user.id
+    name: '', clientId: '', bidId: '', date: '', start_time: '', end_time: '', status: 'agendada', result: 'pendente', responsible: user?.id || ''
   });
 
   const getResponsibleStr = (id) => {
@@ -78,8 +78,8 @@ export const Disputes = () => {
       setResponsibleInput(dispute.responsible ? getResponsibleStr(dispute.responsible) : '');
     } else {
       setEditingId(null);
-      setFormData({ name: '', clientId: '', bidId: '', date: '', start_time: '', end_time: '', status: 'agendada', result: 'pendente', responsible: user.id });
-      setResponsibleInput(getResponsibleStr(user.id));
+      setFormData({ name: '', clientId: '', bidId: '', date: '', start_time: '', end_time: '', status: 'agendada', result: 'pendente', responsible: user?.id || '' });
+      setResponsibleInput(user?.id ? getResponsibleStr(user.id) : '');
     }
     setShowModal(true);
   };
@@ -504,7 +504,7 @@ export const Disputes = () => {
                  setActiveDayDate(null);
                  setEditingId(null);
                  const datePrefix = activeDayDate;
-                 setFormData({ name: '', clientId: '', bidId: '', date: datePrefix, start_time: '', end_time: '', status: 'agendada', result: 'pendente', responsible: user.id });
+                 setFormData({ name: '', clientId: '', bidId: '', date: datePrefix, start_time: '', end_time: '', status: 'agendada', result: 'pendente', responsible: user?.id || '' });
                  setShowModal(true);
                }}>Adicionar Nova</button>
             </div>
