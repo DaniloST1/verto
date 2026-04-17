@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { Plus, Edit2, Trash2, Filter, X, Eye, Link as LinkIcon, Download, Search, Check, MessageCircle, FileText, Upload } from 'lucide-react';
+import { Plus, Edit2, Trash2, Filter, X, Eye, Link as LinkIcon, Download, Search, Check, MessageCircle, FileText } from 'lucide-react';
 import { Modal } from '../components/Modal';
 import { supabase } from '../lib/supabaseClient';
 
@@ -30,12 +30,8 @@ export const Bids = () => {
   const [formData, setFormData] = useState({
     number: '', organ: '', estimatedValue: 0, status: 'Em análise',
     responsible: '', object: '', originPortal: '', clientsLinked: [],
-    disputeDate: '', disputeStartTime: '', disputeEndTime: '',
-    attachmentUrl: ''
+    disputeDate: '', disputeStartTime: '', disputeEndTime: ''
   });
-  
-  const [attachmentFile, setAttachmentFile] = useState(null);
-  const [uploading, setUploading] = useState(false);
 
   // Lock body scroll when modal is open
   useEffect(() => {
@@ -59,7 +55,8 @@ export const Bids = () => {
 
 
   const getStatusStyle = (status) => {
-    const s = status?.toLowerCase() || '';
+    let s = status?.toLowerCase() || '';
+    if (s === 'aberto') s = 'em análise';
     if (s.includes('vitória') || s.includes('vitoria') || s.includes('homologado')) return { bg: '#dcfce7', color: '#166534' };
     if (s.includes('disputa') || s.includes('seleção')) return { bg: '#dbeafe', color: '#1e40af' };
     if (s.includes('proposta') || s.includes('análise') || s.includes('analise')) return { bg: '#fef3c7', color: '#92400e' };
@@ -91,48 +88,21 @@ export const Bids = () => {
       setFormData({
         number: '', organ: '', estimatedValue: 0, status: 'Em análise',
         responsible: '', object: '', originPortal: '', clientsLinked: [],
-        disputeDate: '', disputeStartTime: '', disputeEndTime: '',
-        attachmentUrl: ''
+        disputeDate: '', disputeStartTime: '', disputeEndTime: ''
       });
     }
-    setAttachmentFile(null);
     setShowModal(true);
   };
 
-  const uploadFile = async () => {
-    if (!attachmentFile) return formData.attachmentUrl;
-    setUploading(true);
-    const fileExt = attachmentFile.name.split('.').pop();
-    const fileName = `${Date.now()}.${fileExt}`;
-    const filePath = `bid-attachments/${fileName}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from('Verto imagens')
-      .upload(filePath, attachmentFile);
-
-    if (uploadError) {
-      addToast('Erro ao fazer upload do arquivo.', 'error');
-      setUploading(false);
-      return null;
-    }
-
-    const { data } = supabase.storage.from('Verto imagens').getPublicUrl(filePath);
-    setUploading(false);
-    return data.publicUrl;
-  };
-
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    const finalAttachmentUrl = await uploadFile();
-    const updatedData = { ...formData, attachmentUrl: finalAttachmentUrl };
-
     if (editingId) {
-      updateBid(editingId, updatedData);
+      updateBid(editingId, formData);
       if (currentBid && currentBid.id === editingId) {
-        setCurrentBid({...updatedData, id: editingId});
+        setCurrentBid({...formData, id: editingId});
       }
     } else {
-      addBid(updatedData);
+      addBid(formData);
     }
     setShowModal(false);
   };
@@ -292,7 +262,7 @@ export const Bids = () => {
                      color: getStatusStyle(bid.status).color,
                      display: 'inline-block'
                    }}>
-                    {bid.status || 'Em análise'}
+                    {bid.status === 'aberto' ? 'Em análise' : (bid.status || 'Em análise')}
                    </span>
                 </div>
                 <div style={{ textAlign: 'right' }}>
@@ -312,11 +282,6 @@ export const Bids = () => {
                  <button className="btn" style={{ padding: '8px 16px', fontSize: '0.85rem', background: '#fff', border: '1px solid #cbd5e1', color: '#1e293b', borderRadius: '8px' }} onClick={() => { setCurrentBid(bid); setViewMode('links'); }}>
                   <LinkIcon size={16} /> Vínculos
                 </button>
-                {bid.attachmentUrl && (
-                  <a href={bid.attachmentUrl} target="_blank" rel="noopener noreferrer" className="btn" style={{ padding: '8px 16px', fontSize: '0.85rem', background: '#fff', border: '1px solid #cbd5e1', color: '#1e293b', borderRadius: '8px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <FileText size={16} /> Edital
-                  </a>
-                )}
               </div>
               <div style={{ display: 'flex', gap: '8px' }}>
                   <button className="btn btn-primary" style={{ padding: '8px 16px', fontSize: '0.85rem', borderRadius: '8px' }} onClick={() => openForm(bid)}>
@@ -517,18 +482,13 @@ export const Bids = () => {
                 <h2 style={{ color: '#0f172a', textAlign: 'center', marginBottom: '32px' }}>Termo de Referência - {currentBid.organ}</h2>
                 <div style={{ borderBottom: '2px solid #1d3e83', paddingBottom: '8px', marginBottom: '24px' }}>
                   <p><strong>Pregão:</strong> {currentBid.number}</p>
-                  <p><strong>Status:</strong> {currentBid.status.toUpperCase()}</p>
+                  <p><strong>Status:</strong> {currentBid.status === 'aberto' ? 'EM ANÁLISE' : currentBid.status.toUpperCase()}</p>
                   <p><strong>Valor Estimado:</strong> R$ {Number(currentBid.estimatedValue).toLocaleString(undefined, {minimumFractionDigits:2})}</p>
                   <p>
                     <strong>Data/Hora Disputa:</strong> {currentBid.disputeDate ? currentBid.disputeDate.split('-').reverse().join('/') : '-'}
                     {currentBid.disputeStartTime && ` às ${currentBid.disputeStartTime}`}
                     {currentBid.disputeEndTime && ` até ${currentBid.disputeEndTime}`}
                   </p>
-                  {currentBid.attachmentUrl && (
-                    <p>
-                      <strong>Arquivo do Edital:</strong> <a href={currentBid.attachmentUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#1d3e83', fontWeight: 600 }}>Visualizar Documento <Download size={14} /></a>
-                    </p>
-                  )}
                   <p><strong>Objeto:</strong> {currentBid.object}</p>
                 </div>
                 <div style={{ fontSize: '0.9rem', color: '#334155', lineHeight: '1.8' }}>
@@ -595,15 +555,6 @@ export const Bids = () => {
             <div className="form-group">
               <label>Portal de Origem (URL)</label>
               <input type="url" value={formData.originPortal} onChange={e => setFormData({ ...formData, originPortal: e.target.value })} />
-            </div>
-            <div className="form-group">
-              <label>Anexar Edital (Arquivo)</label>
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <input type="file" onChange={e => setAttachmentFile(e.target.files[0])} style={{ flex: 1 }} />
-                {formData.attachmentUrl && (
-                  <span style={{ fontSize: '0.8rem', color: '#10b981' }}>✓ Arquivo já anexado</span>
-                )}
-              </div>
             </div>
             <div style={{ display: 'flex', gap: '16px' }}>
               <div className="form-group" style={{ flex: 1 }}>
