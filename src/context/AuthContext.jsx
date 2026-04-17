@@ -130,11 +130,10 @@ export const AuthProvider = ({ children }) => {
       return;
     }
 
-    // Unbind from related tables first to avoid foreign key constraints
+    // Transfer responsibility to the current admin to avoid foreign key constraints and orphans
     const tablesToClean = ['clients', 'contracts', 'disputes', 'cash_flow'];
     for (const table of tablesToClean) {
-      // Note: we don't block deletion if child updates fail, but we log it
-      await supabase.from(table).update({ responsible_id: null }).eq('responsible_id', id);
+      await supabase.from(table).update({ responsible_id: user.id }).eq('responsible_id', id);
     }
 
     const { error } = await supabase.from('users').delete().eq('id', id);
