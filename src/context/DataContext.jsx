@@ -263,7 +263,7 @@ export const DataProvider = ({ children }) => {
 
   const addCashFlow = async (item) => {
     if (!checkPermission(['finance', 'admin'], 'Fluxo de Caixa')) return;
-    const { id, lastUpdate, paymentMethodOther, ...insertData } = item;
+    const { id, lastUpdate, ...insertData } = item;
     const snakeData = camelToSnake(insertData);
     const { data, error } = await supabase.from('cash_flow').insert([snakeData]).select().single();
     if (error) {
@@ -276,7 +276,7 @@ export const DataProvider = ({ children }) => {
 
   const updateCashFlow = async (id, item) => {
     if (!checkPermission(['finance', 'admin'], 'Fluxo de Caixa')) return;
-    const { id: _, lastUpdate, paymentMethodOther, ...updateData } = item;
+    const { id: _, lastUpdate, ...updateData } = item;
     const snakeData = camelToSnake(updateData);
     const { data, error } = await supabase.from('cash_flow').update(snakeData).eq('id', id).select().single();
     if (error) {
