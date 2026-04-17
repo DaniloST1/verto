@@ -123,7 +123,7 @@ export const ClientPayments = () => {
           clientId: client.id,
           clientName: client.name,
           cnpj: client.cnpj,
-          contact: client.contact,
+          phone: client.phone || client.contact,
           monthIndex: i,
           year: yearToUse,
           reference: `${MONTH_NAMES[i]}/${yearToUse}`,
@@ -206,7 +206,7 @@ export const ClientPayments = () => {
   };
 
   const sendWhatsApp = (record) => {
-    if (!record.contact) { addToast('Cliente não possui contato cadastrado.', 'error'); return; }
+    if (!record.phone) { addToast('Cliente não possui contato cadastrado.', 'error'); return; }
     
     let brDate = 'data não informada';
     if (record.dueDate) {
@@ -217,7 +217,7 @@ export const ClientPayments = () => {
     const val = Number(record.value) || 0;
     const msg = encodeURIComponent(`Olá ${record.clientName}, tudo bem? Identificamos que a fatura referente ao mês de ${record.reference} no valor de R$ ${val.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}, com vencimento para ${brDate}, está constando em aberto. Por favor, poderia verificar? A Verto Soluções agradece.`);
     
-    const phone = String(record.contact).replace(/\D/g, '');
+    const phone = String(record.phone).replace(/\D/g, '');
     const url = `https://api.whatsapp.com/send?phone=55${phone}&text=${msg}`;
     
     // Create an invisible anchor to force the browser to open a new tab reliably
@@ -355,6 +355,7 @@ export const ClientPayments = () => {
                     <td>
                       <div style={{ fontWeight: 600, color: '#1e293b' }}>{record.clientName || 'Cliente sem nome'}</div>
                       {record.cnpj && <div style={{ fontSize: '0.78rem', color: '#64748b' }}>{record.cnpj}</div>}
+                      {record.phone && <div style={{ fontSize: '0.78rem', color: '#94a3b8', marginTop: '2px' }}>{record.phone}</div>}
                     </td>
                     <td>{record.reference}</td>
                     <td style={{ color: isOverdue ? '#be123c' : 'inherit', fontWeight: isOverdue ? 600 : 400 }}>

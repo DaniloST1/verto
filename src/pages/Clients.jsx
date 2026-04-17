@@ -62,7 +62,7 @@ export const Clients = () => {
   const [showRespSuggestions, setShowRespSuggestions] = useState(false);
 
   const emptyForm = {
-    name: '', cnpj: '', contact: '', email: '', status: 'apto', responsible_id: user?.id || '',
+    name: '', cnpj: '', phone: '', email: '', status: 'apto', responsible_id: user?.id || '',
     cash_value: 0, notes: '',
     cpf_cnpj_responsible: '', state_registration: '', due_day: 10,
     contract_start: '', contract_end: ''
@@ -146,7 +146,7 @@ export const Clients = () => {
         ...emptyForm,
         ...client,
         cash_value: client.cashValue ?? client.cash_value ?? 0,
-        responsible_id: client.responsible ?? client.responsible_id ?? '',
+        phone: client.phone ?? client.contact ?? '',
         contract_start: toDateInput(resolvedContractStart),
         contract_end: toDateInput(resolvedContractEnd),
       });
@@ -166,7 +166,7 @@ export const Clients = () => {
     if (!formData.name.trim()) errors.name = 'Nome é obrigatório';
     if (!isValidCNPJ(formData.cnpj)) errors.cnpj = 'CNPJ deve ter 14 dígitos (00.000.000/0000-00)';
     if (formData.email && !isValidEmail(formData.email)) errors.email = 'E-mail inválido';
-    if (formData.contact && !isValidPhone(formData.contact)) errors.contact = 'Telefone inválido (mín. 10 dígitos)';
+    if (formData.phone && !isValidPhone(formData.phone)) errors.phone = 'Telefone inválido (mín. 10 dígitos)';
     return errors;
   };
 
@@ -424,7 +424,7 @@ export const Clients = () => {
                 <td style={{ whiteSpace: 'nowrap' }}>{c.cnpj || '-'}</td>
                 <td>{c.state_registration || '-'}</td>
                 <td>{c.email || '-'}</td>
-                <td style={{ whiteSpace: 'nowrap' }}>{c.contact || c.phone || '-'}</td>
+                <td style={{ whiteSpace: 'nowrap' }}>{c.phone || c.contact || '-'}</td>
                 <td>{c.cpf_cnpj_responsible || '-'}</td>
                 <td style={{ textAlign: 'center' }}>{c.due_day || c.dueDay || 10}</td>
                 <td style={{ fontWeight: 600, color: '#0f172a' }}>
@@ -554,12 +554,12 @@ export const Clients = () => {
                 <input
                   type="text"
                   placeholder="(00) 00000-0000"
-                  value={formData.contact}
-                  onChange={e => set('contact', maskPhone(e.target.value))}
+                  value={formData.phone}
+                  onChange={e => set('phone', maskPhone(e.target.value))}
                   maxLength={15}
-                  className={fieldErrors.contact ? 'input-error' : ''}
+                  className={fieldErrors.phone ? 'input-error' : ''}
                 />
-                {fieldErrors.contact && <span className="field-error-msg">{fieldErrors.contact}</span>}
+                {fieldErrors.phone && <span className="field-error-msg">{fieldErrors.phone}</span>}
               </div>
               <div className="form-group" style={{ flex: 1 }}>
                 <label>Dia de Vencimento *</label>
