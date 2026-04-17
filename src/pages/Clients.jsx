@@ -241,11 +241,11 @@ export const Clients = () => {
               <div><strong style={{ color: '#64748b' }}>CNPJ Principal:</strong> <span style={{ color: '#1e293b', fontWeight: 600 }}>{c.cnpj || '-'}</span></div>
               <div><strong style={{ color: '#64748b' }}>CPF/CNPJ do Responsável:</strong> {c.cpf_cnpj_responsible || '-'}</div>
               <div><strong style={{ color: '#64748b' }}>Inscrição Estadual:</strong> {c.state_registration || '-'}</div>
-              <div><strong style={{ color: '#64748b' }}>Telefone:</strong> {c.contact || '-'}</div>
+              <div><strong style={{ color: '#64748b' }}>Telefone:</strong> {c.contact || c.phone || '-'}</div>
               <div><strong style={{ color: '#64748b' }}>Email:</strong> {c.email || '-'}</div>
               <div><strong style={{ color: '#64748b' }}>Responsável de Gestão (Verto):</strong> {getResponsibleStr(c.responsible_id || c.responsible)}</div>
-              <div><strong style={{ color: '#64748b' }}>Mês/Dia de Cobrança:</strong> Dia {c.due_day || 10}</div>
-              <div><strong style={{ color: '#64748b' }}>Valor de Honorário:</strong> {formatCurrency(c.cash_value || 0)}</div>
+              <div><strong style={{ color: '#64748b' }}>Mês/Dia de Cobrança:</strong> Dia {c.due_day || c.dueDay || 10}</div>
+              <div><strong style={{ color: '#64748b' }}>Valor de Honorário / Recorrente:</strong> {formatCurrency(c.cash_value ?? c.cashValue ?? 0)}</div>
               <div><strong style={{ color: '#64748b' }}>Início do Contrato:</strong> {(() => {
                 const val = c.contract_start || c.contractStart;
                 if (!val) return '-';
@@ -388,10 +388,10 @@ export const Clients = () => {
           <thead style={{ background: '#eef2f6' }}>
             <tr>
               <th style={{ width: '220px' }}>NOME DA EMPRESA</th>
-              <th style={{ width: '180px' }}>CNPJ</th>
+              <th style={{ width: '220px' }}>CNPJ</th>
               <th style={{ width: '140px' }}>IE</th>
               <th style={{ width: '200px' }}>EMAIL</th>
-              <th style={{ width: '160px' }}>TELEFONE</th>
+              <th style={{ width: '200px' }}>TELEFONE</th>
               <th style={{ width: '180px' }}>RESP. (CPF/CNPJ)</th>
               <th style={{ width: '100px' }}>VENC.</th>
               <th style={{ width: '140px' }}>VALOR</th>
