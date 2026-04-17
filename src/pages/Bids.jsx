@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { Plus, Edit2, Trash2, Filter, X, Eye, Link as LinkIcon, Download, Search, Check, MessageCircle, FileText } from 'lucide-react';
+import { Plus, Edit2, Trash2, Filter, X, Eye, Link as LinkIcon, Download, Search, Check, MessageCircle, FileText, Upload } from 'lucide-react';
 import { Modal } from '../components/Modal';
 import { supabase } from '../lib/supabaseClient';
 
@@ -30,8 +30,12 @@ export const Bids = () => {
   const [formData, setFormData] = useState({
     number: '', organ: '', estimatedValue: 0, status: 'Em análise',
     responsible: '', object: '', originPortal: '', clientsLinked: [],
-    disputeDate: '', disputeStartTime: '', disputeEndTime: ''
+    disputeDate: '', disputeStartTime: '', disputeEndTime: '',
+    attachmentUrl: ''
   });
+  
+  const [attachmentFile, setAttachmentFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
   // Lock body scroll when modal is open
   useEffect(() => {
@@ -88,21 +92,48 @@ export const Bids = () => {
       setFormData({
         number: '', organ: '', estimatedValue: 0, status: 'Em análise',
         responsible: '', object: '', originPortal: '', clientsLinked: [],
-        disputeDate: '', disputeStartTime: '', disputeEndTime: ''
+        disputeDate: '', disputeStartTime: '', disputeEndTime: '',
+        attachmentUrl: ''
       });
     }
+    setAttachmentFile(null);
     setShowModal(true);
   };
 
-  const handleSubmit = (e) => {
+  const uploadFile = async () => {
+    if (!attachmentFile) return formData.attachmentUrl;
+    setUploading(true);
+    const fileExt = attachmentFile.name.split('.').pop();
+    const fileName = `${Date.now()}.${fileExt}`;
+    const filePath = `bid-attachments/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('Verto imagens')
+      .upload(filePath, attachmentFile);
+
+    if (uploadError) {
+      addToast('Erro ao fazer upload do arquivo.', 'error');
+      setUploading(false);
+      return null;
+    }
+
+    const { data } = supabase.storage.from('Verto imagens').getPublicUrl(filePath);
+    setUploading(false);
+    return data.publicUrl;
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    const finalAttachmentUrl = await uploadFile();
+    const updatedData = { ...formData, attachmentUrl: finalAttachmentUrl };
+
     if (editingId) {
-      updateBid(editingId, formData);
+      updateBid(editingId, updatedData);
       if (currentBid && currentBid.id === editingId) {
-        setCurrentBid({...formData, id: editingId});
+        setCurrentBid({...updatedData, id: editingId});
       }
     } else {
-      addBid(formData);
+      addBid(updatedData);
     }
     setShowModal(false);
   };
@@ -282,6 +313,11 @@ export const Bids = () => {
                  <button className="btn" style={{ padding: '8px 16px', fontSize: '0.85rem', background: '#fff', border: '1px solid #cbd5e1', color: '#1e293b', borderRadius: '8px' }} onClick={() => { setCurrentBid(bid); setViewMode('links'); }}>
                   <LinkIcon size={16} /> Vínculos
                 </button>
+                {bid.attachmentUrl && (
+                  <a href={bid.attachmentUrl} target="_blank" rel="noopener noreferrer" className="btn" style={{ padding: '8px 16px', fontSize: '0.85rem', background: '#fff', border: '1px solid #cbd5e1', color: '#1e293b', borderRadius: '8px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <FileText size={16} /> Edital
+                  </a>
+                )}
               </div>
               <div style={{ display: 'flex', gap: '8px' }}>
                   <button className="btn btn-primary" style={{ padding: '8px 16px', fontSize: '0.85rem', borderRadius: '8px' }} onClick={() => openForm(bid)}>
@@ -448,56 +484,62 @@ export const Bids = () => {
   };
 
   const PDFView = () => {
-    return (
-      <div className="animate-fade-in">
-        <div className="page-header" style={{ marginBottom: '24px' }}>
-          <div>
-            <h1 className="page-title" style={{ fontSize: '2rem', color: '#0f172a' }}>Editais</h1>
-            <p style={{ color: 'var(--text-muted)' }}>Documentos e publicações</p>
-          </div>
-          <button className="btn btn-secondary" onClick={() => setViewMode('list')} style={{ background: '#fff', borderRadius: '8px' }}>Voltar para Lista</button>
-        </div>
+    if (!currentBid) return null;
 
-        <div className="glass-panel" style={{ padding: '0', borderRadius: '12px', overflow: 'hidden' }}>
-          <div style={{ padding: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--surface-border)' }}>
-             <div>
-               <h2 style={{ fontSize: '1.5rem', color: '#1e293b', marginBottom: '4px' }}>{currentBid.organ || 'Edital Sem Nome'}</h2>
-               <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Dados do edital {currentBid.number}</p>
-             </div>
-             <div style={{ display: 'flex', gap: '12px' }}>
-               <button className="btn btn-secondary" onClick={() => setViewMode('links')} style={{ background: '#fff', color: '#1e293b' }}><LinkIcon size={16}/> Ver Clientes Vinculados</button>
-               <button className="btn btn-secondary" style={{ background: '#fff', color: '#3b82f6' }}><Download size={16}/> Baixar PDF</button>
-               {(user.role === 'admin' || user.role === 'supervisor') && (
-                 <>
-                   <button className="btn btn-primary" onClick={() => openForm(currentBid)} style={{ background: '#1d3e83' }}><Edit2 size={16}/> Editar</button>
-                   <button className="btn btn-danger" onClick={() => handleDelete(currentBid.id)}><Trash2 size={16}/> Apagar</button>
-                 </>
-               )}
-             </div>
+    return (
+      <div className="pdf-view-container" style={{ padding: '40px', background: '#f8fafc', minHeight: '100vh', display: 'flex', justifyContent: 'center' }}>
+        <div style={{ maxWidth: '900px', width: '100%', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+             <button className="btn" style={{ background: '#fff', border: '1px solid #cbd5e1', display: 'flex', alignItems: 'center', gap: '8px' }} onClick={() => setViewMode('list')}>
+                <X size={18} /> Voltar para Lista
+             </button>
+             <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#1e293b' }}>Visualização do Edital</h2>
+             {currentBid.attachmentUrl && (
+               <a href={currentBid.attachmentUrl} download className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Download size={18} /> Baixar Arquivo
+               </a>
+             )}
           </div>
-          
-          {/* PDF Viewer Mock Container */}
-          <div style={{ background: '#e2e8f0', minHeight: '600px', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: '32px' }}>
-             <div style={{ width: '850px', minHeight: '800px', background: '#fff', boxShadow: '0 20px 40px rgba(0,0,0,0.1)', padding: '48px' }}>
-                <h2 style={{ color: '#0f172a', textAlign: 'center', marginBottom: '32px' }}>Termo de Referência - {currentBid.organ}</h2>
-                <div style={{ borderBottom: '2px solid #1d3e83', paddingBottom: '8px', marginBottom: '24px' }}>
-                  <p><strong>Pregão:</strong> {currentBid.number}</p>
-                  <p><strong>Status:</strong> {currentBid.status === 'aberto' ? 'EM ANÁLISE' : currentBid.status.toUpperCase()}</p>
-                  <p><strong>Valor Estimado:</strong> R$ {Number(currentBid.estimatedValue).toLocaleString(undefined, {minimumFractionDigits:2})}</p>
-                  <p>
-                    <strong>Data/Hora Disputa:</strong> {currentBid.disputeDate ? currentBid.disputeDate.split('-').reverse().join('/') : '-'}
-                    {currentBid.disputeStartTime && ` às ${currentBid.disputeStartTime}`}
-                    {currentBid.disputeEndTime && ` até ${currentBid.disputeEndTime}`}
-                  </p>
-                  <p><strong>Objeto:</strong> {currentBid.object}</p>
+
+          <div className="glass-panel" style={{ padding: '32px', background: '#fff' }}>
+             <div style={{ marginBottom: '32px', display: 'flex', gap: '24px', flexWrap: 'wrap', borderBottom: '1px solid #f1f5f9', paddingBottom: '24px' }}>
+                <div style={{ flex: 1, minWidth: '200px' }}>
+                   <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>ÓRGÃO</p>
+                   <p style={{ fontWeight: 700, fontSize: '1.1rem' }}>{currentBid.organ}</p>
                 </div>
-                <div style={{ fontSize: '0.9rem', color: '#334155', lineHeight: '1.8' }}>
-                   <p>Este documento simula o Anexo em PDF fornecido pela origem organizadora do certame.</p>
-                   <br/>
-                   <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-                   <br/>
-                   <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+                <div style={{ flex: 1, minWidth: '200px' }}>
+                   <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>PREGÃO</p>
+                   <p style={{ fontWeight: 700, fontSize: '1.1rem' }}>{currentBid.number}</p>
                 </div>
+                <div style={{ flex: 1, minWidth: '200px' }}>
+                   <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>STATUS</p>
+                   <p style={{ fontWeight: 700 }}>{currentBid.status?.toUpperCase() || 'EM ANÁLISE'}</p>
+                </div>
+             </div>
+
+             <div style={{ background: '#f8fafc', borderRadius: '12px', minHeight: '600px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: '1px dashed #cbd5e1' }}>
+                {currentBid.attachmentUrl ? (
+                  currentBid.attachmentUrl.toLowerCase().endsWith('.pdf') ? (
+                    <iframe 
+                      src={`${currentBid.attachmentUrl}#toolbar=0`} 
+                      style={{ width: '100%', height: '800px', border: 'none' }}
+                      title="PDF Viewer"
+                    />
+                  ) : (
+                    <div style={{ textAlign: 'center', padding: '40px' }}>
+                      <FileText size={64} color="#64748b" style={{ marginBottom: '16px' }} />
+                      <p style={{ fontWeight: 600, color: '#1e293b', marginBottom: '8px' }}>O arquivo anexado não é um PDF para visualização direta.</p>
+                      <a href={currentBid.attachmentUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary">
+                        Abrir em nova aba
+                      </a>
+                    </div>
+                  )
+                ) : (
+                  <div style={{ textAlign: 'center', color: '#94a3b8' }}>
+                    <X size={48} style={{ marginBottom: '16px', opacity: 0.5 }} />
+                    <p style={{ fontSize: '1.1rem', fontWeight: 500 }}>Nenhum edital anexado</p>
+                  </div>
+                )}
              </div>
           </div>
         </div>
@@ -555,6 +597,17 @@ export const Bids = () => {
             <div className="form-group">
               <label>Portal de Origem (URL)</label>
               <input type="url" value={formData.originPortal} onChange={e => setFormData({ ...formData, originPortal: e.target.value })} />
+            </div>
+            <div className="form-group">
+              <label>Anexar Edital (Arquivo)</label>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <input type="file" onChange={e => setAttachmentFile(e.target.files[0])} style={{ flex: 1 }} />
+                {(formData.attachmentUrl || uploading) && (
+                  <span style={{ fontSize: '0.8rem', color: uploading ? '#3b82f6' : '#10b981' }}>
+                    {uploading ? 'Fazendo upload...' : '✓ Arquivo salvo'}
+                  </span>
+                )}
+              </div>
             </div>
             <div style={{ display: 'flex', gap: '16px' }}>
               <div className="form-group" style={{ flex: 1 }}>
