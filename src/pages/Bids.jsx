@@ -1,3 +1,7 @@
+import React, { useState, useMemo, useEffect } from 'react';
+import { useData } from '../context/DataContext';
+import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { Plus, Edit2, Trash2, Filter, X, Eye, Link as LinkIcon, Download, Search, Check, MessageCircle, FileText, Upload } from 'lucide-react';
 import { Modal } from '../components/Modal';
 import { supabase } from '../lib/supabaseClient';
