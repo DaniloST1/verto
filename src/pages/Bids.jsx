@@ -36,6 +36,8 @@ export const Bids = () => {
   
   const [attachmentFile, setAttachmentFile] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [responsibleInput, setResponsibleInput] = useState('');
+  const [showRespSuggestions, setShowRespSuggestions] = useState(false);
 
   // Lock body scroll when modal is open
   useEffect(() => {
@@ -55,6 +57,16 @@ export const Bids = () => {
     const abr = { admin: 'Admin', finance: 'Financ', supervisor: 'Superv', employee: 'Colab' };
     return `${u.name} (${abr[u.role] || u.role})`;
   };
+
+  const responsibleSuggestions = useMemo(() => {
+    if (!responsibleInput || !showRespSuggestions) return [];
+    const lower = responsibleInput.toLowerCase();
+    const abr = { admin: 'Admin', finance: 'Financ', supervisor: 'Superv', employee: 'Colab' };
+    return users.filter(u => {
+      const roleStr = abr[u.role] || u.role;
+      return u.name.toLowerCase().includes(lower) || roleStr.toLowerCase().includes(lower);
+    }).slice(0, 5);
+  }, [responsibleInput, users, showRespSuggestions]);
 
 
 
@@ -87,6 +99,7 @@ export const Bids = () => {
         disputeStartTime: bid.disputeStartTime || '',
         disputeEndTime: bid.disputeEndTime || ''
       });
+      setResponsibleInput(bid.responsible ? getResponsibleStr(bid.responsible) : '');
     } else {
       setEditingId(null);
       setFormData({
@@ -95,6 +108,7 @@ export const Bids = () => {
         disputeDate: '', disputeStartTime: '', disputeEndTime: '',
         attachmentUrl: ''
       });
+      setResponsibleInput('');
     }
     setAttachmentFile(null);
     setShowModal(true);
@@ -595,15 +609,33 @@ export const Bids = () => {
                   <option value="Desclassificado">Desclassificado</option>
                 </select>
               </div>
-              <div className="form-group" style={{ flex: 1 }}>
+              <div className="form-group" style={{ flex: 1, position: 'relative' }}>
                 <label>Responsável</label>
-                <select value={formData.responsible || ''} onChange={e => setFormData({ ...formData, responsible: e.target.value })}>
-                  <option value="">Selecione...</option>
-                  {users.map(u => {
-                    const abr = { admin: 'Admin', finance: 'Financ', supervisor: 'Superv', employee: 'Colab' };
-                    return <option key={u.id} value={u.id}>{u.name} ({abr[u.role] || u.role})</option>;
-                  })}
-                </select>
+                <input
+                  type="text"
+                  placeholder="Busque por nome ou função..."
+                  value={responsibleInput}
+                  onChange={e => {
+                    setResponsibleInput(e.target.value);
+                    setShowRespSuggestions(true);
+                  }}
+                  onFocus={() => setShowRespSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowRespSuggestions(false), 200)}
+                />
+                {showRespSuggestions && responsibleSuggestions.length > 0 && (
+                  <div className="autocomplete-dropdown">
+                    {responsibleSuggestions.map(u => (
+                      <div key={u.id} className="autocomplete-item" onClick={() => {
+                        setFormData({ ...formData, responsible: u.id });
+                        setResponsibleInput(getResponsibleStr(u.id));
+                        setShowRespSuggestions(false);
+                      }}>
+                        <strong>{u.name}</strong>
+                        <span>{u.role.charAt(0).toUpperCase() + u.role.slice(1)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
             <div className="form-group">

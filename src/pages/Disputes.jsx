@@ -20,6 +20,8 @@ export const Disputes = () => {
   const [viewMode, setViewMode] = useState('list');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [activeDayDate, setActiveDayDate] = useState(null);
+  const [responsibleInput, setResponsibleInput] = useState('');
+  const [showRespSuggestions, setShowRespSuggestions] = useState(false);
   
   // Filter states
   const [filterSearch, setFilterSearch] = useState('');
@@ -55,9 +57,12 @@ export const Disputes = () => {
     if (dispute) {
       setEditingId(dispute.id);
       setFormData({ ...dispute });
+      setResponsibleInput(dispute.responsible ? getResponsibleStr(dispute.responsible) : '');
     } else {
       setEditingId(null);
       setFormData({ name: '', clientId: '', bidId: '', date: '', start_time: '', end_time: '', status: 'agendada', result: 'pendente', responsible: user.id });
+      setResponsibleInput(getResponsibleStr(user.id));
+    }
     }
     setShowModal(true);
   };
@@ -84,6 +89,16 @@ export const Disputes = () => {
     const abr = { admin: 'Admin', finance: 'Financ', supervisor: 'Superv', employee: 'Colab' };
     return `${u.name} (${abr[u.role] || u.role})`;
   };
+
+  const responsibleSuggestions = useMemo(() => {
+    if (!responsibleInput || !showRespSuggestions) return [];
+    const lower = responsibleInput.toLowerCase();
+    const abr = { admin: 'Admin', finance: 'Financ', supervisor: 'Superv', employee: 'Colab' };
+    return users.filter(u => {
+      const roleStr = abr[u.role] || u.role;
+      return u.name.toLowerCase().includes(lower) || roleStr.toLowerCase().includes(lower);
+    }).slice(0, 5);
+  }, [responsibleInput, users, showRespSuggestions]);
   const getClient = (id) => clients.find(c => c.id === id);
   const getBidNumber = (id) => bids.find(b => b.id === id)?.number || 'Desconhecido';
 
@@ -146,15 +161,33 @@ export const Disputes = () => {
       </div>
 
       {(user.role === 'supervisor' || user.role === 'admin') && (
-        <div className="form-group">
+        <div className="form-group" style={{ flex: 1, position: 'relative' }}>
           <label>Responsável</label>
-          <select value={formData.responsible} onChange={e => setFormData({...formData, responsible: e.target.value})}>
-            <option value="">Selecione...</option>
-            {users.map(u => {
-              const abr = { admin: 'Admin', finance: 'Financ', supervisor: 'Superv', employee: 'Colab' };
-              return <option key={u.id} value={u.id}>{u.name} ({abr[u.role] || u.role})</option>;
-            })}
-          </select>
+          <input
+            type="text"
+            placeholder="Busque por nome ou função..."
+            value={responsibleInput}
+            onChange={e => {
+              setResponsibleInput(e.target.value);
+              setShowRespSuggestions(true);
+            }}
+            onFocus={() => setShowRespSuggestions(true)}
+            onBlur={() => setTimeout(() => setShowRespSuggestions(false), 200)}
+          />
+          {showRespSuggestions && responsibleSuggestions.length > 0 && (
+            <div className="autocomplete-dropdown">
+              {responsibleSuggestions.map(u => (
+                <div key={u.id} className="autocomplete-item" onClick={() => {
+                  setFormData({ ...formData, responsible: u.id });
+                  setResponsibleInput(getResponsibleStr(u.id));
+                  setShowRespSuggestions(false);
+                }}>
+                  <strong>{u.name}</strong>
+                  <span>{u.role.charAt(0).toUpperCase() + u.role.slice(1)}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
