@@ -5,27 +5,29 @@ import { supabase } from '../lib/supabaseClient';
 import { useToast } from '../context/ToastContext';
 import { User, Upload, Shield, CheckCircle, Eye, EyeOff } from 'lucide-react';
 
+const LOGO_URL = 'https://kxvminodzhcsdwrmucdj.supabase.co/storage/v1/object/public/Verto%20imagens/logo-verto.jpeg';
+const VIDEO_URL = 'https://kxvminodzhcsdwrmucdj.supabase.co/storage/v1/object/public/Verto%20imagens/video-fundo-tela-login.mp4';
 const BUCKET = 'Verto imagens';
 
 const maskPhone = (v = '') => {
   v = v.replace(/\D/g, '').slice(0, 11);
-  if (v.length <= 10) return v.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
-  return v.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+  if (v.length === 0) return '';
+  if (v.length <= 2) return `(${v}`;
+  if (v.length <= 6) return `(${v.slice(0,2)}) ${v.slice(2)}`;
+  if (v.length <= 10) return `(${v.slice(0,2)}) ${v.slice(2,6)}-${v.slice(6)}`;
+  return `(${v.slice(0,2)}) ${v.slice(2,7)}-${v.slice(7)}`;
 };
 
 const maskCpfCnpj = (v = '') => {
   v = v.replace(/\D/g, '').slice(0, 14);
-  if (v.length <= 11) return v.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-  return v.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
-};
-
-const isValidPassword = (pass) => {
-  if (!pass) return false;
-  const hasUpper = /[A-Z]/.test(pass);
-  const hasLower = /[a-z]/.test(pass);
-  const hasNumber = /\d/.test(pass);
-  const hasSpecial = /[@$!%*?&]/.test(pass);
-  return pass.length >= 8 && hasUpper && hasLower && hasNumber && hasSpecial;
+  if (v.length <= 11) {
+    return v.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
+            .replace(/(\d{3})(\d{3})(\d{3})/, '$1.$2.$3')
+            .replace(/(\d{3})(\d{3})/, '$1.$2');
+  }
+  return v.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5')
+          .replace(/(\d{2})(\d{3})(\d{3})(\d{4})/, '$1.$2.$3/$4')
+          .replace(/(\d{2})(\d{3})(\d{3})/, '$1.$2.$3');
 };
 
 export const UpdateProfile = () => {
@@ -69,16 +71,16 @@ export const UpdateProfile = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formData.password && !allSatisfied) {
-      addToast('Sua senha não atende a todos os requisitos de segurança.', 'error');
+    if (!allSatisfied) {
+      addToast('A senha não atende aos requisitos de segurança.', 'error');
       return;
     }
-    if (formData.password && formData.password !== formData.confirmPassword) {
+    if (formData.password !== formData.confirmPassword) {
       addToast('As senhas não coincidem.', 'error');
       return;
     }
     if (!avatarPreview) {
-      addToast('Por favor, adicione uma foto de perfil.', 'warning');
+      addToast('A foto de perfil é obrigatória.', 'warning');
       return;
     }
 
@@ -89,7 +91,8 @@ export const UpdateProfile = () => {
       if (avatarFile) {
         const ext = avatarFile.name.split('.').pop();
         const path = `avatars/${user.id}.${ext}`;
-        await supabase.storage.from(BUCKET).upload(path, avatarFile, { upsert: true });
+        const { error: uploadError } = await supabase.storage.from(BUCKET).upload(path, avatarFile, { upsert: true });
+        if (uploadError) throw uploadError;
         const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
         avatar_url = data.publicUrl;
       }
@@ -104,172 +107,176 @@ export const UpdateProfile = () => {
         ...(formData.password ? { password: formData.password } : {})
       };
 
-      const { data: updated, error } = await supabase
+      const { error } = await supabase
         .from('users')
         .update(updates)
-        .eq('id', user.id)
-        .select()
-        .single();
+        .eq('id', user.id);
 
       if (error) throw error;
 
-      // Force logout and redirect to login so they use their new password
-      logout('Cadastro atualizado! Por favor, entre com sua nova senha.');
+      logout('Perfil atualizado! Por favor, entre com sua nova senha.');
       navigate('/login');
     } catch (err) {
       console.error('Update profile error:', err);
-      addToast('Erro ao atualizar perfil: ' + err.message, 'error');
+      addToast('Erro ao atualizar: ' + (err.message || 'Erro desconhecido'), 'error');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={{ 
-      minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', 
-      background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)', padding: '20px' 
-    }}>
-      <div className="glass-panel" style={{ width: '100%', maxWidth: '500px', padding: '40px', borderRadius: '24px' }}>
-        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <div style={{ 
-            width: '64px', height: '64px', background: '#e0f2fe', borderRadius: '16px', 
-            display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', color: '#0369a1' 
-          }}>
-            <Shield size={32} />
-          </div>
-          <h1 style={{ fontSize: '1.75rem', color: '#0f172a', marginBottom: '8px' }}>Primeiro Acesso</h1>
-          <p style={{ color: '#64748b' }}>Complete seu cadastro para acessar o sistema Verto.</p>
+    <div className="login-container">
+      {/* Video background */}
+      <video autoPlay loop muted playsInline style={{ position: 'fixed', inset: 0, width: '100vw', height: '100vh', objectFit: 'cover', zIndex: 0 }}>
+        <source src={VIDEO_URL} type="video/mp4" />
+      </video>
+
+      {/* Dark overlay */}
+      <div style={{ position: 'fixed', inset: 0, background: 'rgba(0, 0, 0, 0.70)', zIndex: 1 }} />
+
+      {/* Centered Box */}
+      <div className="login-box" style={{ 
+        position: 'relative', zIndex: 2, maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto',
+        display: 'flex', flexDirection: 'column', gap: '24px', padding: '40px'
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <img src={LOGO_URL} alt="Verto Logo" style={{ maxHeight: '60px', marginBottom: '8px' }} />
+          <h2 style={{ fontSize: '1.25rem', color: '#1e293b', margin: 0 }}>Primeiro Acesso</h2>
+          <p style={{ color: '#64748b', fontSize: '0.85rem', marginTop: '4px' }}>Atualize seus dados para continuar</p>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          {/* Avatar Section */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {/* Avatar */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
             <div 
               onClick={() => fileInputRef.current?.click()}
               style={{ 
-                width: '100px', height: '100px', borderRadius: '50%', background: '#f1f5f9', 
-                border: '3px solid #fff', boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                width: '80px', height: '80px', borderRadius: '50%', background: '#f1f5f9', border: '2px solid #e2e8f0',
                 cursor: 'pointer', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center'
               }}
             >
               {avatarPreview ? (
                 <img src={avatarPreview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : (
-                <User size={40} color="#94a3b8" />
+                <User size={32} color="#94a3b8" />
               )}
             </div>
-            <button type="button" onClick={() => fileInputRef.current?.click()} style={{ 
-              background: 'none', border: 'none', color: '#1d3e83', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer' 
-            }}>
-              <Upload size={14} style={{ marginRight: '4px' }} /> Escolher Foto Obrigatória
-            </button>
+            <span style={{ fontSize: '0.75rem', color: '#1d3e83', fontWeight: 600, cursor: 'pointer' }} onClick={() => fileInputRef.current?.click()}>
+              Alterar Foto
+            </span>
             <input type="file" ref={fileInputRef} onChange={handleAvatarChange} accept="image/*" style={{ display: 'none' }} />
           </div>
 
-          <div className="form-group">
-            <label>Confirmar Nome Completo</label>
-            <input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required />
+          <div className="input-group">
+            <User className="input-icon" size={18} />
+            <input type="text" placeholder="Nome Completo" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required />
           </div>
 
-          <div className="form-group">
-            <label>Confirmar E-mail Corporativo</label>
-            <input type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} required />
+          <div className="input-group">
+            <Shield className="input-icon" size={18} />
+            <input type="email" placeholder="E-mail Corporativo" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} required />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <div className="form-group">
-              <label>CPF/CNPJ</label>
-              <input type="text" value={formData.document} onChange={e => setFormData({...formData, document: maskCpfCnpj(e.target.value)})} maxLength={18} required />
-            </div>
-            <div className="form-group">
-              <label>Telefone</label>
-              <input type="text" value={formData.phone} onChange={e => setFormData({...formData, phone: maskPhone(e.target.value)})} maxLength={15} required />
-            </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '12px' }}>
+            <input 
+              type="text" 
+              placeholder="CPF/CNPJ" 
+              value={formData.document} 
+              onChange={e => setFormData({...formData, document: maskCpfCnpj(e.target.value)})} 
+              maxLength={18} 
+              required 
+              style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '10px 14px', borderRadius: '8px' }}
+            />
+            <input 
+              type="text" 
+              placeholder="Telefone" 
+              value={formData.phone} 
+              onChange={e => setFormData({...formData, phone: maskPhone(e.target.value)})} 
+              maxLength={15} 
+              required 
+              style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '10px 14px', borderRadius: '8px' }}
+            />
           </div>
 
-          <div className="nav-divider" style={{ margin: '8px 0' }}></div>
+          <div style={{ height: '1px', background: '#e2e8f0', margin: '4px 0' }} />
 
-          <div className="form-group">
-            <label>Definir Nova Senha Forte</label>
-            <div style={{ position: 'relative' }}>
+          {/* Passwords */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div className="input-group">
               <input 
                 type={showPassword ? 'text' : 'password'} 
-                placeholder="Digite sua nova senha" 
+                placeholder="Nova Senha" 
                 value={formData.password} 
                 onChange={e => setFormData({...formData, password: e.target.value})} 
                 required 
-                style={{ paddingRight: '45px' }}
               />
               <button 
                 type="button" 
                 onClick={() => setShowPassword(!showPassword)}
-                style={{ 
-                  position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
-                  background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '4px'
-                }}
+                style={{ position: 'absolute', right: '12px', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}
               >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
-            
+
+            {/* Checklist */}
             <div style={{ 
-              marginTop: '12px', padding: '16px', background: '#f8fafc', 
-              borderRadius: '12px', border: '1px solid #e2e8f0',
-              display: 'flex', flexDirection: 'column', gap: '8px'
+              padding: '12px', background: '#f8fafc', borderRadius: '8px', 
+              border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '6px'
             }}>
-              <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: 600, color: '#475569', marginBottom: '4px' }}>
-                Sua senha deve:
-              </p>
+              <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: 600, color: '#475569' }}>Sua senha deve:</p>
               {requirements.map((req, i) => (
-                <div key={i} style={{ 
-                  display: 'flex', alignItems: 'center', gap: '8px', 
-                  fontSize: '0.8rem', color: req.satisfied ? '#10b981' : '#94a3b8',
-                  transition: 'color 0.2s'
-                }}>
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.7rem', color: req.satisfied ? '#10b981' : '#94a3b8' }}>
                   <div style={{ 
-                    width: '16px', height: '16px', borderRadius: '50%', 
-                    border: `1px solid ${req.satisfied ? '#10b981' : '#cbd5e1'}`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    background: req.satisfied ? '#10b981' : 'transparent',
-                    color: '#fff', transition: 'all 0.2s'
+                    width: '12px', height: '12px', borderRadius: '50%', border: `1px solid ${req.satisfied ? '#10b981' : '#cbd5e1'}`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', background: req.satisfied ? '#10b981' : 'transparent', color: '#fff'
                   }}>
-                    {req.satisfied && <CheckCircle size={10} />}
+                    {req.satisfied && <CheckCircle size={8} />}
                   </div>
                   {req.label}
                 </div>
               ))}
             </div>
-          </div>
-          
-          <div className="form-group">
-            <label>Confirmar Nova Senha</label>
-            <div style={{ position: 'relative' }}>
+
+            <div className="input-group">
               <input 
                 type={showConfirmPassword ? 'text' : 'password'} 
-                placeholder="Repita a nova senha" 
+                placeholder="Confirmar Nova Senha" 
                 value={formData.confirmPassword} 
                 onChange={e => setFormData({...formData, confirmPassword: e.target.value})} 
                 required 
-                style={{ paddingRight: '45px' }}
               />
               <button 
                 type="button" 
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                style={{ 
-                  position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
-                  background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '4px'
-                }}
+                style={{ position: 'absolute', right: '12px', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}
               >
-                {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
           </div>
 
-          <button type="submit" className="btn btn-primary" style={{ height: '48px', marginTop: '12px', background: '#1d3e83' }} disabled={loading}>
-            {loading ? 'Salvando...' : <><CheckCircle size={18} /> Finalizar e Acessar</>}
+          <button 
+            type="submit" 
+            className="btn btn-primary" 
+            disabled={loading}
+            style={{ padding: '14px', background: '#1d3e83', fontWeight: 600 }}
+          >
+            {loading ? 'Salvando...' : 'Finalizar e Acessar'}
           </button>
         </form>
       </div>
+
+      <style>{`
+        .login-container { min-height: 100vh; display: flex; alignItems: center; justifyContent: center; overflow: hidden; }
+        .login-box { width: 100%; animation: fadeIn 0.6s ease-out; background: #ffffff; border-radius: 20px; box-shadow: 0 25px 80px rgba(0,0,0,0.5); }
+        .input-group { position: relative; display: flex; alignItems: center; }
+        .input-group .input-icon { position: absolute; left: 14px; color: #94a3b8; }
+        .input-group input { padding: 10px 14px 10px 42px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; width: 100%; transition: all 0.2s; }
+        .input-group input:focus { border-color: #1d3e83; background: #fff; outline: none; box-shadow: 0 0 0 3px rgba(29,62,131,0.1); }
+        .btn-primary:active { transform: scale(0.98); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+      `}</style>
     </div>
   );
 };
