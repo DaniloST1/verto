@@ -28,7 +28,8 @@ export const Bids = () => {
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({
     number: '', organ: '', estimatedValue: 0, status: 'aberto',
-    responsible: '', object: '', originPortal: '', clientsLinked: []
+    responsible: '', object: '', originPortal: '', clientsLinked: [],
+    disputeDate: '', disputeStartTime: '', disputeEndTime: ''
   });
 
   // Lock body scroll when modal is open
@@ -55,19 +56,26 @@ export const Bids = () => {
       if (filterName && !b.object?.toLowerCase().includes(filterName.toLowerCase()) && !b.organ?.toLowerCase().includes(filterName.toLowerCase())) return false;
       if (filterNumber && !b.number?.includes(filterNumber)) return false;
       if (filterDispute !== 'Todos' && b.status !== filterDispute.toLowerCase()) return false;
+      if (filterDate && b.disputeDate !== filterDate) return false;
       return true;
     });
-  }, [bids, filterName, filterNumber, filterDispute]);
+  }, [bids, filterName, filterNumber, filterDispute, filterDate]);
 
   const openForm = (bid = null) => {
     if (bid) {
       setEditingId(bid.id);
-      setFormData(bid);
+      setFormData({
+        ...bid,
+        disputeDate: bid.disputeDate || '',
+        disputeStartTime: bid.disputeStartTime || '',
+        disputeEndTime: bid.disputeEndTime || ''
+      });
     } else {
       setEditingId(null);
       setFormData({
         number: '', organ: '', estimatedValue: 0, status: 'aberto',
-        responsible: '', object: '', originPortal: '', clientsLinked: []
+        responsible: '', object: '', originPortal: '', clientsLinked: [],
+        disputeDate: '', disputeStartTime: '', disputeEndTime: ''
       });
     }
     setShowModal(true);
@@ -206,6 +214,17 @@ export const Bids = () => {
                     CRITÉRIO
                   </p>
                   <p style={{ fontWeight: 600, color: '#1e293b' }}>{bid.criterion || 'Maior Lance'}</p>
+                </div>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
+                <div>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    DATA/HORA DISPUTA
+                  </p>
+                  <p style={{ fontWeight: 600, color: '#1e293b' }}>
+                    {bid.disputeDate ? bid.disputeDate.split('-').reverse().join('/') : '-'} {bid.disputeStartTime ? ` às ${bid.disputeStartTime}` : ''}
+                  </p>
                 </div>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -432,6 +451,7 @@ export const Bids = () => {
                   <p><strong>Pregão:</strong> {currentBid.number}</p>
                   <p><strong>Status:</strong> {currentBid.status.toUpperCase()}</p>
                   <p><strong>Valor Estimado:</strong> R$ {Number(currentBid.estimatedValue).toLocaleString(undefined, {minimumFractionDigits:2})}</p>
+                  <p><strong>Data/Hora Disputa:</strong> {currentBid.disputeDate ? currentBid.disputeDate.split('-').reverse().join('/') : '-'} {currentBid.disputeStartTime ? ` às ${currentBid.disputeStartTime}` : ''}</p>
                   <p><strong>Objeto:</strong> {currentBid.object}</p>
                 </div>
                 <div style={{ fontSize: '0.9rem', color: '#334155', lineHeight: '1.8' }}>
@@ -494,6 +514,24 @@ export const Bids = () => {
             <div className="form-group">
               <label>Portal de Origem (URL)</label>
               <input type="url" value={formData.originPortal} onChange={e => setFormData({ ...formData, originPortal: e.target.value })} />
+            </div>
+            <div style={{ display: 'flex', gap: '16px' }}>
+              <div className="form-group" style={{ flex: 1 }}>
+                <label>Data da Disputa</label>
+                <input 
+                  type="date" 
+                  value={formData.disputeDate ? (typeof formData.disputeDate === 'string' && formData.disputeDate.includes('T') ? formData.disputeDate.split('T')[0] : formData.disputeDate) : ''} 
+                  onChange={e => setFormData({ ...formData, disputeDate: e.target.value })} 
+                />
+              </div>
+              <div className="form-group" style={{ flex: 1 }}>
+                <label>Hora Início</label>
+                <input type="time" value={formData.disputeStartTime || ''} onChange={e => setFormData({ ...formData, disputeStartTime: e.target.value })} />
+              </div>
+              <div className="form-group" style={{ flex: 1 }}>
+                <label>Hora Término</label>
+                <input type="time" value={formData.disputeEndTime || ''} onChange={e => setFormData({ ...formData, disputeEndTime: e.target.value })} />
+              </div>
             </div>
             <div className="form-group">
               <label>Objeto (Descrição)</label>

@@ -72,6 +72,9 @@ export const DataProvider = ({ children }) => {
       else if (key === 'referenceMonth') newObj.reference_month = obj[key];
       else if (key === 'referenceYear') newObj.reference_year = obj[key];
       else if (key === 'paymentMethod') newObj.payment_method = obj[key];
+      else if (key === 'disputeDate') newObj.dispute_date = obj[key];
+      else if (key === 'disputeStartTime') newObj.dispute_start_time = obj[key];
+      else if (key === 'disputeEndTime') newObj.dispute_end_time = obj[key];
       else newObj[key] = obj[key];
     }
     return newObj;
@@ -96,6 +99,9 @@ export const DataProvider = ({ children }) => {
       else if (key === 'reference_month') newObj.referenceMonth = obj[key];
       else if (key === 'reference_year') newObj.referenceYear = obj[key];
       else if (key === 'payment_method') newObj.paymentMethod = obj[key];
+      else if (key === 'dispute_date') newObj.disputeDate = obj[key];
+      else if (key === 'dispute_start_time') newObj.disputeStartTime = obj[key];
+      else if (key === 'dispute_end_time') newObj.disputeEndTime = obj[key];
       else newObj[key] = obj[key];
     }
     return newObj;
