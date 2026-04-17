@@ -244,7 +244,7 @@ export const Bids = () => {
         }
       `}</style>
 
-      <div className="grid-cards" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))' }}>
+      <div className="grid-cards" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(450px, 1fr)) !important' }}>
         {filteredBids.map(bid => (
           <div key={bid.id} className="glass-panel" style={{ padding: '0', display: 'flex', flexDirection: 'column', borderRadius: '12px', overflow: 'hidden' }}>
             <div style={{ padding: '24px' }}>
@@ -305,25 +305,25 @@ export const Bids = () => {
               </div>
             </div>
             
-            <div style={{ padding: '16px 24px', borderTop: '1px solid var(--surface-border)', display: 'flex', gap: '8px', justifyContent: 'space-between', background: '#f8fafc' }}>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <button className="btn" style={{ padding: '8px 16px', fontSize: '0.85rem', background: '#fff', border: '1px solid #cbd5e1', color: '#1e293b', borderRadius: '8px' }} onClick={() => { setCurrentBid(bid); setViewMode('view'); }}>
+            <div style={{ padding: '16px 20px', borderTop: '1px solid var(--surface-border)', display: 'flex', gap: '8px', justifyContent: 'space-between', background: '#f8fafc', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <button className="btn" style={{ padding: '8px 12px', fontSize: '0.85rem', background: '#fff', border: '1px solid #cbd5e1', color: '#1e293b', borderRadius: '8px' }} onClick={() => { setCurrentBid(bid); setViewMode('view'); }}>
                   <Eye size={16} /> Ver
                 </button>
-                 <button className="btn" style={{ padding: '8px 16px', fontSize: '0.85rem', background: '#fff', border: '1px solid #cbd5e1', color: '#1e293b', borderRadius: '8px' }} onClick={() => { setCurrentBid(bid); setViewMode('links'); }}>
+                 <button className="btn" style={{ padding: '8px 12px', fontSize: '0.85rem', background: '#fff', border: '1px solid #cbd5e1', color: '#1e293b', borderRadius: '8px' }} onClick={() => { setCurrentBid(bid); setViewMode('links'); }}>
                   <LinkIcon size={16} /> Vínculos
                 </button>
                 {bid.attachmentUrl && (
-                  <a href={bid.attachmentUrl} target="_blank" rel="noopener noreferrer" className="btn" style={{ padding: '8px 16px', fontSize: '0.85rem', background: '#fff', border: '1px solid #cbd5e1', color: '#1e293b', borderRadius: '8px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <a href={bid.attachmentUrl} target="_blank" rel="noopener noreferrer" className="btn" style={{ padding: '8px 12px', fontSize: '0.85rem', background: '#fff', border: '1px solid #cbd5e1', color: '#1e293b', borderRadius: '8px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <FileText size={16} /> Edital
                   </a>
                 )}
               </div>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                  <button className="btn btn-primary" style={{ padding: '8px 16px', fontSize: '0.85rem', borderRadius: '8px' }} onClick={() => openForm(bid)}>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  <button className="btn btn-primary" style={{ padding: '8px 12px', fontSize: '0.85rem', borderRadius: '8px', minWidth: '90px' }} onClick={() => openForm(bid)}>
                     <Edit2 size={16} /> Editar
                   </button>
-                  <button className="btn btn-danger" style={{ padding: '8px', borderRadius: '8px' }} onClick={() => handleDelete(bid.id)}>
+                  <button className="btn btn-danger" style={{ padding: '8px 10px', borderRadius: '8px' }} onClick={() => handleDelete(bid.id)}>
                     <Trash2 size={16} />
                   </button>
               </div>
@@ -487,8 +487,8 @@ export const Bids = () => {
     if (!currentBid) return null;
 
     return (
-      <div className="pdf-view-container" style={{ padding: '40px', background: '#f8fafc', minHeight: '100vh', display: 'flex', justifyContent: 'center' }}>
-        <div style={{ maxWidth: '900px', width: '100%', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div className="pdf-view-container" style={{ padding: '20px 10px', background: '#f8fafc', minHeight: '100vh', display: 'flex', justifyContent: 'center' }}>
+        <div style={{ maxWidth: '1600px', width: '100%', display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
              <button className="btn" style={{ background: '#fff', border: '1px solid #cbd5e1', display: 'flex', alignItems: 'center', gap: '8px' }} onClick={() => setViewMode('list')}>
                 <X size={18} /> Voltar para Lista
@@ -522,7 +522,7 @@ export const Bids = () => {
                   currentBid.attachmentUrl.toLowerCase().endsWith('.pdf') ? (
                     <iframe 
                       src={`${currentBid.attachmentUrl}#toolbar=0`} 
-                      style={{ width: '100%', height: '800px', border: 'none' }}
+                      style={{ width: '100%', height: '1200px', border: 'none' }}
                       title="PDF Viewer"
                     />
                   ) : (
