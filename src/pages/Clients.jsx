@@ -405,20 +405,28 @@ export const Clients = () => {
             {filteredClients.map(c => (
               <tr key={c.id}>
                 <td style={{ fontWeight: 600, color: '#1e293b' }}>{c.name}</td>
-                <td>{c.cnpj || '-'}</td>
+                <td style={{ whiteSpace: 'nowrap' }}>{c.cnpj || '-'}</td>
                 <td>{c.state_registration || '-'}</td>
                 <td>{c.email || '-'}</td>
-                <td>{c.contact || '-'}</td>
+                <td style={{ whiteSpace: 'nowrap' }}>{c.contact || c.phone || '-'}</td>
                 <td>{c.cpf_cnpj_responsible || '-'}</td>
-                <td style={{ textAlign: 'center' }}>{c.due_day || 10}</td>
+                <td style={{ textAlign: 'center' }}>{c.due_day || c.dueDay || 10}</td>
                 <td style={{ fontWeight: 600, color: '#0f172a' }}>
-                  {Number(c.cash_value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  {Number(c.cash_value ?? c.cashValue ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                 </td>
-                <td style={{ fontSize: '0.85rem' }}>
+                <td style={{ fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
                   <div style={{ display: 'flex', gap: '8px' }}>
-                    <span>{c.contract_start ? new Date(c.contract_start + 'T12:00:00').toLocaleDateString('pt-BR') : '-'}</span>
+                    <span>{(() => {
+                      const val = c.contract_start || c.contractStart;
+                      if (!val) return '-';
+                      return new Date(val.includes('T') ? val : val + 'T12:00:00').toLocaleDateString('pt-BR');
+                    })()}</span>
                     <span style={{ color: '#94a3b8' }}>|</span>
-                    <span>{c.contract_end ? new Date(c.contract_end + 'T12:00:00').toLocaleDateString('pt-BR') : '-'}</span>
+                    <span>{(() => {
+                      const val = c.contract_end || c.contractEnd;
+                      if (!val) return '-';
+                      return new Date(val.includes('T') ? val : val + 'T12:00:00').toLocaleDateString('pt-BR');
+                    })()}</span>
                   </div>
                 </td>
                 <td>
