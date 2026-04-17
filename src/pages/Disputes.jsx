@@ -63,7 +63,6 @@ export const Disputes = () => {
       setFormData({ name: '', clientId: '', bidId: '', date: '', start_time: '', end_time: '', status: 'agendada', result: 'pendente', responsible: user.id });
       setResponsibleInput(getResponsibleStr(user.id));
     }
-    }
     setShowModal(true);
   };
 
