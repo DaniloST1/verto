@@ -149,7 +149,11 @@ export const Disputes = () => {
         <div className="form-group">
           <label>Responsável</label>
           <select value={formData.responsible} onChange={e => setFormData({...formData, responsible: e.target.value})}>
-      {users.map(u => <option key={u.id} value={u.id}>{u.name} ({ROLE_NAMES[u.role] || u.role})</option>)}
+            <option value="">Selecione...</option>
+            {users.map(u => {
+              const abr = { admin: 'Admin', finance: 'Financ', supervisor: 'Superv', employee: 'Colab' };
+              return <option key={u.id} value={u.id}>{u.name} ({abr[u.role] || u.role})</option>;
+            })}
           </select>
         </div>
       )}

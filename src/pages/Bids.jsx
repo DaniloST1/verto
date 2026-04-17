@@ -599,7 +599,10 @@ export const Bids = () => {
                 <label>Responsável</label>
                 <select value={formData.responsible || ''} onChange={e => setFormData({ ...formData, responsible: e.target.value })}>
                   <option value="">Selecione...</option>
-                  {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+                  {users.map(u => {
+                    const abr = { admin: 'Admin', finance: 'Financ', supervisor: 'Superv', employee: 'Colab' };
+                    return <option key={u.id} value={u.id}>{u.name} ({abr[u.role] || u.role})</option>;
+                  })}
                 </select>
               </div>
             </div>
