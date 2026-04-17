@@ -261,8 +261,31 @@ export const DataProvider = ({ children }) => {
   const updateContract = (id, data) => updateItem('contracts', setContracts, id, data, 'Contrato', ['supervisor', 'employee', 'admin']);
   const deleteContract = (id) => deleteItem('contracts', setContracts, id, 'Contrato', ['admin', 'supervisor']);
 
-  const addCashFlow = (data) => addItem('cash_flow', setCashFlow, data, 'Fluxo de Caixa', ['finance', 'admin']);
-  const updateCashFlow = (id, data) => updateItem('cash_flow', setCashFlow, id, data, 'Fluxo de Caixa', ['finance', 'admin']);
+  const addCashFlow = async (item) => {
+    if (!checkPermission(['finance', 'admin'], 'Fluxo de Caixa')) return;
+    const { id, lastUpdate, paymentMethodOther, ...insertData } = item;
+    const snakeData = camelToSnake(insertData);
+    const { data, error } = await supabase.from('cash_flow').insert([snakeData]).select().single();
+    if (error) {
+      addToast(`Erro ao salvar Fluxo de Caixa: ${error.message}`, 'error');
+    } else if (data) {
+      setCashFlow(prev => [...prev, data]);
+      addToast(`Lançamento salvo com sucesso!`, 'success');
+    }
+  };
+
+  const updateCashFlow = async (id, item) => {
+    if (!checkPermission(['finance', 'admin'], 'Fluxo de Caixa')) return;
+    const { id: _, lastUpdate, paymentMethodOther, ...updateData } = item;
+    const snakeData = camelToSnake(updateData);
+    const { data, error } = await supabase.from('cash_flow').update(snakeData).eq('id', id).select().single();
+    if (error) {
+      addToast(`Erro ao atualizar Fluxo de Caixa: ${error.message}`, 'error');
+    } else if (data) {
+      setCashFlow(prev => prev.map(i => i.id === id ? data : i));
+      addToast(`Lançamento atualizado com sucesso!`, 'success');
+    }
+  };
   const deleteCashFlow = (id) => deleteItem('cash_flow', setCashFlow, id, 'Fluxo de Caixa', ['finance', 'admin']);
 
   const updatePaymentStatus = async (clientId, year, monthIndex, data) => {
