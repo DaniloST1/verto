@@ -119,111 +119,118 @@ export const Settings = () => {
     setAvatarFile(null);
   };
 
-  if (user?.role !== 'admin') return <div>Acesso negado.</div>;
+  const isAdmin = user?.role === 'admin';
 
   return (
     <div>
       <div className="page-header" style={{ marginBottom: '24px' }}>
         <div>
-          <h1 className="page-title" style={{ fontSize: '2rem', color: '#0f172a' }}>Gestão de Usuários</h1>
-          <p style={{ color: 'var(--text-muted)' }}>Crie e gerencie os acessos da equipe</p>
+          <h1 className="page-title" style={{ fontSize: '2rem', color: '#0f172a' }}>{isAdmin ? 'Gestão de Usuários' : 'Diretório da Equipe'}</h1>
+          <p style={{ color: 'var(--text-muted)' }}>{isAdmin ? 'Crie e gerencie os acessos da equipe' : 'Visualize e entre em contato com os membros da equipe'}</p>
         </div>
       </div>
 
       <div className="grid-cards" style={{ gridTemplateColumns: 'minmax(300px, 1fr) minmax(400px, 1.5fr)', gap: '24px' }}>
-        {/* Form Panel */}
-        <div className="glass-panel" style={{ padding: '32px', borderRadius: '12px' }}>
-          <h3 style={{ marginBottom: '24px', color: '#1e293b' }}>
-            {editingId ? 'Editar Usuário' : 'Criar Novo Usuário'}
-          </h3>
-          <form onSubmit={handleSubmit}>
-            {/* Avatar Upload */}
-            <div className="form-group">
-              <label>Foto do Usuário</label>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <div
-                  onClick={() => fileInputRef.current?.click()}
-                  style={{
-                    width: '72px', height: '72px', borderRadius: '50%',
-                    background: '#f1f5f9', border: '2px dashed #cbd5e1',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    cursor: 'pointer', overflow: 'hidden', flexShrink: 0,
-                    transition: 'border-color 0.2s',
-                  }}
-                  onMouseOver={e => e.currentTarget.style.borderColor = '#1d3e83'}
-                  onMouseOut={e => e.currentTarget.style.borderColor = '#cbd5e1'}
-                >
-                  {avatarPreview ? (
-                    <img src={avatarPreview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  ) : (
-                    <User size={28} color="#94a3b8" />
-                  )}
-                </div>
-                <div>
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    style={{ fontSize: '0.85rem', padding: '8px 14px' }}
+        {isAdmin && (
+          /* Form Panel */
+          <div className="glass-panel" style={{ padding: '32px', borderRadius: '12px' }}>
+            <h3 style={{ marginBottom: '24px', color: '#1e293b' }}>
+              {editingId ? 'Editar Usuário' : 'Criar Novo Usuário'}
+            </h3>
+            <form onSubmit={handleSubmit}>
+              {/* Avatar Upload */}
+              <div className="form-group">
+                <label>Foto do Usuário</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                  <div
                     onClick={() => fileInputRef.current?.click()}
+                    style={{
+                      width: '72px', height: '72px', borderRadius: '50%',
+                      background: '#f1f5f9', border: '2px dashed #cbd5e1',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      cursor: 'pointer', overflow: 'hidden', flexShrink: 0,
+                      transition: 'border-color 0.2s',
+                    }}
+                    onMouseOver={e => e.currentTarget.style.borderColor = '#1d3e83'}
+                    onMouseOut={e => e.currentTarget.style.borderColor = '#cbd5e1'}
                   >
-                    <Upload size={14} /> {avatarPreview ? 'Trocar Foto' : 'Selecionar Foto'}
-                  </button>
-                  {avatarPreview && (
+                    {avatarPreview ? (
+                      <img src={avatarPreview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      <User size={28} color="#94a3b8" />
+                    )}
+                  </div>
+                  <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleAvatarChange} />
+                  <div>
                     <button
                       type="button"
-                      style={{ display: 'block', marginTop: '6px', background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '0.8rem' }}
-                      onClick={() => { setAvatarPreview(null); setAvatarFile(null); setFormData(p => ({...p, avatar_url: ''})); }}
+                      className="btn btn-secondary"
+                      style={{ fontSize: '0.85rem', padding: '8px 14px' }}
+                      onClick={() => fileInputRef.current?.click()}
                     >
-                      Remover foto
+                      <Upload size={14} /> {avatarPreview ? 'Trocar Foto' : 'Selecionar Foto'}
                     </button>
-                  )}
-                  <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '4px' }}>JPG, PNG, WebP — máx. 2MB</p>
+                    {avatarPreview && (
+                      <button
+                        type="button"
+                        style={{ display: 'block', marginTop: '6px', background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '0.8rem' }}
+                        onClick={() => { setAvatarPreview(null); setAvatarFile(null); setFormData(p => ({...p, avatar_url: ''})); }}
+                      >
+                        Remover foto
+                      </button>
+                    )}
+                    <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '4px' }}>JPG, PNG, WebP — máx. 2MB</p>
+                  </div>
                 </div>
               </div>
-              <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleAvatarChange} />
-            </div>
 
-            <div className="form-group">
-              <label>Nome</label>
-              <input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required />
-            </div>
-            <div className="form-group">
-              <label>E-mail</label>
-              <input type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} required />
-            </div>
-            <div className="form-group">
-              <label>Documento (CPF/CNPJ)</label>
-              <input type="text" value={formData.document} onChange={e => setFormData({...formData, document: e.target.value})} required />
-            </div>
-            <div className="form-group">
-              <label>Telefone</label>
-              <input type="text" value={formData.phone} onChange={e => setFormData({...formData, phone: maskPhone(e.target.value)})} maxLength={15} placeholder="(00) 00000-0000" />
-            </div>
-            <div className="form-group">
-              <label>{editingId ? 'Nova Senha (opcional)' : 'Senha'}</label>
-              <input type="password" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} required={!editingId} />
-            </div>
-            <div className="form-group">
-              <label>Permissão (Cargo)</label>
-              <select value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})}>
-                <option value="admin">Administrador</option>
-                <option value="finance">Financeiro</option>
-                <option value="supervisor">Supervisor</option>
-                <option value="employee">Colaborador</option>
-              </select>
-            </div>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button type="submit" className="btn btn-primary" style={{ flex: 1, background: '#1d3e83' }} disabled={uploading}>
-                {uploading ? 'Salvando...' : editingId ? 'Salvar Alterações' : <><Plus size={18} /> Criar Usuário</>}
-              </button>
-              {editingId && (
-                <button type="button" className="btn btn-secondary" onClick={handleCancel}>Cancelar</button>
-              )}
-            </div>
-          </form>
-        </div>
+              <div className="form-group">
+                <label>Nome Completo</label>
+                <input type="text" placeholder="Nome do usuário" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} required />
+              </div>
 
-        {/* Users Table Panel */}
+              <div className="form-group">
+                <label>E-mail Corporativo</label>
+                <input type="email" placeholder="usuario@verto.com" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} required />
+              </div>
+
+              <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+                <div className="form-group" style={{ flex: '1 1 200px' }}>
+                  <label>Documento (CPF/CNPJ)</label>
+                  <input type="text" placeholder="000.000.000-00" value={formData.document} onChange={e => setFormData({ ...formData, document: e.target.value })} required />
+                </div>
+                <div className="form-group" style={{ flex: '1 1 200px' }}>
+                  <label>Telefone</label>
+                  <input type="text" placeholder="(00) 00000-0000" value={formData.phone || ''} onChange={e => setFormData({ ...formData, phone: maskPhone(e.target.value) })} />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>Senha de Acesso {editingId && <span style={{ fontWeight: 400, color: '#94a3b8' }}>(deixe vazio para não alterar)</span>}</label>
+                <input type="password" placeholder="••••••••" value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} required={!editingId} />
+              </div>
+
+              <div className="form-group">
+                <label>Cargo / Permissão</label>
+                <select value={formData.role} onChange={e => setFormData({ ...formData, role: e.target.value })}>
+                  <option value="admin">Administrador</option>
+                  <option value="finance">Financeiro</option>
+                  <option value="supervisor">Supervisor</option>
+                  <option value="employee">Colaborador</option>
+                </select>
+              </div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button type="submit" className="btn btn-primary" style={{ flex: 1, background: '#1d3e83' }} disabled={uploading}>
+                  {uploading ? 'Salvando...' : editingId ? 'Salvar Alterações' : <><Plus size={18} /> Criar Usuário</>}
+                </button>
+                {editingId && (
+                  <button type="button" className="btn btn-secondary" onClick={handleCancel}>Cancelar</button>
+                )}
+              </div>
+            </form>
+          </div>
+        )}
+
         <div className="glass-panel" style={{ padding: '32px', borderRadius: '12px', display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
             <h3 style={{ margin: 0, color: '#1e293b' }}>Usuários Cadastrados</h3>
@@ -288,9 +295,11 @@ export const Settings = () => {
                         <button className="btn" style={{ padding: '6px', background: '#fff', border: '1px solid #cbd5e1', color: '#10b981', borderRadius: '6px' }} onClick={() => setViewingUser(u)} title="Ver dados">
                           <Eye size={16} />
                         </button>
-                        <button className="btn" style={{ padding: '6px', background: '#fff', border: '1px solid #cbd5e1', color: '#3b82f6', borderRadius: '6px' }} onClick={() => handleEditClick(u)} title="Editar">
-                          <Edit2 size={16} />
-                        </button>
+                        {isAdmin && (
+                          <button className="btn" style={{ padding: '6px', background: '#fff', border: '1px solid #cbd5e1', color: '#3b82f6', borderRadius: '6px' }} onClick={() => handleEditClick(u)} title="Editar">
+                            <Edit2 size={16} />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
