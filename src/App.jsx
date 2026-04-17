@@ -11,11 +11,13 @@ import { Contracts } from './pages/Contracts';
 import { CashFlow } from './pages/CashFlow';
 import { ClientPayments } from './pages/ClientPayments';
 import { Settings } from './pages/Settings';
+import { UpdateProfile } from './pages/UpdateProfile';
 
 function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/update-profile" element={<ProtectedRoute ignoreFirstLogin><UpdateProfile /></ProtectedRoute>} />
       <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route index element={<Dashboard />} />
         <Route path="clients" element={<Clients />} />

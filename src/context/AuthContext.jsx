@@ -63,10 +63,10 @@ export const AuthProvider = ({ children }) => {
       setUser(data);
       localStorage.setItem('verto_user', JSON.stringify(data));
       addToast('Login realizado com sucesso!', 'success');
-      return true;
+      return data;
     } else {
       addToast('Credenciais inválidas. Tente novamente.', 'error');
-      return false;
+      return null;
     }
   };
 

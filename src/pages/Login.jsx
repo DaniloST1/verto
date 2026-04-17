@@ -20,9 +20,15 @@ export const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    const success = await login(identifier, password);
+    const loggedUser = await login(identifier, password);
     setLoading(false);
-    if (success) navigate('/');
+    if (loggedUser) {
+      if (loggedUser.is_first_login) {
+        navigate('/update-profile');
+      } else {
+        navigate('/');
+      }
+    }
   };
 
   const handleResetPassword = async (e) => {
