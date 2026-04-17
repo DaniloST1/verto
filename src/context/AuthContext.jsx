@@ -129,6 +129,14 @@ export const AuthProvider = ({ children }) => {
       addToast('Você não pode excluir sua própria conta.', 'warning');
       return;
     }
+
+    // Unbind from related tables first to avoid foreign key constraints
+    const tablesToClean = ['clients', 'contracts', 'disputes', 'cash_flow'];
+    for (const table of tablesToClean) {
+      // Note: we don't block deletion if child updates fail, but we log it
+      await supabase.from(table).update({ responsible_id: null }).eq('responsible_id', id);
+    }
+
     const { error } = await supabase.from('users').delete().eq('id', id);
     if (error) {
       addToast('Erro ao excluir usuário: ' + error.message, 'error');
