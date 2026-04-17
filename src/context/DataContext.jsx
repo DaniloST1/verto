@@ -231,7 +231,25 @@ export const DataProvider = ({ children }) => {
       fetchData();
     }
   };
-  const deleteBid = (id) => deleteItem('bids', setBids, id, 'Edital', ['admin', 'supervisor']);
+  const deleteBid = async (id) => {
+    if (!checkPermission(['admin', 'supervisor'], 'Excluir Edital')) return;
+    
+    // Deletar disputas vinculadas (Cascata manual)
+    const { error: dispErr } = await supabase.from('disputes').delete().eq('bid_id', id);
+    if (dispErr) {
+      addToast(`Erro ao limpar disputas vinculadas: ${dispErr.message}`, 'error');
+      return;
+    }
+
+    const { error } = await supabase.from('bids').delete().eq('id', id);
+    if (error) {
+      addToast(`Erro ao excluir Edital: ${error.message}`, 'error');
+    } else {
+      setBids(prev => prev.filter(item => item.id !== id));
+      setDisputes(prev => prev.filter(item => item.bid_id !== id));
+      addToast(`Edital e suas disputas excluídos com sucesso.`, 'info');
+    }
+  };
 
   const addDispute = (data) => addItem('disputes', setDisputes, data, 'Disputa', ['supervisor', 'admin']);
   const updateDispute = (id, data) => updateItem('disputes', setDisputes, id, data, 'Disputa', ['supervisor', 'employee', 'admin']);

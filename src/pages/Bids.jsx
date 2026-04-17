@@ -124,6 +124,15 @@ export const Bids = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Validação de horário
+    if (formData.disputeStartTime && formData.disputeEndTime) {
+      if (formData.disputeEndTime <= formData.disputeStartTime) {
+        addToast("O horário de término não pode ser menor ou igual ao de início.", 'error');
+        return;
+      }
+    }
+
     const finalAttachmentUrl = await uploadFile();
     const updatedData = { ...formData, attachmentUrl: finalAttachmentUrl };
 

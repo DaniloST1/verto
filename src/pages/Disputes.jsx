@@ -38,6 +38,15 @@ export const Disputes = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    // Validação de horário
+    if (formData.start_time && formData.end_time) {
+      if (formData.end_time <= formData.start_time) {
+        addToast("O horário de término não pode ser menor ou igual ao de início.", 'error');
+        return;
+      }
+    }
+
     if (editingId) updateDispute(editingId, formData);
     else addDispute(formData);
     setShowModal(false);
