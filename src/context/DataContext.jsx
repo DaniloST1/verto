@@ -154,8 +154,83 @@ export const DataProvider = ({ children }) => {
   const updateClient = (id, data) => updateItem('clients', setClients, id, data, 'Cliente', ['employee', 'supervisor', 'admin']);
   const deleteClient = (id) => deleteItem('clients', setClients, id, 'Cliente', ['admin', 'supervisor']);
 
-  const addBid = (data) => addItem('bids', setBids, data, 'Edital', ['supervisor', 'employee', 'admin']);
-  const updateBid = (id, data) => updateItem('bids', setBids, id, data, 'Edital', ['supervisor', 'employee', 'admin']);
+  const addBid = async (item) => {
+    if (!checkPermission(['supervisor', 'employee', 'admin'], 'Edital')) return;
+    const { id, lastUpdate, ...insertData } = item; 
+    const snakeData = camelToSnake(insertData);
+    const { data: newBid, error } = await supabase.from('bids').insert([snakeData]).select().single();
+    
+    if (error) {
+      addToast(`Erro ao salvar Edital: ${error.message}`, 'error');
+    } else if (newBid) {
+      setBids(prev => [...prev, newBid]);
+      addToast(`Edital salvo com sucesso!`, 'success');
+      
+      // Auto-create Dispute
+      const disputeData = {
+        name: newBid.organ || 'Edital sem nome',
+        bid_id: newBid.id,
+        date: newBid.dispute_date,
+        start_time: newBid.dispute_start_time,
+        end_time: newBid.dispute_end_time,
+        status: 'agendada',
+        result: 'pendente',
+        responsible_id: newBid.responsible_id
+      };
+      
+      const { error: dispErr } = await supabase.from('disputes').insert([disputeData]);
+      if (dispErr) {
+        console.error("ERRO CRITICO NA DISPUTA:", dispErr);
+        // Usando alert para garantir que o usuário veja a mensagem do banco
+        window.alert(`ATENÇÃO: Edital salvo, mas a DISPUTA falhou.\nErro do Banco: ${dispErr.message}`);
+      } else {
+        addToast(`Disputa vinculada com sucesso!`, 'info');
+        await fetchData(); 
+      }
+    }
+  };
+
+  const updateBid = async (id, updates) => {
+    if (!checkPermission(['supervisor', 'employee', 'admin'], 'Edital')) return;
+    const snakeUpdates = camelToSnake(updates);
+    const { data: updatedBid, error } = await supabase.from('bids').update(snakeUpdates).eq('id', id).select().single();
+    
+    if (error) {
+      addToast(`Erro ao atualizar Edital: ${error.message}`, 'error');
+    } else if (updatedBid) {
+      setBids(prev => prev.map(item => item.id === id ? updatedBid : item));
+      addToast(`Edital atualizado com sucesso!`, 'success');
+
+      // Sync Disputes
+      const basicDispUpdate = {
+        name: updatedBid.organ,
+        date: updatedBid.dispute_date,
+        start_time: updatedBid.dispute_start_time,
+        end_time: updatedBid.dispute_end_time,
+        responsible_id: updatedBid.responsible_id
+      };
+      
+      await supabase.from('disputes').update(basicDispUpdate).eq('bid_id', id);
+
+      const linked = updatedBid.clients_linked || [];
+      if (linked.length > 0) {
+        for (const clientId of linked) {
+          const { data: existing } = await supabase.from('disputes').select('*').eq('bid_id', id).eq('client_id', clientId).maybeSingle();
+          if (!existing) {
+            await supabase.from('disputes').insert([{
+              ...basicDispUpdate,
+              bid_id: id,
+              client_id: clientId,
+              status: 'agendada',
+              result: 'pendente'
+            }]);
+          }
+        }
+        await supabase.from('disputes').delete().eq('bid_id', id).is('client_id', null);
+      }
+      fetchData();
+    }
+  };
   const deleteBid = (id) => deleteItem('bids', setBids, id, 'Edital', ['admin', 'supervisor']);
 
   const addDispute = (data) => addItem('disputes', setDisputes, data, 'Disputa', ['supervisor', 'admin']);
