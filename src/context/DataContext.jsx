@@ -75,6 +75,7 @@ export const DataProvider = ({ children }) => {
       else if (key === 'disputeDate') newObj.dispute_date = obj[key];
       else if (key === 'disputeStartTime') newObj.dispute_start_time = obj[key];
       else if (key === 'disputeEndTime') newObj.dispute_end_time = obj[key];
+      else if (key === 'attachmentUrl') newObj.attachment_url = obj[key];
       else newObj[key] = obj[key];
     }
     return newObj;
@@ -102,6 +103,7 @@ export const DataProvider = ({ children }) => {
       else if (key === 'dispute_date') newObj.disputeDate = obj[key];
       else if (key === 'dispute_start_time') newObj.disputeStartTime = obj[key];
       else if (key === 'dispute_end_time') newObj.disputeEndTime = obj[key];
+      else if (key === 'attachment_url') newObj.attachmentUrl = obj[key];
       else newObj[key] = obj[key];
     }
     return newObj;
