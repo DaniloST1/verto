@@ -223,7 +223,12 @@ export const Bids = () => {
                     DATA/HORA DISPUTA
                   </p>
                   <p style={{ fontWeight: 600, color: '#1e293b' }}>
-                    {bid.disputeDate ? bid.disputeDate.split('-').reverse().join('/') : '-'} {bid.disputeStartTime ? ` às ${bid.disputeStartTime}` : ''}
+                    {bid.disputeDate ? bid.disputeDate.split('-').reverse().join('/') : '-'}
+                    {bid.disputeStartTime && (
+                      <span style={{ marginLeft: '4px' }}>
+                         às {bid.disputeStartTime} {bid.disputeEndTime ? ` até ${bid.disputeEndTime}` : ''}
+                      </span>
+                    )}
                   </p>
                 </div>
               </div>
@@ -451,7 +456,11 @@ export const Bids = () => {
                   <p><strong>Pregão:</strong> {currentBid.number}</p>
                   <p><strong>Status:</strong> {currentBid.status.toUpperCase()}</p>
                   <p><strong>Valor Estimado:</strong> R$ {Number(currentBid.estimatedValue).toLocaleString(undefined, {minimumFractionDigits:2})}</p>
-                  <p><strong>Data/Hora Disputa:</strong> {currentBid.disputeDate ? currentBid.disputeDate.split('-').reverse().join('/') : '-'} {currentBid.disputeStartTime ? ` às ${currentBid.disputeStartTime}` : ''}</p>
+                  <p>
+                    <strong>Data/Hora Disputa:</strong> {currentBid.disputeDate ? currentBid.disputeDate.split('-').reverse().join('/') : '-'}
+                    {currentBid.disputeStartTime && ` às ${currentBid.disputeStartTime}`}
+                    {currentBid.disputeEndTime && ` até ${currentBid.disputeEndTime}`}
+                  </p>
                   <p><strong>Objeto:</strong> {currentBid.object}</p>
                 </div>
                 <div style={{ fontSize: '0.9rem', color: '#334155', lineHeight: '1.8' }}>
