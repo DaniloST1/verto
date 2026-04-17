@@ -24,7 +24,7 @@ function App() {
         <Route path="contracts" element={<Contracts />} />
         <Route path="cash-flow" element={<ProtectedRoute allowedRoles={['admin', 'finance']}><CashFlow /></ProtectedRoute>} />
         <Route path="client-payments" element={<ProtectedRoute allowedRoles={['admin', 'finance']}><ClientPayments /></ProtectedRoute>} />
-        <Route path="settings" element={<ProtectedRoute allowedRoles={['admin']}><Settings /></ProtectedRoute>} />
+        <Route path="settings" element={<ProtectedRoute allowedRoles={['admin', 'supervisor', 'employee', 'finance']}><Settings /></ProtectedRoute>} />
       </Route>
     </Routes>
   );

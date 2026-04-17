@@ -58,15 +58,10 @@ export const Sidebar = ({ open, onClose }) => {
             </>
           )}
 
-          {isAdmin && (
-            <>
-              <div className="nav-divider"></div>
-              <span className="nav-section-title">ADMIN</span>
-              <NavLink to="/settings" className={({isActive}) => `nav-link ${isActive ? 'active' : ''}`}>
-                <Settings size={20}/> Gestão de Usuários
-              </NavLink>
-            </>
-          )}
+          <div className="nav-divider"></div>
+          <NavLink to="/settings" className={({isActive}) => `nav-link ${isActive ? 'active' : ''}`}>
+            <Settings size={20}/> {isAdmin ? 'Gestão de Usuários' : 'Equipe'}
+          </NavLink>
         </nav>
       </aside>
 
