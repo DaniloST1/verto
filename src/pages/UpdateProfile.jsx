@@ -268,9 +268,29 @@ export const UpdateProfile = () => {
       </div>
 
       <style>{`
-        .login-container { min-height: 100vh; display: flex; alignItems: center; justifyContent: center; overflow: hidden; }
-        .login-box { width: 100%; animation: fadeIn 0.6s ease-out; background: #ffffff; border-radius: 20px; box-shadow: 0 25px 80px rgba(0,0,0,0.5); }
-        .input-group { position: relative; display: flex; alignItems: center; }
+        .login-container { 
+          min-height: 100vh; 
+          display: flex; 
+          align-items: center; 
+          justify-content: center; 
+          overflow: hidden; 
+          position: relative;
+        }
+        .login-box { 
+          width: 100%; 
+          animation: fadeIn 0.6s ease-out; 
+          background: #ffffff; 
+          border-radius: 20px; 
+          box-shadow: 0 25px 80px rgba(0,0,0,0.5); 
+          /* Custom scrollbar for better look */
+          scrollbar-width: thin;
+          scrollbar-color: #cbd5e1 transparent;
+        }
+        .login-box::-webkit-scrollbar { width: 6px; }
+        .login-box::-webkit-scrollbar-track { background: transparent; }
+        .login-box::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 20px; }
+        
+        .input-group { position: relative; display: flex; align-items: center; }
         .input-group .input-icon { position: absolute; left: 14px; color: #94a3b8; }
         .input-group input { padding: 10px 14px 10px 42px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; width: 100%; transition: all 0.2s; }
         .input-group input:focus { border-color: #1d3e83; background: #fff; outline: none; box-shadow: 0 0 0 3px rgba(29,62,131,0.1); }
