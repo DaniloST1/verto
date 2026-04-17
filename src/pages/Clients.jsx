@@ -384,10 +384,10 @@ export const Clients = () => {
       `}</style>
 
       <div className="table-container animate-fade-in" style={{ overflowX: 'auto' }}>
-        <table style={{ minWidth: '1500px' }}>
+        <table style={{ minWidth: '1800px' }}>
           <thead style={{ background: '#eef2f6' }}>
             <tr>
-              <th style={{ width: '220px' }}>NOME DA EMPRESA</th>
+              <th style={{ width: '350px' }}>NOME DA EMPRESA</th>
               <th style={{ width: '220px' }}>CNPJ</th>
               <th style={{ width: '140px' }}>IE</th>
               <th style={{ width: '200px' }}>EMAIL</th>
