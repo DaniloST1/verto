@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { useToast } from '../context/ToastContext';
-import { User, Upload, Shield, CheckCircle } from 'lucide-react';
+import { User, Upload, Shield, CheckCircle, Eye, EyeOff } from 'lucide-react';
 
 const BUCKET = 'Verto imagens';
 
@@ -29,10 +29,13 @@ const isValidPassword = (pass) => {
 };
 
 export const UpdateProfile = () => {
-  const { user, setUser } = useAuth();
+  const { user, setUser, logout } = useAuth();
   const { addToast } = useToast();
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [formData, setFormData] = useState({
     name: user?.name || '',
@@ -110,11 +113,11 @@ export const UpdateProfile = () => {
 
       if (error) throw error;
 
-      setUser(updated);
-      localStorage.setItem('verto_user', JSON.stringify(updated));
-      addToast('Perfil atualizado com sucesso! Bem-vindo ao sistema.', 'success');
-      navigate('/');
+      // Force logout and redirect to login so they use their new password
+      logout('Cadastro atualizado! Por favor, entre com sua nova senha.');
+      navigate('/login');
     } catch (err) {
+      console.error('Update profile error:', err);
       addToast('Erro ao atualizar perfil: ' + err.message, 'error');
     } finally {
       setLoading(false);
@@ -188,13 +191,26 @@ export const UpdateProfile = () => {
 
           <div className="form-group">
             <label>Definir Nova Senha Forte</label>
-            <input 
-              type="password" 
-              placeholder="Digite sua nova senha" 
-              value={formData.password} 
-              onChange={e => setFormData({...formData, password: e.target.value})} 
-              required 
-            />
+            <div style={{ position: 'relative' }}>
+              <input 
+                type={showPassword ? 'text' : 'password'} 
+                placeholder="Digite sua nova senha" 
+                value={formData.password} 
+                onChange={e => setFormData({...formData, password: e.target.value})} 
+                required 
+                style={{ paddingRight: '45px' }}
+              />
+              <button 
+                type="button" 
+                onClick={() => setShowPassword(!showPassword)}
+                style={{ 
+                  position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
+                  background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '4px'
+                }}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
             
             <div style={{ 
               marginTop: '12px', padding: '16px', background: '#f8fafc', 
@@ -227,13 +243,26 @@ export const UpdateProfile = () => {
           
           <div className="form-group">
             <label>Confirmar Nova Senha</label>
-            <input 
-              type="password" 
-              placeholder="Repita a nova senha" 
-              value={formData.confirmPassword} 
-              onChange={e => setFormData({...formData, confirmPassword: e.target.value})} 
-              required 
-            />
+            <div style={{ position: 'relative' }}>
+              <input 
+                type={showConfirmPassword ? 'text' : 'password'} 
+                placeholder="Repita a nova senha" 
+                value={formData.confirmPassword} 
+                onChange={e => setFormData({...formData, confirmPassword: e.target.value})} 
+                required 
+                style={{ paddingRight: '45px' }}
+              />
+              <button 
+                type="button" 
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                style={{ 
+                  position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
+                  background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '4px'
+                }}
+              >
+                {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </div>
 
           <button type="submit" className="btn btn-primary" style={{ height: '48px', marginTop: '12px', background: '#1d3e83' }} disabled={loading}>
