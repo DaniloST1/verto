@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Plus, Edit2, Upload, User, Eye, MessageCircle, Trash2, CheckCircle } from 'lucide-react';
+import { Plus, Edit2, Upload, User, Eye, EyeOff, MessageCircle, Trash2, CheckCircle } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { useToast } from '../context/ToastContext';
 import { Modal } from '../components/Modal';
@@ -58,6 +58,7 @@ export const Settings = () => {
   const [avatarPreview, setAvatarPreview] = useState(null);
   const [avatarFile, setAvatarFile] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const requirements = [
     { label: 'Ter no mínimo 8 caracteres', satisfied: formData.password.length >= 8 },
     { label: 'Ter no mínimo 1 número', satisfied: /\d/.test(formData.password) },
@@ -264,13 +265,26 @@ export const Settings = () => {
 
               <div className="form-group">
                 <label>Senha de Acesso {editingId && <span style={{ fontWeight: 400, color: '#94a3b8' }}>(deixe vazio para não alterar)</span>}</label>
-                <input 
-                  type="password" 
-                  placeholder="••••••••" 
-                  value={formData.password} 
-                  onChange={e => setFormData({ ...formData, password: e.target.value })} 
-                  required={!editingId} 
-                />
+                <div style={{ position: 'relative' }}>
+                  <input 
+                    type={showPassword ? 'text' : 'password'} 
+                    placeholder="••••••••" 
+                    value={formData.password} 
+                    onChange={e => setFormData({ ...formData, password: e.target.value })} 
+                    required={!editingId} 
+                    style={{ paddingRight: '40px' }}
+                  />
+                  <button 
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{ 
+                      position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
+                      background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer'
+                    }}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
                 
                 {formData.password && (
                   <div style={{ 
