@@ -56,6 +56,15 @@ export const Bids = () => {
     return `${u.name} (${abr[u.role] || u.role})`;
   };
 
+  const getStatusStyle = (status) => {
+    const s = status?.toLowerCase() || '';
+    if (s.includes('vitória') || s.includes('vitoria') || s.includes('homologado')) return { bg: '#dcfce7', color: '#166534' };
+    if (s.includes('disputa') || s.includes('seleção')) return { bg: '#dbeafe', color: '#1e40af' };
+    if (s.includes('análise') || s.includes('analise')) return { bg: '#fef3c7', color: '#92400e' };
+    if (s.includes('desclassificado')) return { bg: '#fee2e2', color: '#991b1b' };
+    return { bg: '#f1f5f9', color: '#475569' };
+  };
+
   const filteredBids = useMemo(() => {
     return bids.filter(b => {
       if (filterName && !b.object?.toLowerCase().includes(filterName.toLowerCase()) && !b.organ?.toLowerCase().includes(filterName.toLowerCase())) return false;
@@ -264,13 +273,23 @@ export const Bids = () => {
                   </p>
                 </div>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
-                   <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>DISPUTA</p>
-                   <p style={{ fontWeight: 600, color: '#1e293b', textTransform: 'capitalize' }}>{bid.status}</p>
+                   <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, marginBottom: '4px' }}>STATUS</p>
+                   <span style={{ 
+                     padding: '4px 12px', 
+                     borderRadius: '16px', 
+                     fontSize: '0.75rem', 
+                     fontWeight: 700,
+                     background: getStatusStyle(bid.status).bg,
+                     color: getStatusStyle(bid.status).color,
+                     display: 'inline-block'
+                   }}>
+                    {bid.status || 'Em análise'}
+                   </span>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                   <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>RESPONSÁVEL</p>
+                   <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, marginBottom: '4px' }}>RESPONSÁVEL</p>
                    <p style={{ fontWeight: 500, color: '#475569', fontSize: '0.9rem' }}>
                     {getResponsibleStr(bid.responsible)}
                    </p>
