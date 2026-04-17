@@ -383,17 +383,22 @@ export const Clients = () => {
         }
       `}</style>
 
-      <div className="table-container">
-        <table>
+      <div className="table-container animate-fade-in" style={{ overflowX: 'auto' }}>
+        <table style={{ minWidth: '1500px' }}>
           <thead style={{ background: '#eef2f6' }}>
             <tr>
-              <th>NOME DA EMPRESA</th>
-              <th>CNPJ</th>
-              <th>EMAIL</th>
-              <th>TELEFONE</th>
-              <th>STATUS</th>
-              <th>RESPONSÁVEL</th>
-              <th style={{ textAlign: 'center' }}>AÇÕES</th>
+              <th style={{ width: '220px' }}>NOME DA EMPRESA</th>
+              <th style={{ width: '180px' }}>CNPJ</th>
+              <th style={{ width: '140px' }}>IE</th>
+              <th style={{ width: '200px' }}>EMAIL</th>
+              <th style={{ width: '160px' }}>TELEFONE</th>
+              <th style={{ width: '180px' }}>RESP. (CPF/CNPJ)</th>
+              <th style={{ width: '100px' }}>VENC.</th>
+              <th style={{ width: '140px' }}>VALOR</th>
+              <th style={{ width: '240px' }}>CONTRATO (INÍCIO/FIM)</th>
+              <th style={{ width: '120px' }}>STATUS</th>
+              <th style={{ width: '180px' }}>RESPONSÁVEL GESTÃO</th>
+              <th style={{ textAlign: 'center', width: '140px' }}>AÇÕES</th>
             </tr>
           </thead>
           <tbody>
@@ -401,8 +406,21 @@ export const Clients = () => {
               <tr key={c.id}>
                 <td style={{ fontWeight: 600, color: '#1e293b' }}>{c.name}</td>
                 <td>{c.cnpj || '-'}</td>
+                <td>{c.state_registration || '-'}</td>
                 <td>{c.email || '-'}</td>
                 <td>{c.contact || '-'}</td>
+                <td>{c.cpf_cnpj_responsible || '-'}</td>
+                <td style={{ textAlign: 'center' }}>{c.due_day || 10}</td>
+                <td style={{ fontWeight: 600, color: '#0f172a' }}>
+                  {Number(c.cash_value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                </td>
+                <td style={{ fontSize: '0.85rem' }}>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <span>{c.contract_start ? new Date(c.contract_start + 'T12:00:00').toLocaleDateString('pt-BR') : '-'}</span>
+                    <span style={{ color: '#94a3b8' }}>|</span>
+                    <span>{c.contract_end ? new Date(c.contract_end + 'T12:00:00').toLocaleDateString('pt-BR') : '-'}</span>
+                  </div>
+                </td>
                 <td>
                   <span style={{
                     padding: '4px 12px', borderRadius: '16px', fontSize: '0.75rem', fontWeight: 700,
