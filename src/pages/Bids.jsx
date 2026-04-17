@@ -611,17 +611,21 @@ export const Bids = () => {
               </div>
               <div className="form-group" style={{ flex: 1, position: 'relative' }}>
                 <label>Responsável</label>
-                <input
-                  type="text"
-                  placeholder="Busque por nome ou função..."
-                  value={responsibleInput}
-                  onChange={e => {
-                    setResponsibleInput(e.target.value);
-                    setShowRespSuggestions(true);
-                  }}
-                  onFocus={() => setShowRespSuggestions(true)}
-                  onBlur={() => setTimeout(() => setShowRespSuggestions(false), 200)}
-                />
+                <div style={{ position: 'relative' }}>
+                  <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                  <input
+                    type="text"
+                    placeholder="Busque por nome ou função..."
+                    value={responsibleInput}
+                    style={{ paddingLeft: '36px' }}
+                    onChange={e => {
+                      setResponsibleInput(e.target.value);
+                      setShowRespSuggestions(true);
+                    }}
+                    onFocus={() => setShowRespSuggestions(true)}
+                    onBlur={() => setTimeout(() => setShowRespSuggestions(false), 200)}
+                  />
+                </div>
                 {showRespSuggestions && responsibleSuggestions.length > 0 && (
                   <div className="autocomplete-dropdown">
                     {responsibleSuggestions.map(u => (

@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { Plus, Edit2, Trash2, Filter, X, Eye, ArrowLeft, TrendingUp, Building, Briefcase, DollarSign, Activity, FileText, Gavel, BarChart2 } from 'lucide-react';
+import { Plus, Edit2, Trash2, Filter, X, Eye, ArrowLeft, TrendingUp, Building, Briefcase, DollarSign, Activity, FileText, Gavel, BarChart2, Search } from 'lucide-react';
 import { Modal } from '../components/Modal';
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
 
@@ -610,17 +610,21 @@ export const Clients = () => {
               </div>
               <div className="form-group" style={{ flex: 1, position: 'relative' }}>
                 <label>Responsável de Gestão</label>
-                <input
-                  type="text"
-                  placeholder="Busque por nome ou função..."
-                  value={responsibleInput}
-                  onChange={e => {
-                    setResponsibleInput(e.target.value);
-                    setShowRespSuggestions(true);
-                  }}
-                  onFocus={() => setShowRespSuggestions(true)}
-                  onBlur={() => setTimeout(() => setShowRespSuggestions(false), 200)}
-                />
+                <div style={{ position: 'relative' }}>
+                  <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                  <input
+                    type="text"
+                    placeholder="Busque por nome ou função..."
+                    value={responsibleInput}
+                    style={{ paddingLeft: '36px' }}
+                    onChange={e => {
+                      setResponsibleInput(e.target.value);
+                      setShowRespSuggestions(true);
+                    }}
+                    onFocus={() => setShowRespSuggestions(true)}
+                    onBlur={() => setTimeout(() => setShowRespSuggestions(false), 200)}
+                  />
+                </div>
                 {showRespSuggestions && responsibleSuggestions.length > 0 && (
                   <div className="autocomplete-dropdown">
                     {responsibleSuggestions.map(u => (
