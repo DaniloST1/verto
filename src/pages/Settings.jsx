@@ -55,6 +55,9 @@ export const Settings = () => {
   
   const [editingId, setEditingId] = useState(null);
   const [viewingUser, setViewingUser] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState(null);
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
   const requirements = [
     { label: 'Ter no mínimo 8 caracteres', satisfied: formData.password.length >= 8 },
     { label: 'Ter no mínimo 1 número', satisfied: /\d/.test(formData.password) },
