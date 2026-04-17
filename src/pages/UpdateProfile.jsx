@@ -29,7 +29,7 @@ const isValidPassword = (pass) => {
 };
 
 export const UpdateProfile = () => {
-  const { user, setUser, logout } = useAuth();
+  const { user, logout } = useAuth();
   const { addToast } = useToast();
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
