@@ -14,13 +14,22 @@ const ROLE_NAMES = {
 
 const BUCKET = 'Verto imagens';
 
+const maskPhone = (v = '') => {
+  v = v.replace(/\D/g, '').slice(0, 11);
+  if (v.length === 0) return '';
+  if (v.length <= 2) return `(${v}`;
+  if (v.length <= 6) return `(${v.slice(0,2)}) ${v.slice(2)}`;
+  if (v.length <= 10) return `(${v.slice(0,2)}) ${v.slice(2,6)}-${v.slice(6)}`;
+  return `(${v.slice(0,2)}) ${v.slice(2,7)}-${v.slice(7)}`;
+};
+
 export const Settings = () => {
   const { user, users, addUser, editUser, fetchUsers } = useAuth();
   const { addToast } = useToast();
   const fileInputRef = useRef(null);
   
   const [formData, setFormData] = useState({
-    name: '', email: '', document: '', password: '', role: 'employee', avatar_url: ''
+    name: '', email: '', document: '', phone: '', password: '', role: 'employee', avatar_url: ''
   });
   
   const [editingId, setEditingId] = useState(null);
@@ -60,7 +69,8 @@ export const Settings = () => {
       const avatar_url = await uploadAvatar(editingId);
       await editUser(editingId, {
         name: formData.name, email: formData.email,
-        document: formData.document, role: formData.role,
+        document: formData.document, phone: formData.phone, 
+        role: formData.role,
         ...(avatar_url ? { avatar_url } : {}),
         ...(formData.password ? { password: formData.password } : {})
       });
@@ -72,7 +82,8 @@ export const Settings = () => {
       // Create user first (without avatar_url) to get the ID
       const tempUser = {
         name: formData.name, email: formData.email,
-        document: formData.document, password: formData.password,
+        document: formData.document, phone: formData.phone,
+        password: formData.password,
         role: formData.role
       };
       const { data: created, error } = await supabase.from('users').insert([tempUser]).select().single();
@@ -86,21 +97,24 @@ export const Settings = () => {
         }
       }
     }
-    setFormData({ name: '', email: '', document: '', password: '', role: 'employee', avatar_url: '' });
+    setFormData({ name: '', email: '', document: '', phone: '', password: '', role: 'employee', avatar_url: '' });
     setAvatarPreview(null);
     setAvatarFile(null);
   };
 
   const handleEditClick = (u) => {
     setEditingId(u.id);
-    setFormData({ name: u.name, email: u.email, document: u.document, role: u.role, password: '', avatar_url: u.avatar_url || '' });
+    setFormData({ 
+      name: u.name, email: u.email, document: u.document, phone: u.phone || '', 
+      role: u.role, password: '', avatar_url: u.avatar_url || '' 
+    });
     setAvatarPreview(u.avatar_url || null);
     setAvatarFile(null);
   };
 
   const handleCancel = () => {
     setEditingId(null);
-    setFormData({ name: '', email: '', document: '', password: '', role: 'employee', avatar_url: '' });
+    setFormData({ name: '', email: '', document: '', phone: '', password: '', role: 'employee', avatar_url: '' });
     setAvatarPreview(null);
     setAvatarFile(null);
   };
@@ -180,6 +194,10 @@ export const Settings = () => {
             <div className="form-group">
               <label>Documento (CPF/CNPJ)</label>
               <input type="text" value={formData.document} onChange={e => setFormData({...formData, document: e.target.value})} required />
+            </div>
+            <div className="form-group">
+              <label>Telefone</label>
+              <input type="text" value={formData.phone} onChange={e => setFormData({...formData, phone: maskPhone(e.target.value)})} maxLength={15} placeholder="(00) 00000-0000" />
             </div>
             <div className="form-group">
               <label>{editingId ? 'Nova Senha (opcional)' : 'Senha'}</label>
@@ -297,6 +315,10 @@ export const Settings = () => {
               <div>
                 <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600 }}>Documento (CPF/CNPJ)</label>
                 <div style={{ color: '#1e293b' }}>{viewingUser.document}</div>
+              </div>
+              <div>
+                <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600 }}>Telefone</label>
+                <div style={{ color: '#1e293b' }}>{viewingUser.phone || '——'}</div>
               </div>
             </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px' }}>
