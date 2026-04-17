@@ -130,7 +130,7 @@ export const Settings = () => {
         </div>
       </div>
 
-      <div className="grid-cards" style={{ gridTemplateColumns: 'minmax(300px, 1fr) minmax(400px, 1.5fr)', gap: '24px' }}>
+      <div className={isAdmin ? 'grid-cards' : ''} style={isAdmin ? { display: 'grid', gridTemplateColumns: 'minmax(300px, 1fr) minmax(400px, 1.5fr)', gap: '24px' } : { width: '100%' }}>
         {isAdmin && (
           /* Form Panel */
           <div className="glass-panel" style={{ padding: '32px', borderRadius: '12px' }}>
