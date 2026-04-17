@@ -56,14 +56,7 @@ export const Bids = () => {
     return `${u.name} (${abr[u.role] || u.role})`;
   };
 
-  const getStatusStyle = (status) => {
-    const s = status?.toLowerCase() || '';
-    if (s.includes('vitória') || s.includes('vitoria') || s.includes('homologado')) return { bg: '#dcfce7', color: '#166534' };
-    if (s.includes('disputa') || s.includes('seleção')) return { bg: '#dbeafe', color: '#1e40af' };
-    if (s.includes('análise') || s.includes('analise')) return { bg: '#fef3c7', color: '#92400e' };
-    if (s.includes('desclassificado')) return { bg: '#fee2e2', color: '#991b1b' };
-    return { bg: '#f1f5f9', color: '#475569' };
-  };
+
 
   const getStatusStyle = (status) => {
     const s = status?.toLowerCase() || '';
