@@ -198,7 +198,7 @@ export const Bids = () => {
             <label>Critério</label>
             <select value={filterCriterion} onChange={e => setFilterCriterion(e.target.value)}>
               <option value="Todos">Todos</option>
-              <option value="Maior Lance">Maior Lance</option>
+              <option value="Maior Desconto">Maior Desconto</option>
               <option value="Menor Preço">Menor Preço</option>
             </select>
           </div>
@@ -285,7 +285,7 @@ export const Bids = () => {
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
                     CRITÉRIO
                   </p>
-                  <p style={{ fontWeight: 600, color: '#1e293b' }}>{bid.criterion || 'Maior Lance'}</p>
+                  <p style={{ fontWeight: 600, color: '#1e293b' }}>{bid.criterion || 'Maior Desconto'}</p>
                 </div>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
