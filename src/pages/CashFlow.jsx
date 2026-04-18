@@ -9,7 +9,7 @@ import { useToast } from '../context/ToastContext';
 
 export const CashFlow = () => {
   const { cashFlow, addCashFlow, updateCashFlow, deleteCashFlow, clients } = useData();
-  const { user } = useAuth();
+  const { user, users } = useAuth();
   const { addToast } = useToast();
   const [showModal, setShowModal] = useState(false);
   const [isImporterOpen, setIsImporterOpen] = useState(false);
@@ -98,14 +98,28 @@ export const CashFlow = () => {
   };
 
   const handleSelectClient = (client) => {
-    setCnpjInput(`${client.name} ${client.cnpj ? ' - ' + client.cnpj : ''}`);
+    setCnpjInput(`${client.name}${client.cnpj ? ' - ' + client.cnpj : ''}`);
     setShowClientSuggestions(false);
     setFormData(prev => ({ 
       ...prev, 
       name: `Mensalidade: ${client.name}`, 
       type: 'receita', 
       specificType: 'assessoria recorrente', 
-      clientId: client.id 
+      clientId: client.id,
+      userId: null
+    }));
+  };
+
+  const handleSelectUser = (u) => {
+    setCnpjInput(`${u.name} (Colaborador)`);
+    setShowClientSuggestions(false);
+    setFormData(prev => ({ 
+      ...prev, 
+      name: `Salário/Pagamento: ${u.name}`, 
+      type: 'despesa', 
+      specificType: 'equipe', 
+      userId: u.id,
+      clientId: null
     }));
   };
 
@@ -116,8 +130,14 @@ export const CashFlow = () => {
     return clients.filter(c => 
       (c.name && c.name.toLowerCase().includes(lower)) || 
       (clean && c.cnpj && c.cnpj.replace(/\D/g, '').includes(clean))
-    ).slice(0, 5); // Limit to 5
+    ).slice(0, 5);
   }, [cnpjInput, clients, showClientSuggestions]);
+
+  const userSuggestions = useMemo(() => {
+    if (!cnpjInput || !showClientSuggestions) return [];
+    const lower = cnpjInput.toLowerCase();
+    return (users || []).filter(u => u.name && u.name.toLowerCase().includes(lower)).slice(0, 3);
+  }, [cnpjInput, users, showClientSuggestions]);
 
   const filteredCashFlow = useMemo(() => {
     return cashFlow.filter(item => {
@@ -434,24 +454,42 @@ export const CashFlow = () => {
                     onFocus={() => setShowClientSuggestions(true)}
                     onBlur={() => setTimeout(() => setShowClientSuggestions(false), 200)}
                   />
-                  {showClientSuggestions && clientSuggestions.length > 0 && (
-                    <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', zIndex: 10, boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', overflow: 'hidden' }}>
-                      {clientSuggestions.map(col => (
-                        <div 
-                          key={col.id} 
-                          onClick={() => handleSelectClient(col)}
-                          style={{ padding: '10px 12px', cursor: 'pointer', borderBottom: '1px solid #f1f5f9', display: 'flex', flexDirection: 'column' }}
-                          onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
-                          onMouseLeave={e => e.currentTarget.style.background = '#fff'}
-                        >
-                          <strong style={{ fontSize: '0.9rem', color: '#1e293b' }}>{col.name}</strong>
-                          <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{col.cnpj || 'Sem CNPJ'}</span>
-                        </div>
-                      ))}
+                  {showClientSuggestions && (clientSuggestions.length > 0 || userSuggestions.length > 0) && (
+                    <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', zIndex: 10, boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
+                      {clientSuggestions.length > 0 && (
+                        <>
+                          <div style={{ padding: '6px 12px', fontSize: '0.7rem', fontWeight: 700, color: '#94a3b8', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Clientes</div>
+                          {clientSuggestions.map(col => (
+                            <div key={col.id} onClick={() => handleSelectClient(col)}
+                              style={{ padding: '10px 12px', cursor: 'pointer', borderBottom: '1px solid #f1f5f9', display: 'flex', flexDirection: 'column' }}
+                              onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
+                              onMouseLeave={e => e.currentTarget.style.background = '#fff'}
+                            >
+                              <strong style={{ fontSize: '0.9rem', color: '#1e293b' }}>{col.name}</strong>
+                              <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{col.cnpj || 'Sem CNPJ'}</span>
+                            </div>
+                          ))}
+                        </>
+                      )}
+                      {userSuggestions.length > 0 && (
+                        <>
+                          <div style={{ padding: '6px 12px', fontSize: '0.7rem', fontWeight: 700, color: '#94a3b8', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Colaboradores</div>
+                          {userSuggestions.map(u => (
+                            <div key={u.id} onClick={() => handleSelectUser(u)}
+                              style={{ padding: '10px 12px', cursor: 'pointer', borderBottom: '1px solid #f1f5f9', display: 'flex', flexDirection: 'column' }}
+                              onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
+                              onMouseLeave={e => e.currentTarget.style.background = '#fff'}
+                            >
+                              <strong style={{ fontSize: '0.9rem', color: '#1e293b' }}>{u.name}</strong>
+                              <span style={{ fontSize: '0.75rem', color: '#7c3aed' }}>Colaborador · {u.email}</span>
+                            </div>
+                          ))}
+                        </>
+                      )}
                     </div>
                   )}
-                  {formData.clientId && !showClientSuggestions && (
-                    <div style={{ fontSize: '0.8rem', color: '#10b981', marginTop: '4px' }}>✓ Cliente vinculado e dados preenchidos.</div>
+                  {(formData.clientId || formData.userId) && !showClientSuggestions && (
+                    <div style={{ fontSize: '0.8rem', color: '#10b981', marginTop: '4px' }}>✓ {formData.clientId ? 'Cliente' : 'Colaborador'} vinculado com sucesso.</div>
                   )}
                 </div>
 
