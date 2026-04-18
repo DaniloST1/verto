@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { User, LogOut, Settings as SettingsIcon, Key, Upload, Menu } from 'lucide-react';
+import { User, LogOut, Settings as SettingsIcon, Key, Upload, Menu, Eye, EyeOff, CheckCircle } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { Modal } from './Modal';
 
@@ -14,28 +14,69 @@ const ROLE_NAMES = {
 
 const BUCKET = 'Verto imagens';
 
+const maskPhone = (v = '') => {
+  v = v.replace(/\D/g, '').slice(0, 11);
+  if (v.length === 0) return '';
+  if (v.length <= 2) return `(${v}`;
+  if (v.length <= 6) return `(${v.slice(0,2)}) ${v.slice(2)}`;
+  if (v.length <= 10) return `(${v.slice(0,2)}) ${v.slice(2,6)}-${v.slice(6)}`;
+  return `(${v.slice(0,2)}) ${v.slice(2,7)}-${v.slice(7)}`;
+};
+
+const maskCpfCnpj = (v = '') => {
+  v = v.replace(/\D/g, '').slice(0, 14);
+  if (v.length <= 11) {
+    return v.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
+            .replace(/(\d{3})(\d{3})(\d{3})/, '$1.$2.$3')
+            .replace(/(\d{3})(\d{3})/, '$1.$2');
+  }
+  return v.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5')
+          .replace(/(\d{2})(\d{3})(\d{3})(\d{4})/, '$1.$2.$3/$4')
+          .replace(/(\d{2})(\d{3})(\d{3})/, '$1.$2.$3');
+};
+
 export const Navbar = ({ onMenuToggle }) => {
   const { user, logout } = useAuth();
   const { addToast } = useToast();
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [modalType, setModalType] = useState(null); // 'profile', 'password'
+  const [modalType, setModalType] = useState(null); // 'profile'
 
   const fileInputRef = useRef(null);
   const [avatarPreview, setAvatarPreview] = useState(user?.avatar_url || null);
   const [avatarFile, setAvatarFile] = useState(null);
   const [uploading, setUploading] = useState(false);
 
-  const [passwordForm, setPasswordForm] = useState({ current: '', new: '', confirm: '' });
   const [profileForm, setProfileForm] = useState({
     name: user?.name || '',
     email: user?.email || '',
-    document: user?.document || ''
+    document: maskCpfCnpj(user?.document || ''),
+    phone: maskPhone(user?.phone || ''),
+    password: ''
   });
+
+  const [showPassword, setShowPassword] = useState(false);
+  const requirements = [
+    { label: 'Ter no mínimo 8 caracteres', satisfied: profileForm.password.length >= 8 },
+    { label: 'Ter no mínimo 1 número', satisfied: /\d/.test(profileForm.password) },
+    { label: 'Ter no mínimo 1 letra maiúscula', satisfied: /[A-Z]/.test(profileForm.password) },
+    { label: 'Ter no mínimo 1 letra minúscula', satisfied: /[a-z]/.test(profileForm.password) },
+    { label: 'Ter no mínimo 1 caractere especial', satisfied: /[@$!%*?&]/.test(profileForm.password) },
+  ];
+  const allSatisfied = requirements.every(r => r.satisfied);
 
   // Keep avatar preview in sync with user state
   useEffect(() => {
     setAvatarPreview(user?.avatar_url || null);
-  }, [user?.avatar_url]);
+    if (user && !profileForm.name) {
+      setProfileForm({
+        name: user.name || '',
+        email: user.email || '',
+        document: maskCpfCnpj(user.document || ''),
+        phone: maskPhone(user.phone || ''),
+        password: ''
+      });
+    }
+  }, [user]);
 
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
@@ -44,35 +85,16 @@ export const Navbar = ({ onMenuToggle }) => {
     setAvatarPreview(URL.createObjectURL(file));
   };
 
-  const handlePasswordSubmit = async (e) => {
-    e.preventDefault();
-    if (passwordForm.new !== passwordForm.confirm) {
-      addToast('As senhas não coincidem.', 'error');
-      return;
-    }
-    if (passwordForm.new.length < 4) {
-      addToast('A nova senha deve ter ao menos 4 caracteres.', 'error');
-      return;
-    }
-    const { error } = await supabase
-      .from('users')
-      .update({ password: passwordForm.new })
-      .eq('id', user.id);
-
-    if (error) {
-      addToast('Erro ao alterar senha: ' + error.message, 'error');
-    } else {
-      addToast('Senha alterada com sucesso!', 'success');
-      setModalType(null);
-      setPasswordForm({ current: '', new: '', confirm: '' });
-    }
-  };
-
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
-    setUploading(true);
+    if (profileForm.password && !allSatisfied) {
+      addToast('A senha não atende a todos os requisitos de segurança.', 'error');
+      return;
+    }
 
+    setUploading(true);
     let avatar_url = user?.avatar_url || null;
+    
     if (avatarFile) {
       const ext = avatarFile.name.split('.').pop();
       const path = `avatars/${user.id}.${ext}`;
@@ -86,18 +108,21 @@ export const Navbar = ({ onMenuToggle }) => {
     const updates = {
       name: profileForm.name,
       email: profileForm.email,
-      document: profileForm.document,
-      ...(avatar_url ? { avatar_url } : {})
+      document: profileForm.document.replace(/\D/g, ''),
+      phone: profileForm.phone.replace(/\D/g, ''),
+      ...(avatar_url ? { avatar_url } : {}),
+      ...(profileForm.password ? { password: profileForm.password } : {})
     };
 
     const { error } = await supabase.from('users').update(updates).eq('id', user.id);
     setUploading(false);
 
     if (error) {
-      addToast('Erro ao atualizar perfil: ' + error.message, 'error');
+      addToast('Erro ao atualizar cadastro: ' + error.message, 'error');
     } else {
       setAvatarFile(null);
-      addToast('Perfil atualizado! Faça login novamente para refletir todas as mudanças.', 'success');
+      setProfileForm({ ...profileForm, password: '' });
+      addToast('Cadastro atualizado! Faça login novamente para ver todas as mudanças caso dados críticos tenham sido alterados.', 'success');
       setModalType(null);
     }
   };
@@ -154,104 +179,142 @@ export const Navbar = ({ onMenuToggle }) => {
             border: '1px solid #e2e8f0', zIndex: 200, overflow: 'hidden'
           }}>
             <div
-              style={{ padding: '12px 16px', display: 'flex', gap: '8px', alignItems: 'center', cursor: 'pointer', fontSize: '0.9rem', color: '#1e293b', borderBottom: '1px solid #f1f5f9' }}
+              style={{ padding: '12px 16px', display: 'flex', gap: '8px', alignItems: 'center', cursor: 'pointer', fontSize: '0.9rem', color: '#1e293b' }}
               onClick={e => { e.stopPropagation(); setModalType('profile'); setDropdownOpen(false); }}
             >
               <SettingsIcon size={16} /> Alterar Cadastro
-            </div>
-            <div
-              style={{ padding: '12px 16px', display: 'flex', gap: '8px', alignItems: 'center', cursor: 'pointer', fontSize: '0.9rem', color: '#1e293b' }}
-              onClick={e => { e.stopPropagation(); setModalType('password'); setDropdownOpen(false); }}
-            >
-              <Key size={16} /> Alterar Senha
             </div>
           </div>
         )}
       </div>
 
-      {/* Password Modal */}
-      {modalType === 'password' && (
-        <Modal title="Alterar Senha" onClose={() => setModalType(null)} maxWidth="400px">
-          <form onSubmit={handlePasswordSubmit}>
-            <div className="form-group">
-              <label>Nova Senha</label>
-              <input
-                type="password"
-                placeholder="Mínimo 4 caracteres"
-                value={passwordForm.new}
-                onChange={e => setPasswordForm({...passwordForm, new: e.target.value})}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label>Confirmar Nova Senha</label>
-              <input
-                type="password"
-                placeholder="Repita a senha"
-                value={passwordForm.confirm}
-                onChange={e => setPasswordForm({...passwordForm, confirm: e.target.value})}
-                required
-              />
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '8px' }}>
-              <button type="button" className="btn btn-secondary" onClick={() => setModalType(null)}>Cancelar</button>
-              <button type="submit" className="btn btn-primary" style={{ background: '#1d3e83' }}>Salvar</button>
-            </div>
-          </form>
-        </Modal>
-      )}
-
       {/* Profile Modal */}
       {modalType === 'profile' && (
-        <Modal title="Alterar Cadastro" onClose={() => setModalType(null)} maxWidth="420px">
+        <Modal title="Alterar Cadastro" onClose={() => setModalType(null)} maxWidth="550px">
           <form onSubmit={handleProfileSubmit}>
-            {/* Avatar in profile modal */}
+            {/* Avatar Upload */}
             <div className="form-group">
-              <label>Foto de Perfil</label>
+              <label>Foto do Usuário</label>
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                 <div
                   onClick={() => fileInputRef.current?.click()}
                   style={{
-                    width: '64px', height: '64px', borderRadius: '50%',
+                    width: '72px', height: '72px', borderRadius: '50%',
                     background: '#f1f5f9', border: '2px dashed #cbd5e1',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    cursor: 'pointer', overflow: 'hidden', flexShrink: 0
+                    cursor: 'pointer', overflow: 'hidden', flexShrink: 0,
+                    transition: 'border-color 0.2s',
                   }}
+                  onMouseOver={e => e.currentTarget.style.borderColor = '#1d3e83'}
+                  onMouseOut={e => e.currentTarget.style.borderColor = '#cbd5e1'}
                 >
-                  {avatarPreview || user?.avatar_url ? (
-                    <img src={avatarPreview || user?.avatar_url} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  {avatarPreview ? (
+                    <img src={avatarPreview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : (
-                    <User size={24} color="#94a3b8" />
+                    <User size={28} color="#94a3b8" />
                   )}
                 </div>
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  style={{ fontSize: '0.85rem', padding: '8px 14px' }}
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <Upload size={14} /> Trocar Foto
-                </button>
+                <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleAvatarChange} />
+                <div>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    style={{ fontSize: '0.85rem', padding: '8px 14px' }}
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Upload size={14} /> Selecionar Foto
+                  </button>
+                  <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '4px' }}>JPG, PNG, WebP — máx. 2MB</p>
+                </div>
               </div>
-              <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleAvatarChange} />
             </div>
 
             <div className="form-group">
               <label>Nome Completo</label>
-              <input type="text" value={profileForm.name} onChange={e => setProfileForm({...profileForm, name: e.target.value})} required />
+              <input type="text" placeholder="Nome do usuário" value={profileForm.name} onChange={e => setProfileForm({...profileForm, name: e.target.value})} required />
             </div>
+
             <div className="form-group">
-              <label>E-mail</label>
-              <input type="email" value={profileForm.email} onChange={e => setProfileForm({...profileForm, email: e.target.value})} required />
+              <label>E-mail Corporativo</label>
+              <input type="email" placeholder="usuario@verto.com" value={profileForm.email} onChange={e => setProfileForm({...profileForm, email: e.target.value})} required style={{ background: '#eef2ff' }} />
             </div>
+
+            <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+              <div className="form-group" style={{ flex: '1 1 200px' }}>
+                <label>Documento (CPF/CNPJ)</label>
+                <input 
+                  type="text" 
+                  placeholder="000.000.000-00" 
+                  value={profileForm.document} 
+                  onChange={e => setProfileForm({ ...profileForm, document: maskCpfCnpj(e.target.value) })} 
+                  maxLength={18}
+                />
+              </div>
+              <div className="form-group" style={{ flex: '1 1 200px' }}>
+                <label>Telefone</label>
+                <input 
+                  type="text" 
+                  placeholder="(00) 00000-0000" 
+                  value={profileForm.phone} 
+                  onChange={e => setProfileForm({ ...profileForm, phone: maskPhone(e.target.value) })} 
+                  maxLength={15}
+                />
+              </div>
+            </div>
+
             <div className="form-group">
-              <label>Documento</label>
-              <input type="text" value={profileForm.document} onChange={e => setProfileForm({...profileForm, document: e.target.value})} />
+              <label>Senha de Acesso <span style={{ fontWeight: 400, color: '#94a3b8' }}>(deixe vazio para não alterar)</span></label>
+              <div style={{ position: 'relative' }}>
+                <input 
+                  type={showPassword ? 'text' : 'password'} 
+                  placeholder="••••••••" 
+                  value={profileForm.password} 
+                  onChange={e => setProfileForm({ ...profileForm, password: e.target.value })} 
+                  style={{ paddingRight: '40px', background: '#eef2ff' }}
+                />
+                <button 
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{ 
+                    position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
+                    background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer'
+                  }}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+              
+              {profileForm.password && (
+                <div style={{ 
+                  marginTop: '10px', padding: '12px', background: '#f8fafc', 
+                  borderRadius: '8px', border: '1px solid #e2e8f0',
+                  display: 'flex', flexDirection: 'column', gap: '6px'
+                }}>
+                  {requirements.map((req, i) => (
+                    <div key={i} style={{ 
+                      display: 'flex', alignItems: 'center', gap: '6px', 
+                      fontSize: '0.75rem', color: req.satisfied ? '#10b981' : '#94a3b8'
+                    }}>
+                      <div style={{ 
+                        width: '14px', height: '14px', borderRadius: '50%', 
+                        border: `1px solid ${req.satisfied ? '#10b981' : '#cbd5e1'}`,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        background: req.satisfied ? '#10b981' : 'transparent',
+                        color: '#fff'
+                      }}>
+                        {req.satisfied && <CheckCircle size={8} />}
+                      </div>
+                      {req.label}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '8px' }}>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
               <button type="button" className="btn btn-secondary" onClick={() => setModalType(null)}>Cancelar</button>
-              <button type="submit" className="btn btn-primary" style={{ background: '#1d3e83' }} disabled={uploading}>
-                {uploading ? 'Salvando...' : 'Salvar'}
+              <button type="submit" className="btn btn-primary" style={{ background: '#1d3e83', padding: '10px 24px' }} disabled={uploading}>
+                {uploading ? 'Salvando...' : 'Salvar Alterações'}
               </button>
             </div>
           </form>
@@ -306,3 +369,4 @@ export const Navbar = ({ onMenuToggle }) => {
     </header>
   );
 };
+
