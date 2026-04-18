@@ -167,56 +167,76 @@ export const UpdateProfile = () => {
             <input type="file" ref={fileInputRef} onChange={handleAvatarChange} accept="image/*" style={{ display: 'none' }} />
           </div>
 
-          <div className="input-group">
-            <User className="input-icon" size={18} />
-            <input type="text" placeholder="Nome Completo" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#475569', marginLeft: '2px' }}>Nome Completo</label>
+            <div className="input-group">
+              <User className="input-icon" size={18} />
+              <input type="text" placeholder="Seu nome completo" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required />
+            </div>
           </div>
 
-          <div className="input-group">
-            <Shield className="input-icon" size={18} />
-            <input type="email" placeholder="E-mail Corporativo" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} required />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#475569', marginLeft: '2px' }}>E-mail Corporativo</label>
+            <div className="input-group">
+              <Shield className="input-icon" size={18} />
+              <input type="email" placeholder="usuario@verto.com.br" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} required />
+            </div>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '12px' }}>
-            <input 
-              type="text" 
-              placeholder="CPF/CNPJ" 
-              value={formData.document} 
-              onChange={e => setFormData({...formData, document: maskCpfCnpj(e.target.value)})} 
-              maxLength={18} 
-              required 
-              style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '10px 14px', borderRadius: '8px' }}
-            />
-            <input 
-              type="text" 
-              placeholder="Telefone" 
-              value={formData.phone} 
-              onChange={e => setFormData({...formData, phone: maskPhone(e.target.value)})} 
-              maxLength={15} 
-              required 
-              style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '10px 14px', borderRadius: '8px' }}
-            />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#475569', marginLeft: '2px' }}>Documento (CPF/CNPJ)</label>
+              <input 
+                type="text" 
+                placeholder="000.000.000-00" 
+                value={formData.document} 
+                onChange={e => setFormData({...formData, document: maskCpfCnpj(e.target.value)})} 
+                maxLength={18} 
+                required 
+                style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '10px 14px', borderRadius: '8px', width: '100%', outline: 'none', transition: 'border-color 0.2s' }}
+                onFocus={(e) => e.target.style.borderColor = '#1d3e83'}
+                onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+              />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#475569', marginLeft: '2px' }}>Telefone</label>
+              <input 
+                type="text" 
+                placeholder="(00) 00000-0000" 
+                value={formData.phone} 
+                onChange={e => setFormData({...formData, phone: maskPhone(e.target.value)})} 
+                maxLength={15} 
+                required 
+                style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '10px 14px', borderRadius: '8px', width: '100%', outline: 'none', transition: 'border-color 0.2s' }}
+                onFocus={(e) => e.target.style.borderColor = '#1d3e83'}
+                onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+              />
+            </div>
           </div>
 
           <div style={{ height: '1px', background: '#e2e8f0', margin: '4px 0' }} />
 
           {/* Passwords */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div className="input-group">
-              <input 
-                type={showPassword ? 'text' : 'password'} 
-                placeholder="Nova Senha" 
-                value={formData.password} 
-                onChange={e => setFormData({...formData, password: e.target.value})} 
-                required 
-              />
-              <button 
-                type="button" 
-                onClick={() => setShowPassword(!showPassword)}
-                style={{ position: 'absolute', right: '12px', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}
-              >
-                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#475569', marginLeft: '2px' }}>Nova Senha</label>
+              <div className="input-group">
+                <input 
+                  type={showPassword ? 'text' : 'password'} 
+                  placeholder="Defina uma senha forte" 
+                  value={formData.password} 
+                  onChange={e => setFormData({...formData, password: e.target.value})} 
+                  required 
+                  style={{ paddingLeft: '14px' }}
+                />
+                <button 
+                  type="button" 
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{ position: 'absolute', right: '12px', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
             </div>
 
             {/* Checklist */}
@@ -238,21 +258,25 @@ export const UpdateProfile = () => {
               ))}
             </div>
 
-            <div className="input-group">
-              <input 
-                type={showConfirmPassword ? 'text' : 'password'} 
-                placeholder="Confirmar Nova Senha" 
-                value={formData.confirmPassword} 
-                onChange={e => setFormData({...formData, confirmPassword: e.target.value})} 
-                required 
-              />
-              <button 
-                type="button" 
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                style={{ position: 'absolute', right: '12px', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}
-              >
-                {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#475569', marginLeft: '2px' }}>Confirmar Senha</label>
+              <div className="input-group">
+                <input 
+                  type={showConfirmPassword ? 'text' : 'password'} 
+                  placeholder="Repita a nova senha" 
+                  value={formData.confirmPassword} 
+                  onChange={e => setFormData({...formData, confirmPassword: e.target.value})} 
+                  required 
+                  style={{ paddingLeft: '14px' }}
+                />
+                <button 
+                  type="button" 
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  style={{ position: 'absolute', right: '12px', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}
+                >
+                  {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
             </div>
           </div>
 
