@@ -512,31 +512,75 @@ export const Bids = () => {
     return (
       <div className="pdf-view-container" style={{ padding: '20px 10px', background: '#f8fafc', minHeight: '100vh', display: 'flex', justifyContent: 'center' }}>
         <div style={{ maxWidth: '1600px', width: '100%', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
              <button className="btn" style={{ background: '#fff', border: '1px solid #cbd5e1', display: 'flex', alignItems: 'center', gap: '8px' }} onClick={() => setViewMode('list')}>
                 <X size={18} /> Voltar para Lista
              </button>
              <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#1e293b' }}>Visualização do Edital</h2>
-             {currentBid.attachmentUrl && (
-               <a href={currentBid.attachmentUrl} download className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Download size={18} /> Baixar Arquivo
-               </a>
-             )}
+             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+               <button className="btn" style={{ background: '#fff', border: '1px solid #cbd5e1', display: 'flex', alignItems: 'center', gap: '8px' }} onClick={() => setViewMode('links')}>
+                  <LinkIcon size={18} /> Vínculos
+               </button>
+               <button className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#1d3e83' }} onClick={() => openForm(currentBid)}>
+                  <Edit2 size={18} /> Editar
+               </button>
+               {currentBid.attachmentUrl && (
+                 <a href={currentBid.attachmentUrl} target="_blank" rel="noopener noreferrer" download className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#10b981', border: 'none' }}>
+                    <Download size={18} /> Baixar Arquivo
+                 </a>
+               )}
+             </div>
           </div>
 
           <div className="glass-panel" style={{ padding: '32px', background: '#fff' }}>
-             <div style={{ marginBottom: '32px', display: 'flex', gap: '24px', flexWrap: 'wrap', borderBottom: '1px solid #f1f5f9', paddingBottom: '24px' }}>
-                <div style={{ flex: 1, minWidth: '200px' }}>
+             <div style={{ marginBottom: '32px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '24px', borderBottom: '1px solid #f1f5f9', paddingBottom: '24px' }}>
+                <div>
                    <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>ÓRGÃO</p>
-                   <p style={{ fontWeight: 700, fontSize: '1.1rem' }}>{currentBid.organ}</p>
+                   <p style={{ fontWeight: 700, fontSize: '1.1rem' }}>{currentBid.organ || '-'}</p>
                 </div>
-                <div style={{ flex: 1, minWidth: '200px' }}>
+                <div>
                    <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>PREGÃO</p>
-                   <p style={{ fontWeight: 700, fontSize: '1.1rem' }}>{currentBid.number}</p>
+                   <p style={{ fontWeight: 700, fontSize: '1.1rem' }}>{currentBid.number || '-'}</p>
                 </div>
-                <div style={{ flex: 1, minWidth: '200px' }}>
+                <div>
+                   <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>CRITÉRIO</p>
+                   <p style={{ fontWeight: 700, fontSize: '1.1rem' }}>{currentBid.criterion || 'Maior Desconto'}</p>
+                </div>
+                <div>
+                   <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>VALOR ESTIMADO</p>
+                   <p style={{ fontWeight: 700, fontSize: '1.1rem' }}>
+                      {currentBid.estimatedValue ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(currentBid.estimatedValue) : '-'}
+                   </p>
+                </div>
+                <div>
                    <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>STATUS</p>
                    <p style={{ fontWeight: 700 }}>{currentBid.status?.toUpperCase() || 'EM ANÁLISE'}</p>
+                </div>
+                <div>
+                   <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>RESPONSÁVEL</p>
+                   <p style={{ fontWeight: 700 }}>{getResponsibleStr(currentBid.responsible)}</p>
+                </div>
+                <div>
+                   <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>DATA DA DISPUTA</p>
+                   <p style={{ fontWeight: 700 }}>
+                     {currentBid.disputeDate ? currentBid.disputeDate.split('-').reverse().join('/') : '-'}
+                   </p>
+                </div>
+                <div>
+                   <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>HORÁRIO DA DISPUTA</p>
+                   <p style={{ fontWeight: 700 }}>
+                     {currentBid.disputeStartTime ? `${currentBid.disputeStartTime} ${currentBid.disputeEndTime ? `até ${currentBid.disputeEndTime}` : ''}` : '-'}
+                   </p>
+                </div>
+                <div style={{ gridColumn: '1 / -1' }}>
+                   <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>PORTAL DE ORIGEM</p>
+                   {currentBid.originPortal ? (
+                      <a href={currentBid.originPortal} target="_blank" rel="noopener noreferrer" style={{ fontWeight: 700, color: '#3b82f6', textDecoration: 'none' }}>{currentBid.originPortal}</a>
+                   ) : <p style={{ fontWeight: 700 }}>-</p>}
+                </div>
+                <div style={{ gridColumn: '1 / -1' }}>
+                   <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>OBJETO</p>
+                   <p style={{ fontWeight: 600, color: '#475569', whiteSpace: 'pre-line' }}>{currentBid.object || '-'}</p>
                 </div>
              </div>
 
