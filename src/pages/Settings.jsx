@@ -334,7 +334,7 @@ export const Settings = () => {
           </div>
         )}
 
-        <div className="glass-panel" style={{ padding: '32px', borderRadius: '12px', display: 'flex', flexDirection: 'column' }}>
+        <div className="glass-panel" style={{ padding: '32px', borderRadius: '12px', display: 'flex', flexDirection: 'column', height: '100%' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
             <h3 style={{ margin: 0, color: '#1e293b' }}>Usuários Cadastrados</h3>
             <input 
@@ -345,7 +345,7 @@ export const Settings = () => {
               style={{ width: '100%', maxWidth: '300px', padding: '8px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.9rem' }}
             />
           </div>
-          <div className="table-container" style={{ maxHeight: '600px', overflowY: 'auto', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+          <div className="table-container" style={{ flex: 1, overflowY: 'auto', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
             <table style={{ fontSize: '0.9rem', width: '100%' }}>
               <thead style={{ position: 'sticky', top: 0, background: '#f8fafc', zIndex: 1 }}>
                 <tr>
