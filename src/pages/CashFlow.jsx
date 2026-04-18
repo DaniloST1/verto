@@ -522,12 +522,22 @@ export const CashFlow = () => {
                   </div>
                   <div style={{ flex: 1 }}>
                     <label>Categoria</label>
-                    <select value={formData.specificType} onChange={e => setFormData({ ...formData, specificType: e.target.value })}>
+                    <select 
+                      value={
+                        (formData.type === 'receita' && ['assessoria recorrente', 'implementação', 'percentual de contrato', 'investimento'].includes(formData.specificType)) ||
+                        (formData.type === 'despesa' && ['equipe', 'operacional', 'impostos', 'pró-labore', 'distribuição de lucro'].includes(formData.specificType))
+                          ? formData.specificType
+                          : 'outros'
+                      } 
+                      onChange={e => setFormData({ ...formData, specificType: e.target.value === 'outros' ? '' : e.target.value })}
+                    >
                       {formData.type === 'receita' ? (
                         <>
                           <option value="assessoria recorrente">Assessoria recorrente</option>
                           <option value="implementação">Implementação</option>
                           <option value="percentual de contrato">Percentual de contrato</option>
+                          <option value="investimento">Investimento</option>
+                          <option value="outros">Outros</option>
                         </>
                       ) : (
                         <>
@@ -535,9 +545,22 @@ export const CashFlow = () => {
                           <option value="operacional">Operacional</option>
                           <option value="impostos">Impostos</option>
                           <option value="pró-labore">Pró-labore</option>
+                          <option value="distribuição de lucro">Distribuição de lucro</option>
+                          <option value="outros">Outros</option>
                         </>
                       )}
                     </select>
+                    {((formData.type === 'receita' && !['assessoria recorrente', 'implementação', 'percentual de contrato', 'investimento'].includes(formData.specificType)) ||
+                      (formData.type === 'despesa' && !['equipe', 'operacional', 'impostos', 'pró-labore', 'distribuição de lucro'].includes(formData.specificType))) && (
+                      <input
+                        type="text"
+                        placeholder="Especifique a categoria..."
+                        value={formData.specificType}
+                        onChange={e => setFormData({ ...formData, specificType: e.target.value })}
+                        style={{ marginTop: '8px' }}
+                        required
+                      />
+                    )}
                   </div>
                 </div>
 
