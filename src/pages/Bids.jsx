@@ -31,7 +31,7 @@ export const Bids = () => {
     number: '', organ: '', estimatedValue: 0, status: 'Em análise',
     responsible: '', object: '', originPortal: '', clientsLinked: [],
     disputeDate: '', disputeStartTime: '', disputeEndTime: '',
-    attachmentUrl: ''
+    attachmentUrl: '', criterion: 'Maior Desconto'
   });
   
   const [attachmentFile, setAttachmentFile] = useState(null);
@@ -106,7 +106,7 @@ export const Bids = () => {
         number: '', organ: '', estimatedValue: 0, status: 'Em análise',
         responsible: '', object: '', originPortal: '', clientsLinked: [],
         disputeDate: '', disputeStartTime: '', disputeEndTime: '',
-        attachmentUrl: ''
+        attachmentUrl: '', criterion: 'Maior Desconto'
       });
       setResponsibleInput('');
     }
@@ -586,12 +586,19 @@ export const Bids = () => {
               <label>Órgão Organizador</label>
               <input type="text" value={formData.organ} onChange={e => setFormData({ ...formData, organ: e.target.value })} required />
             </div>
-            <div style={{ display: 'flex', gap: '16px' }}>
-              <div className="form-group" style={{ flex: 1 }}>
+            <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+              <div className="form-group" style={{ flex: '1 1 120px' }}>
                 <label>Número do Pregão</label>
                 <input type="text" value={formData.number} onChange={e => setFormData({ ...formData, number: e.target.value })} required />
               </div>
-              <div className="form-group" style={{ flex: 1 }}>
+              <div className="form-group" style={{ flex: '1 1 120px' }}>
+                <label>Critério</label>
+                <select value={formData.criterion || 'Maior Desconto'} onChange={e => setFormData({ ...formData, criterion: e.target.value })} required>
+                  <option value="Maior Desconto">Maior Desconto</option>
+                  <option value="Menor Preço">Menor Preço</option>
+                </select>
+              </div>
+              <div className="form-group" style={{ flex: '1 1 120px' }}>
                 <label>Valor Estimado (R$)</label>
                 <input type="number" step="0.01" value={formData.estimatedValue} onChange={e => setFormData({ ...formData, estimatedValue: parseFloat(e.target.value) })} required />
               </div>
