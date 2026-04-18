@@ -51,10 +51,12 @@ export const Navbar = ({ onMenuToggle }) => {
     email: user?.email || '',
     document: maskCpfCnpj(user?.document || ''),
     phone: maskPhone(user?.phone || ''),
-    password: ''
+    password: '',
+    confirmPassword: ''
   });
 
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const requirements = [
     { label: 'Ter no mínimo 8 caracteres', satisfied: profileForm.password.length >= 8 },
     { label: 'Ter no mínimo 1 número', satisfied: /\d/.test(profileForm.password) },
@@ -73,7 +75,8 @@ export const Navbar = ({ onMenuToggle }) => {
         email: user.email || '',
         document: maskCpfCnpj(user.document || ''),
         phone: maskPhone(user.phone || ''),
-        password: ''
+        password: '',
+        confirmPassword: ''
       });
     }
   }, [user]);
@@ -87,9 +90,15 @@ export const Navbar = ({ onMenuToggle }) => {
 
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
-    if (profileForm.password && !allSatisfied) {
-      addToast('A senha não atende a todos os requisitos de segurança.', 'error');
-      return;
+    if (profileForm.password) {
+      if (!allSatisfied) {
+        addToast('A senha não atende a todos os requisitos de segurança.', 'error');
+        return;
+      }
+      if (profileForm.password !== profileForm.confirmPassword) {
+        addToast('As senhas não coincidem.', 'error');
+        return;
+      }
     }
 
     setUploading(true);
@@ -121,7 +130,7 @@ export const Navbar = ({ onMenuToggle }) => {
       addToast('Erro ao atualizar cadastro: ' + error.message, 'error');
     } else {
       setAvatarFile(null);
-      setProfileForm({ ...profileForm, password: '' });
+      setProfileForm({ ...profileForm, password: '', confirmPassword: '' });
       addToast('Cadastro atualizado! Faça login novamente para ver todas as mudanças caso dados críticos tenham sido alterados.', 'success');
       setModalType(null);
     }
@@ -310,6 +319,32 @@ export const Navbar = ({ onMenuToggle }) => {
                 </div>
               )}
             </div>
+
+            {profileForm.password && (
+              <div className="form-group" style={{ marginTop: '12px' }}>
+                <label>Confirmar Senha</label>
+                <div style={{ position: 'relative' }}>
+                  <input 
+                    type={showConfirmPassword ? 'text' : 'password'} 
+                    placeholder="Repita a nova senha" 
+                    value={profileForm.confirmPassword} 
+                    onChange={e => setProfileForm({ ...profileForm, confirmPassword: e.target.value })} 
+                    style={{ paddingRight: '40px', background: '#eef2ff' }}
+                    required
+                  />
+                  <button 
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    style={{ 
+                      position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
+                      background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer'
+                    }}
+                  >
+                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+            )}
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
               <button type="button" className="btn btn-secondary" onClick={() => setModalType(null)}>Cancelar</button>
