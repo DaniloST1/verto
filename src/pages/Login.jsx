@@ -9,11 +9,11 @@ const VIDEO_URL = 'https://kxvminodzhcsdwrmucdj.supabase.co/storage/v1/object/pu
 
 const maskCnpj = (v = '') => {
   v = v.replace(/\D/g, '').slice(0, 14);
-  return v
-    .replace(/^(\d{2})(\d)/, '$1.$2')
-    .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
-    .replace(/\.(\d{3})(\d)/, '.$1/$2')
-    .replace(/(\d{4})(\d)/, '$1-$2');
+  if (v.length <= 2) return v;
+  if (v.length <= 5) return `${v.slice(0,2)}.${v.slice(2)}`;
+  if (v.length <= 8) return `${v.slice(0,2)}.${v.slice(2,5)}.${v.slice(5)}`;
+  if (v.length <= 12) return `${v.slice(0,2)}.${v.slice(2,5)}.${v.slice(5,8)}/${v.slice(8)}`;
+  return `${v.slice(0,2)}.${v.slice(2,5)}.${v.slice(5,8)}/${v.slice(8,12)}-${v.slice(12)}`;
 };
 
 export const Login = () => {
@@ -69,7 +69,6 @@ export const Login = () => {
     setResetSent(true);
   };
 
-  // Step 1: Validate CNPJ against clients table
   const handleCnpjValidation = async (e) => {
     e.preventDefault();
     setError('');
@@ -80,8 +79,8 @@ export const Login = () => {
       setLoading(false);
       return;
     }
-    // Build formatted CNPJ (XX.XXX.XXX/XXXX-XX) — matches DB storage format
-    const formattedCnpj = cleanCnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+    // Use same step-by-step mask as Clients.jsx to match DB storage format
+    const formattedCnpj = maskCnpj(cleanCnpj);
 
     // Check if a user already exists with this CNPJ document
     const { data: existingUser } = await supabase

@@ -32,8 +32,9 @@ export const DataProvider = ({ children }) => {
       if (user?.role === 'client') {
         cleanDoc = (user.document || '').replace(/\D/g, '');
         if (cleanDoc.length === 14) {
-          // Format to XX.XXX.XXX/XXXX-XX to match DB storage
-          formattedCnpj = cleanDoc.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+          // Format using same step-by-step logic as Clients.jsx maskCNPJ
+          const v = cleanDoc;
+          formattedCnpj = `${v.slice(0,2)}.${v.slice(2,5)}.${v.slice(5,8)}/${v.slice(8,12)}-${v.slice(12)}`;
         } else {
           formattedCnpj = user.document || ''; // already formatted or CPF
         }

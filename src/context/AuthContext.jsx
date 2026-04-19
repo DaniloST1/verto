@@ -110,9 +110,14 @@ export const AuthProvider = ({ children }) => {
 
   // Self-registration for clients (no admin required — validates that CNPJ exists in clients table)
   const registerClient = async (newUser) => {
-    // Build formatted CNPJ to match DB storage (XX.XXX.XXX/XXXX-XX)
+    // Build formatted CNPJ to match DB storage (XX.XXX.XXX/XXXX-XX) using same logic as Clients.jsx
     const cleanDoc = newUser.document.replace(/\D/g, '');
-    const formattedCnpj = cleanDoc.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+    const v = cleanDoc.slice(0, 14);
+    let formattedCnpj = v;
+    if (v.length > 12) formattedCnpj = `${v.slice(0,2)}.${v.slice(2,5)}.${v.slice(5,8)}/${v.slice(8,12)}-${v.slice(12)}`;
+    else if (v.length > 8) formattedCnpj = `${v.slice(0,2)}.${v.slice(2,5)}.${v.slice(5,8)}/${v.slice(8)}`;
+    else if (v.length > 5) formattedCnpj = `${v.slice(0,2)}.${v.slice(2,5)}.${v.slice(5)}`;
+    else if (v.length > 2) formattedCnpj = `${v.slice(0,2)}.${v.slice(2)}`;
 
     // Final safety check: CNPJ in clients table (formatted)
     const { data: clientRecord } = await supabase
