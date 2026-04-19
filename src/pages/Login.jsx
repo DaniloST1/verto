@@ -56,27 +56,65 @@ export const Login = () => {
     setLoading(true);
     const { data, error } = await supabase
       .from('users')
-      .select('id, name')
+      .select('id, name, email')
       .eq('email', resetEmail)
       .single();
 
     if (error || !data) {
-      // For security, don't reveal if email exists or not, but proceed to screen
       setLoading(false);
-      setResetSent(true);
+      setResetSent(true); 
       return;
     }
 
     const tempPassword = Math.random().toString(36).slice(2, 10).toUpperCase();
     
-    // Update password and set must_change_password flag
-    await supabase.from('users').update({ 
-      password: tempPassword,
-      must_change_password: true 
-    }).eq('id', data.id);
+    try {
+      // 1. Update Database
+      const { error: dbError } = await supabase.from('users').update({ 
+        password: tempPassword,
+        must_change_password: true 
+      }).eq('id', data.id);
 
-    setLoading(false);
-    setResetSent(true);
+      if (dbError) throw dbError;
+
+      // 2. Send Real Email via Resend
+      await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer re_3iAfSNj3_B2pzyBZSPvV2xGgAMDmaqH64',
+        },
+        body: JSON.stringify({
+          from: 'Verto Soluções <onboarding@resend.dev>',
+          to: [data.email],
+          subject: 'Sua Senha Temporária - Verto Soluções',
+          html: `
+            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
+              <h2 style="color: #1d3e83; text-align: center;">Verto Soluções em Licitações</h2>
+              <p>Olá, <strong>${data.name}</strong>,</p>
+              <p>Você solicitou a redefinição de sua senha de acesso ao portal.</p>
+              <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; text-align: center; border-radius: 8px; margin: 20px 0;">
+                <p style="margin: 0; color: #64748b; font-size: 0.9rem;">Sua senha temporária é:</p>
+                <h1 style="margin: 10px 0; color: #1d3e83; letter-spacing: 4px;">${tempPassword}</h1>
+              </div>
+              <p style="color: #64748b; font-size: 0.85rem;">
+                <strong>Importante:</strong> Ao realizar o login com esta senha, o sistema solicitará que você crie uma nova senha definitiva por segurança.
+              </p>
+              <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
+              <p style="font-size: 0.75rem; color: #94a3b8; text-align: center;">
+                Este é um e-mail automático. Por favor, não responda.
+              </p>
+            </div>
+          `,
+        }),
+      });
+
+    } catch (err) {
+      console.error('Erro no reset:', err);
+    } finally {
+      setLoading(false);
+      setResetSent(true);
+    }
   };
 
   const handleCnpjValidation = async (e) => {
