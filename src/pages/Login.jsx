@@ -40,7 +40,10 @@ export const Login = () => {
     const loggedUser = await login(identifier, password);
     setLoading(false);
     if (loggedUser) {
-      if (loggedUser.is_first_login) {
+      if (loggedUser.must_change_password) {
+        setValidatedClient({ ...loggedUser, currentPassword: password }); // Reusing state to hold user data
+        setMode('change-password');
+      } else if (loggedUser.is_first_login) {
         navigate('/update-profile');
       } else {
         navigate('/');
@@ -53,18 +56,25 @@ export const Login = () => {
     setLoading(true);
     const { data, error } = await supabase
       .from('users')
-      .select('id')
+      .select('id, name')
       .eq('email', resetEmail)
       .single();
 
     if (error || !data) {
+      // For security, don't reveal if email exists or not, but proceed to screen
       setLoading(false);
       setResetSent(true);
       return;
     }
 
     const tempPassword = Math.random().toString(36).slice(2, 10).toUpperCase();
-    await supabase.from('users').update({ password: tempPassword }).eq('id', data.id);
+    
+    // Update password and set must_change_password flag
+    await supabase.from('users').update({ 
+      password: tempPassword,
+      must_change_password: true 
+    }).eq('id', data.id);
+
     setLoading(false);
     setResetSent(true);
   };
@@ -300,12 +310,13 @@ export const Login = () => {
           <>
             {resetSent ? (
               <div style={{ textAlign: 'center', color: '#1e293b' }}>
-                <div style={{ fontSize: '2rem', marginBottom: '12px' }}>✅</div>
-                <p style={{ marginBottom: '8px', fontWeight: 600 }}>E-mail processado!</p>
-                <p style={{ color: '#64748b', fontSize: '0.85rem', marginBottom: '24px' }}>
-                  Se o e-mail estiver cadastrado, um administrador será notificado para resetar sua senha.
+                <div style={{ fontSize: '3rem', marginBottom: '16px' }}>📧</div>
+                <p style={{ marginBottom: '8px', fontWeight: 700, fontSize: '1.2rem' }}>Senha enviada!</p>
+                <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '24px', lineHeight: '1.5' }}>
+                  Uma senha temporária foi enviada para o seu e-mail.<br/>
+                  Verifique sua caixa de entrada e spam.
                 </p>
-                <button onClick={() => setMode('login')} className="btn btn-primary" style={{ background: '#1d3e83' }}>
+                <button onClick={() => setMode('login')} className="btn btn-primary" style={{ background: '#1d3e83', width: '100%', padding: '14px' }}>
                   <ArrowLeft size={16} /> Voltar ao Login
                 </button>
               </div>
@@ -346,6 +357,19 @@ export const Login = () => {
               </>
             )}
           </>
+        )}
+
+        {/* ─── FORCE CHANGE PASSWORD ─── */}
+        {mode === 'change-password' && validatedClient && (
+          <ForceChangePasswordForm
+            user={validatedClient}
+            onSuccess={() => {
+              setMode('login');
+              setIdentifier('');
+              setPassword('');
+              setValidatedClient(null);
+            }}
+          />
         )}
       </div>
 
@@ -680,6 +704,143 @@ const ClientRegisterForm = ({ clientData, onBack, onSuccess, registerClient }) =
       >
         <ArrowLeft size={13} /> Alterar CNPJ
       </button>
+    </>
+  );
+};
+
+// ─── Force Change Password Form ───────────────────────────────────────────
+const ForceChangePasswordForm = ({ user, onSuccess }) => {
+  const [currentPassword, setCurrentPassword] = useState(user.currentPassword || '');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPass, setShowPass] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const requirements = [
+    { label: 'Ter no mínimo 8 caracteres', satisfied: newPassword.length >= 8 },
+    { label: 'Ter no mínimo 1 número', satisfied: /\d/.test(newPassword) },
+    { label: 'Ter no mínimo 1 letra maiúscula', satisfied: /[A-Z]/.test(newPassword) },
+    { label: 'Ter no mínimo 1 letra minúscula', satisfied: /[a-z]/.test(newPassword) },
+    { label: 'Ter no mínimo 1 caractere especial', satisfied: /[@$!%*?&]/.test(newPassword) },
+  ];
+  const allSatisfied = requirements.every(r => r.satisfied);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    
+    if (newPassword !== confirmPassword) {
+      setError('As senhas não coincidem.');
+      return;
+    }
+    if (!allSatisfied) {
+      setError('A nova senha não atende aos requisitos de segurança.');
+      return;
+    }
+
+    setLoading(true);
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({ 
+        password: newPassword,
+        must_change_password: false 
+      })
+      .eq('id', user.id);
+
+    if (updateError) {
+      setError('Erro ao atualizar senha: ' + updateError.message);
+      setLoading(false);
+    } else {
+      onSuccess();
+    }
+  };
+
+  return (
+    <>
+      <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+        <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>🔒</div>
+        <h3 style={{ color: '#1e293b', fontWeight: 700, marginBottom: '4px' }}>Alterar Senha</h3>
+        <p style={{ color: '#64748b', fontSize: '0.85rem' }}>
+          Para sua segurança, você deve alterar sua senha temporária.
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="login-form">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569' }}>Senha Atual (Temporária)</label>
+          <div className="input-group">
+            <Lock className="input-icon" size={18} />
+            <input 
+              type="text" 
+              value={currentPassword} 
+              readOnly 
+              style={{ background: '#f1f5f9', color: '#64748b', fontWeight: 600 }}
+            />
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569' }}>Nova Senha</label>
+          <div className="input-group">
+            <Lock className="input-icon" size={18} />
+            <input 
+              type={showPass ? 'text' : 'password'} 
+              placeholder="Digite sua nova senha"
+              value={newPassword}
+              onChange={e => setNewPassword(e.target.value)}
+              required
+            />
+            <button type="button" onClick={() => setShowPass(!showPass)} style={{ position: 'absolute', right: '12px', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}>
+              {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
+        </div>
+
+        {/* Requirements */}
+        <div style={{ padding: '10px 12px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <p style={{ margin: 0, fontSize: '0.72rem', fontWeight: 600, color: '#475569' }}>Sua senha deve:</p>
+          {requirements.map((req, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.68rem', color: req.satisfied ? '#10b981' : '#94a3b8' }}>
+              <CheckCircle size={10} color={req.satisfied ? '#10b981' : '#cbd5e1'} />
+              {req.label}
+            </div>
+          ))}
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569' }}>Confirmar Nova Senha</label>
+          <div className="input-group">
+            <Lock className="input-icon" size={18} />
+            <input 
+              type={showConfirm ? 'text' : 'password'} 
+              placeholder="Confirme sua nova senha"
+              value={confirmPassword}
+              onChange={e => setConfirmPassword(e.target.value)}
+              required
+            />
+            <button type="button" onClick={() => setShowConfirm(!showConfirm)} style={{ position: 'absolute', right: '12px', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}>
+              {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
+        </div>
+
+        {error && (
+          <div style={{ padding: '10px 14px', borderRadius: '8px', background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', fontSize: '0.82rem', fontWeight: 500 }}>
+            ⚠️ {error}
+          </div>
+        )}
+
+        <button
+          type="submit"
+          className="btn btn-primary"
+          disabled={loading}
+          style={{ padding: '14px', background: '#1d3e83', fontWeight: 700 }}
+        >
+          {loading ? <div className="loader" style={{ margin: '0 auto' }}></div> : 'Salvar Nova Senha'}
+        </button>
+      </form>
     </>
   );
 };
