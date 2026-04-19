@@ -445,11 +445,14 @@ const ClientRegisterForm = ({ clientData, onBack, onSuccess, registerClient }) =
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    document: maskCpfDoc(clientData.cnpj || ''),
+    document: clientData.cnpj || '',
     phone: '',
     password: '',
     confirmPassword: '',
   });
+
+  const companyName = clientData.name || '';
+  const companyCnpj = clientData.cnpj || '';
 
   const requirements = [
     { label: 'Ter no mínimo 8 caracteres', satisfied: formData.password.length >= 8 },
@@ -551,47 +554,74 @@ const ClientRegisterForm = ({ clientData, onBack, onSuccess, registerClient }) =
           <input type="file" ref={fileInputRef} onChange={handleAvatarChange} accept="image/*" style={{ display: 'none' }} />
         </div>
 
-        <div className="input-group">
-          <UserIcon className="input-icon" size={18} />
-          <input type="text" placeholder="Nome completo *" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} required />
+        {/* Empresa info — readonly */}
+        <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '12px 16px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <div>
+            <p style={{ fontSize: '0.7rem', fontWeight: 700, color: '#94a3b8', marginBottom: '2px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Empresa</p>
+            <p style={{ fontWeight: 700, color: '#1e293b', fontSize: '0.9rem', margin: 0 }}>{companyName}</p>
+          </div>
+          <div>
+            <p style={{ fontSize: '0.7rem', fontWeight: 700, color: '#94a3b8', marginBottom: '2px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>CNPJ</p>
+            <p style={{ fontWeight: 700, color: '#1e293b', fontSize: '0.9rem', margin: 0 }}>{companyCnpj}</p>
+          </div>
         </div>
 
-        <div className="input-group">
-          <Shield className="input-icon" size={18} />
-          <input type="email" placeholder="E-mail de acesso *" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} required />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569' }}>Nome Completo *</label>
+          <div className="input-group">
+            <UserIcon className="input-icon" size={18} />
+            <input type="text" placeholder="Seu nome completo" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} required />
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569' }}>E-mail de Acesso *</label>
+          <div className="input-group">
+            <Shield className="input-icon" size={18} />
+            <input type="email" placeholder="email@empresa.com.br" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} required />
+          </div>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-          <input
-            type="text"
-            placeholder="CPF/CNPJ"
-            value={formData.document}
-            onChange={e => setFormData({ ...formData, document: maskCpfDoc(e.target.value) })}
-            maxLength={18}
-            style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '10px 12px', borderRadius: '8px', width: '100%', outline: 'none', fontSize: '0.9rem' }}
-            onFocus={e => e.target.style.borderColor = '#1d3e83'}
-            onBlur={e => e.target.style.borderColor = '#e2e8f0'}
-          />
-          <input
-            type="text"
-            placeholder="Telefone"
-            value={formData.phone}
-            onChange={e => setFormData({ ...formData, phone: maskPhone(e.target.value) })}
-            maxLength={15}
-            required
-            style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '10px 12px', borderRadius: '8px', width: '100%', outline: 'none', fontSize: '0.9rem' }}
-            onFocus={e => e.target.style.borderColor = '#1d3e83'}
-            onBlur={e => e.target.style.borderColor = '#e2e8f0'}
-          />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569' }}>CPF/CNPJ Pessoal</label>
+            <input
+              type="text"
+              placeholder="000.000.000-00"
+              value={formData.document}
+              onChange={e => setFormData({ ...formData, document: maskCpfDoc(e.target.value) })}
+              maxLength={18}
+              style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '10px 12px', borderRadius: '8px', width: '100%', outline: 'none', fontSize: '0.9rem', boxSizing: 'border-box' }}
+              onFocus={e => e.target.style.borderColor = '#1d3e83'}
+              onBlur={e => e.target.style.borderColor = '#e2e8f0'}
+            />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569' }}>Telefone *</label>
+            <input
+              type="text"
+              placeholder="(00) 00000-0000"
+              value={formData.phone}
+              onChange={e => setFormData({ ...formData, phone: maskPhone(e.target.value) })}
+              maxLength={15}
+              required
+              style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '10px 12px', borderRadius: '8px', width: '100%', outline: 'none', fontSize: '0.9rem', boxSizing: 'border-box' }}
+              onFocus={e => e.target.style.borderColor = '#1d3e83'}
+              onBlur={e => e.target.style.borderColor = '#e2e8f0'}
+            />
+          </div>
         </div>
 
         <div style={{ height: '1px', background: '#e2e8f0' }} />
 
-        <div className="input-group">
-          <input type={showPassword ? 'text' : 'password'} placeholder="Criar senha *" value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} required style={{ paddingLeft: '14px' }} />
-          <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: '12px', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}>
-            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-          </button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569' }}>Nova Senha *</label>
+          <div className="input-group">
+            <input type={showPassword ? 'text' : 'password'} placeholder="Crie uma senha forte" value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} required style={{ paddingLeft: '14px' }} />
+            <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: '12px', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}>
+              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
         </div>
 
         {/* Password checklist */}
@@ -607,11 +637,14 @@ const ClientRegisterForm = ({ clientData, onBack, onSuccess, registerClient }) =
           ))}
         </div>
 
-        <div className="input-group">
-          <input type={showConfirmPassword ? 'text' : 'password'} placeholder="Confirmar senha *" value={formData.confirmPassword} onChange={e => setFormData({ ...formData, confirmPassword: e.target.value })} required style={{ paddingLeft: '14px' }} />
-          <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} style={{ position: 'absolute', right: '12px', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}>
-            {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-          </button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569' }}>Confirmar Senha *</label>
+          <div className="input-group">
+            <input type={showConfirmPassword ? 'text' : 'password'} placeholder="Repita a senha" value={formData.confirmPassword} onChange={e => setFormData({ ...formData, confirmPassword: e.target.value })} required style={{ paddingLeft: '14px' }} />
+            <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} style={{ position: 'absolute', right: '12px', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}>
+              {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
         </div>
 
         {errorMsg && (
