@@ -348,8 +348,8 @@ export const Login = () => {
         }
         .login-box {
           width: 100%;
-          max-width: 420px;
-          padding: 44px 40px;
+          max-width: 560px;
+          padding: 44px 48px;
           display: flex;
           flex-direction: column;
           gap: 20px;
