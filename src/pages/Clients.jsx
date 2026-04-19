@@ -84,6 +84,13 @@ export const Clients = () => {
     }
   }, [clients]);
 
+  // Auto-open own profile for client-role users (they have only 1 client record)
+  useEffect(() => {
+    if (user?.role === 'client' && clients.length > 0 && !viewingClient) {
+      setViewingClient(clients[0]);
+    }
+  }, [user, clients]);
+
   const clearFilters = () => {
     setFilterName('');
     setFilterCnpj('');
@@ -241,9 +248,11 @@ export const Clients = () => {
     return (
       <div className="client-viewer fade-in">
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
-          <button className="btn btn-secondary" onClick={() => setViewingClient(null)}>
-            <ArrowLeft size={16} /> Voltar
-          </button>
+          {user?.role !== 'client' && (
+            <button className="btn btn-secondary" onClick={() => setViewingClient(null)}>
+              <ArrowLeft size={16} /> Voltar
+            </button>
+          )}
           <div>
             <h1 style={{ fontSize: '1.75rem', color: '#0f172a', margin: 0 }}>{c.name}</h1>
             <p style={{ color: '#64748b', margin: '4px 0 0 0' }}>Visualização detalhada e mapa de resultados</p>
