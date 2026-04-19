@@ -22,6 +22,10 @@ export const Login = () => {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [resetEmail, setResetEmail] = useState('');
+  const [resetPhone, setResetPhone] = useState('');
+  const [resetMethod, setResetMethod] = useState('email'); // 'email' | 'phone'
+  const [tempPassResult, setTempPassResult] = useState(''); // Store temp pass to show in WhatsApp link
+  const [userPhoneFound, setUserPhoneFound] = useState(''); // Store phone from DB
   const [loading, setLoading] = useState(false);
   const [resetSent, setResetSent] = useState(false);
   const [error, setError] = useState('');
@@ -56,17 +60,19 @@ export const Login = () => {
     setLoading(true);
     const { data, error } = await supabase
       .from('users')
-      .select('id, name, email')
-      .eq('email', resetEmail)
+      .select('id, name, email, phone')
+      .eq(resetMethod === 'email' ? 'email' : 'phone', resetMethod === 'email' ? resetEmail : resetPhone.replace(/\D/g, ''))
       .single();
 
     if (error || !data) {
+      setError('Usuário não encontrado com este ' + (resetMethod === 'email' ? 'e-mail' : 'telefone') + '.');
       setLoading(false);
-      setResetSent(true); 
       return;
     }
 
     const tempPassword = Math.random().toString(36).slice(2, 10).toUpperCase();
+    setTempPassResult(tempPassword);
+    setUserPhoneFound(data.phone || '');
     
     try {
       // 1. Update Database
@@ -77,37 +83,33 @@ export const Login = () => {
 
       if (dbError) throw dbError;
 
-      // 2. Send Real Email via Resend
-      await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer re_3iAfSNj3_B2pzyBZSPvV2xGgAMDmaqH64',
-        },
-        body: JSON.stringify({
-          from: 'Verto Soluções <onboarding@resend.dev>',
-          to: [data.email],
-          subject: 'Sua Senha Temporária - Verto Soluções',
-          html: `
-            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
-              <h2 style="color: #1d3e83; text-align: center;">Verto Soluções em Licitações</h2>
-              <p>Olá, <strong>${data.name}</strong>,</p>
-              <p>Você solicitou a redefinição de sua senha de acesso ao portal.</p>
-              <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; text-align: center; border-radius: 8px; margin: 20px 0;">
-                <p style="margin: 0; color: #64748b; font-size: 0.9rem;">Sua senha temporária é:</p>
-                <h1 style="margin: 10px 0; color: #1d3e83; letter-spacing: 4px;">${tempPassword}</h1>
+      // 2. Send via Method
+      if (resetMethod === 'email') {
+        const targetEmail = data.email || resetEmail;
+        await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer re_3iAfSNj3_B2pzyBZSPvV2xGgAMDmaqH64',
+          },
+          body: JSON.stringify({
+            from: 'Verto Soluções <onboarding@resend.dev>',
+            to: [targetEmail],
+            subject: 'Sua Senha Temporária - Verto Soluções',
+            html: `
+              <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
+                <h2 style="color: #1d3e83; text-align: center;">Verto Soluções em Licitações</h2>
+                <p>Olá, <strong>${data.name}</strong>,</p>
+                <p>Sua senha temporária de acesso ao portal é:</p>
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; text-align: center; border-radius: 8px; margin: 20px 0;">
+                  <h1 style="margin: 0; color: #1d3e83; letter-spacing: 4px;">${tempPassword}</h1>
+                </div>
+                <p style="color: #64748b; font-size: 0.85rem;">Após o login, altere sua senha por segurança.</p>
               </div>
-              <p style="color: #64748b; font-size: 0.85rem;">
-                <strong>Importante:</strong> Ao realizar o login com esta senha, o sistema solicitará que você crie uma nova senha definitiva por segurança.
-              </p>
-              <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
-              <p style="font-size: 0.75rem; color: #94a3b8; text-align: center;">
-                Este é um e-mail automático. Por favor, não responda.
-              </p>
-            </div>
-          `,
-        }),
-      });
+            `,
+          }),
+        });
+      }
 
     } catch (err) {
       console.error('Erro no reset:', err);
@@ -348,42 +350,73 @@ export const Login = () => {
           <>
             {resetSent ? (
               <div style={{ textAlign: 'center', color: '#1e293b' }}>
-                <div style={{ fontSize: '3rem', marginBottom: '16px' }}>📧</div>
-                <p style={{ marginBottom: '8px', fontWeight: 700, fontSize: '1.2rem' }}>Senha enviada!</p>
+                <div style={{ fontSize: '3rem', marginBottom: '16px' }}>{resetMethod === 'email' ? '📧' : '📱'}</div>
+                <p style={{ marginBottom: '8px', fontWeight: 700, fontSize: '1.2rem' }}>Pronto!</p>
                 <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '24px', lineHeight: '1.5' }}>
-                  Uma senha temporária foi enviada para o seu e-mail.<br/>
-                  Verifique sua caixa de entrada e spam.
+                  {resetMethod === 'email' 
+                    ? 'Uma senha temporária foi enviada para o seu e-mail.' 
+                    : 'Clique no botão abaixo para receber sua senha via WhatsApp instantaneamente.'}
                 </p>
-                <button onClick={() => setMode('login')} className="btn btn-primary" style={{ background: '#1d3e83', width: '100%', padding: '14px' }}>
+                
+                {resetMethod === 'phone' && (
+                  <button 
+                    onClick={() => {
+                      const msg = encodeURIComponent(`Olá! Minha senha temporária da Verto é: *${tempPassResult}*`);
+                      window.open(`https://wa.me/55${userPhoneFound.replace(/\D/g, '')}?text=${msg}`, '_blank');
+                    }}
+                    style={{ width: '100%', background: '#25d366', color: '#fff', border: 'none', padding: '14px', borderRadius: '10px', fontWeight: 700, fontSize: '1rem', cursor: 'pointer', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                  >
+                    Abrir WhatsApp
+                  </button>
+                )}
+
+                <button onClick={() => { setMode('login'); setResetSent(false); }} className="btn btn-primary" style={{ background: '#1d3e83', width: '100%', padding: '14px' }}>
                   <ArrowLeft size={16} /> Voltar ao Login
                 </button>
               </div>
             ) : (
               <>
-                <div style={{ marginBottom: '8px' }}>
+                <div style={{ marginBottom: '20px' }}>
                   <h3 style={{ color: '#1e293b', fontWeight: 700, marginBottom: '4px' }}>Redefinir Senha</h3>
                   <p style={{ color: '#64748b', fontSize: '0.85rem' }}>
-                    Informe seu e-mail cadastrado para solicitar a redefinição de senha.
+                    Escolha como deseja receber sua senha temporária.
                   </p>
                 </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '20px' }}>
+                  <button 
+                    onClick={() => setResetMethod('email')}
+                    style={{ padding: '10px', borderRadius: '8px', border: resetMethod === 'email' ? '2px solid #1d3e83' : '1px solid #e2e8f0', background: resetMethod === 'email' ? '#eff6ff' : '#fff', color: resetMethod === 'email' ? '#1d3e83' : '#64748b', fontWeight: 600, cursor: 'pointer', fontSize: '0.85rem' }}
+                  >
+                    E-mail
+                  </button>
+                  <button 
+                    onClick={() => setResetMethod('phone')}
+                    style={{ padding: '10px', borderRadius: '8px', border: resetMethod === 'phone' ? '2px solid #1d3e83' : '1px solid #e2e8f0', background: resetMethod === 'phone' ? '#eff6ff' : '#fff', color: resetMethod === 'phone' ? '#1d3e83' : '#64748b', fontWeight: 600, cursor: 'pointer', fontSize: '0.85rem' }}
+                  >
+                    WhatsApp
+                  </button>
+                </div>
+
                 <form onSubmit={handleResetPassword} className="login-form">
                   <div className="input-group">
-                    <Mail className="input-icon" size={20} />
+                    {resetMethod === 'email' ? <Mail className="input-icon" size={20} /> : <div className="input-icon" style={{ fontSize: '18px', left: '16px', position: 'absolute' }}>📱</div>}
                     <input
-                      type="email"
-                      placeholder="Seu e-mail cadastrado"
-                      value={resetEmail}
-                      onChange={e => setResetEmail(e.target.value)}
+                      type={resetMethod === 'email' ? 'email' : 'text'}
+                      placeholder={resetMethod === 'email' ? 'Seu e-mail cadastrado' : '(00) 00000-0000'}
+                      value={resetMethod === 'email' ? resetEmail : resetPhone}
+                      onChange={e => resetMethod === 'email' ? setResetEmail(e.target.value) : setResetPhone(maskPhone(e.target.value))}
                       required
                     />
                   </div>
+                  {error && <p style={{ color: '#dc2626', fontSize: '0.8rem', marginTop: '-8px' }}>{error}</p>}
                   <button
                     type="submit"
                     className="btn btn-primary"
                     disabled={loading}
-                    style={{ width: '100%', background: '#1d3e83', padding: '14px' }}
+                    style={{ width: '100%', background: '#1d3e83', padding: '14px', marginBottom: '8px' }}
                   >
-                    {loading ? <div className="loader" style={{ margin: '0 auto' }}></div> : 'Enviar Solicitação'}
+                    {loading ? <div className="loader" style={{ margin: '0 auto' }}></div> : 'Avançar'}
                   </button>
                 </form>
                 <button
