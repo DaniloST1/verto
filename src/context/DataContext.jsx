@@ -28,10 +28,17 @@ export const DataProvider = ({ children }) => {
     try {
       let targetClientId = null;
       let cleanDoc = '';
+      let formattedCnpj = '';
       if (user?.role === 'client') {
         cleanDoc = (user.document || '').replace(/\D/g, '');
-        if (cleanDoc) {
-          const { data: c } = await supabase.from('clients').select('id').eq('cnpj', cleanDoc).maybeSingle();
+        if (cleanDoc.length === 14) {
+          // Format to XX.XXX.XXX/XXXX-XX to match DB storage
+          formattedCnpj = cleanDoc.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+        } else {
+          formattedCnpj = user.document || ''; // already formatted or CPF
+        }
+        if (formattedCnpj) {
+          const { data: c } = await supabase.from('clients').select('id').eq('cnpj', formattedCnpj).maybeSingle();
           if (c) targetClientId = c.id;
         }
       }
@@ -59,7 +66,7 @@ export const DataProvider = ({ children }) => {
       };
 
       await Promise.all([
-        fetchTable('clients', setClients, q => q.eq('cnpj', cleanDoc)),
+        fetchTable('clients', setClients, q => q.eq('cnpj', formattedCnpj)),
         fetchTable('bids', setBids, q => targetClientId ? q.contains('clients_linked', [targetClientId]) : q),
         fetchTable('disputes', setDisputes, q => targetClientId ? q.eq('client_id', targetClientId) : q),
         fetchTable('contracts', setContracts, q => targetClientId ? q.eq('client_id', targetClientId) : q),

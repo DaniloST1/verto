@@ -76,10 +76,12 @@ export const Login = () => {
     setLoading(true);
     const cleanCnpj = cnpj.replace(/\D/g, '');
     if (cleanCnpj.length < 14) {
-      setError('Por favor, informe um CNPJ válido com 14 dígitos.');
+      setError('Por favor, informe um CNPJ v\u00e1lido com 14 d\u00edgitos.');
       setLoading(false);
       return;
     }
+    // Build formatted CNPJ (XX.XXX.XXX/XXXX-XX) — matches DB storage format
+    const formattedCnpj = cleanCnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
 
     // Check if a user already exists with this CNPJ document
     const { data: existingUser } = await supabase
@@ -90,21 +92,21 @@ export const Login = () => {
       .maybeSingle();
 
     if (existingUser) {
-      setError('Este CNPJ já possui uma conta cadastrada. Por favor, faça o login normalmente.');
+      setError('Este CNPJ j\u00e1 possui uma conta cadastrada. Por favor, fa\u00e7a o login normalmente.');
       setLoading(false);
       return;
     }
 
-    // Check if client is registered in clients table
+    // Check if client is registered in clients table (using formatted CNPJ)
     const { data: clientData, error: clientError } = await supabase
       .from('clients')
       .select('*')
-      .eq('cnpj', cleanCnpj)
+      .eq('cnpj', formattedCnpj)
       .maybeSingle();
 
     setLoading(false);
     if (clientError || !clientData) {
-      setError('CNPJ não encontrado. Este CNPJ não está cadastrado no sistema. Entre em contato com a equipe Verto.');
+      setError('CNPJ n\u00e3o encontrado. Este CNPJ n\u00e3o est\u00e1 cadastrado no sistema. Entre em contato com a equipe Verto.');
       return;
     }
 
