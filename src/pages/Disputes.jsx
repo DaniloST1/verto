@@ -10,6 +10,7 @@ const ROLE_NAMES = {
   supervisor: 'Supervisor',
   finance: 'Financeiro',
   employee: 'Colaborador',
+  client: 'Cliente',
 };
 
 export const Disputes = () => {

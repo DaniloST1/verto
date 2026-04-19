@@ -10,6 +10,7 @@ export const Sidebar = ({ open, onClose }) => {
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin';
   const isFinance = user?.role === 'finance';
+  const isClient = user?.role === 'client';
 
   return (
     <>
@@ -58,10 +59,14 @@ export const Sidebar = ({ open, onClose }) => {
             </>
           )}
 
-          <div className="nav-divider"></div>
-          <NavLink to="/settings" className={({isActive}) => `nav-link ${isActive ? 'active' : ''}`}>
-            <Settings size={20}/> {isAdmin ? 'Gestão de Usuários' : 'Equipe'}
-          </NavLink>
+          {!isClient && (
+            <>
+              <div className="nav-divider"></div>
+              <NavLink to="/settings" className={({isActive}) => `nav-link ${isActive ? 'active' : ''}`}>
+                <Settings size={20}/> {isAdmin ? 'Gestão de Usuários' : 'Equipe'}
+              </NavLink>
+            </>
+          )}
         </nav>
       </aside>
 

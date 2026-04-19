@@ -12,7 +12,7 @@ export const Bids = () => {
   const { addToast } = useToast();
 
   const LOGO_URL = 'https://kxvminodzhcsdwrmucdj.supabase.co/storage/v1/object/public/Verto%20imagens/logo-verto.jpeg';
-  const ROLE_NAMES = { admin: 'Administrador', supervisor: 'Supervisor', finance: 'Financeiro', employee: 'Colaborador' };
+  const ROLE_NAMES = { admin: 'Administrador', supervisor: 'Supervisor', finance: 'Financeiro', employee: 'Colaborador', client: 'Cliente' };
 
   const [viewMode, setViewMode] = useState('list'); // 'list', 'links', 'view'
   const [currentBid, setCurrentBid] = useState(null);

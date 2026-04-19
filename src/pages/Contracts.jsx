@@ -11,6 +11,7 @@ const ROLE_NAMES = {
   supervisor: 'Supervisor',
   finance: 'Financeiro',
   employee: 'Colaborador',
+  client: 'Cliente',
 };
 
 // Format datetime-local value from ISO string

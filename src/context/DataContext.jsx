@@ -26,19 +26,45 @@ export const DataProvider = ({ children }) => {
 
   const fetchData = async () => {
     try {
-      const fetchTable = async (table, setter) => {
-        const { data, error } = await supabase.from(table).select('*');
-        if (!error && data) setter(data);
-        else if (error) console.error(`Error fetching ${table}:`, error);
+      let targetClientId = null;
+      let cleanDoc = '';
+      if (user?.role === 'client') {
+        cleanDoc = (user.document || '').replace(/\D/g, '');
+        if (cleanDoc) {
+          const { data: c } = await supabase.from('clients').select('id').eq('cnpj', cleanDoc).maybeSingle();
+          if (c) targetClientId = c.id;
+        }
+      }
+
+      const fetchTable = async (table, setter, queryBuilder) => {
+        let query = supabase.from(table).select('*');
+        if (user?.role === 'client') {
+          if (!targetClientId && table !== 'clients') {
+            setter([]);
+            return;
+          }
+          if (queryBuilder) query = queryBuilder(query);
+        }
+        
+        const { data, error } = await query;
+        if (!error && data) {
+           if (user?.role === 'client' && table === 'bids' && targetClientId) {
+             // Fallback local caso o bd não tenha suporte a contains ou falhe silenciosamente
+             const filtered = data.filter(b => (b.clientsLinked || b.clients_linked || []).includes(targetClientId));
+             setter(filtered);
+           } else {
+             setter(data);
+           }
+        } else if (error) console.error(`Error fetching ${table}:`, error);
       };
 
       await Promise.all([
-        fetchTable('clients', setClients),
-        fetchTable('bids', setBids),
-        fetchTable('disputes', setDisputes),
-        fetchTable('contracts', setContracts),
-        fetchTable('cash_flow', setCashFlow),
-        fetchTable('client_payments', setClientPayments)
+        fetchTable('clients', setClients, q => q.eq('cnpj', cleanDoc)),
+        fetchTable('bids', setBids, q => targetClientId ? q.contains('clients_linked', [targetClientId]) : q),
+        fetchTable('disputes', setDisputes, q => targetClientId ? q.eq('client_id', targetClientId) : q),
+        fetchTable('contracts', setContracts, q => targetClientId ? q.eq('client_id', targetClientId) : q),
+        fetchTable('cash_flow', setCashFlow, q => targetClientId ? q.eq('client_id', targetClientId) : q),
+        fetchTable('client_payments', setClientPayments, q => targetClientId ? q.eq('client_id', targetClientId) : q)
       ]);
     } catch (err) {
       console.error('Fetch data error:', err);
