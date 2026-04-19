@@ -30,9 +30,11 @@ export const Sidebar = ({ open, onClose }) => {
         </div>
 
         <nav className="nav-links" onClick={onClose}>
-          <NavLink to="/" end className={({isActive}) => `nav-link ${isActive ? 'active' : ''}`}>
-            <LayoutDashboard size={20}/> Dashboard
-          </NavLink>
+          {!isClient && (
+            <NavLink to="/" end className={({isActive}) => `nav-link ${isActive ? 'active' : ''}`}>
+              <LayoutDashboard size={20}/> Dashboard
+            </NavLink>
+          )}
           <NavLink to="/clients" className={({isActive}) => `nav-link ${isActive ? 'active' : ''}`}>
             <Users size={20}/> Clientes
           </NavLink>
