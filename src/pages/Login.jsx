@@ -127,7 +127,7 @@ export const Login = () => {
       <div style={{ position: 'fixed', inset: 0, background: 'rgba(0, 0, 0, 0.70)', zIndex: 1 }} />
 
       {/* Card */}
-      <div className="login-box" style={{ position: 'relative', zIndex: 2 }}>
+      <div className="login-box" style={{ position: 'relative', zIndex: 2, ...(mode === 'client-register' && { maxWidth: '680px', padding: '44px 52px' }) }}>
         <div className="login-header">
           <img
             src={LOGO_URL}
