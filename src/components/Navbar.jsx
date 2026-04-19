@@ -321,31 +321,28 @@ export const Navbar = ({ onMenuToggle }) => {
               )}
             </div>
 
-            {profileForm.password && (
-              <div className="form-group" style={{ marginTop: '12px' }}>
-                <label>Confirmar Senha</label>
-                <div style={{ position: 'relative' }}>
-                  <input 
-                    type={showConfirmPassword ? 'text' : 'password'} 
-                    placeholder="Repita a nova senha" 
-                    value={profileForm.confirmPassword} 
-                    onChange={e => setProfileForm({ ...profileForm, confirmPassword: e.target.value })} 
-                    style={{ paddingRight: '40px', background: '#eef2ff' }}
-                    required
-                  />
-                  <button 
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    style={{ 
-                      position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
-                      background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer'
-                    }}
-                  >
-                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
+            <div className="form-group" style={{ marginTop: '4px' }}>
+              <label>Confirmar Senha</label>
+              <div style={{ position: 'relative' }}>
+                <input 
+                  type={showConfirmPassword ? 'text' : 'password'} 
+                  placeholder="Repita a nova senha" 
+                  value={profileForm.confirmPassword} 
+                  onChange={e => setProfileForm({ ...profileForm, confirmPassword: e.target.value })} 
+                  style={{ paddingRight: '40px', background: '#eef2ff' }}
+                />
+                <button 
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  style={{ 
+                    position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
+                    background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer'
+                  }}
+                >
+                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
-            )}
+            </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
               <button type="button" className="btn btn-secondary" onClick={() => setModalType(null)}>Cancelar</button>
