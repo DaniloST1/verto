@@ -210,15 +210,26 @@ export const Login = () => {
             <button
               onClick={() => { setMode('reset'); setResetSent(false); }}
               style={{
-                background: 'none', border: 'none', cursor: 'pointer',
-                color: '#64748b', fontSize: '0.85rem',
-                textAlign: 'center', marginTop: '-16px', textDecoration: 'underline',
-                transition: 'color 0.2s'
+                width: '100%',
+                padding: '10px',
+                border: '1px solid #94a3b8',
+                borderRadius: '10px',
+                background: 'transparent',
+                color: '#64748b',
+                fontWeight: 600,
+                fontSize: '0.82rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                transition: 'all 0.2s',
+                marginTop: '-12px',
               }}
-              onMouseOver={e => e.currentTarget.style.color = '#1d3e83'}
-              onMouseOut={e => e.currentTarget.style.color = '#64748b'}
+              onMouseOver={e => { e.currentTarget.style.borderColor = '#1d3e83'; e.currentTarget.style.color = '#1d3e83'; e.currentTarget.style.background = '#f8fafc'; }}
+              onMouseOut={e => { e.currentTarget.style.borderColor = '#94a3b8'; e.currentTarget.style.color = '#64748b'; e.currentTarget.style.background = 'transparent'; }}
             >
-              Esqueci minha senha
+              <Lock size={14} /> Esqueci minha senha
             </button>
           </>
         )}
