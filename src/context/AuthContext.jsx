@@ -108,6 +108,48 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Self-registration for clients (no admin required — validates that CNPJ exists in clients table)
+  const registerClient = async (newUser) => {
+    // Final safety check: CNPJ in clients table
+    const { data: clientRecord } = await supabase
+      .from('clients')
+      .select('id')
+      .eq('cnpj', newUser.document)
+      .maybeSingle();
+
+    if (!clientRecord) {
+      addToast('CNPJ não localizado na base de clientes.', 'error');
+      return { success: false };
+    }
+
+    // Check for duplicate email/document
+    const { data: existing } = await supabase
+      .from('users')
+      .select('id')
+      .or(`email.eq.${newUser.email},document.eq.${newUser.document}`)
+      .maybeSingle();
+
+    if (existing) {
+      addToast('E-mail ou CNPJ já está em uso no sistema.', 'warning');
+      return { success: false };
+    }
+
+    const { data, error } = await supabase
+      .from('users')
+      .insert([{ ...newUser, role: 'client', is_first_login: false }])
+      .select()
+      .single();
+
+    if (error) {
+      addToast('Erro ao criar conta: ' + error.message, 'error');
+      return { success: false };
+    }
+
+    setUsers(prev => [...prev, data]);
+    addToast('Conta criada com sucesso!', 'success');
+    return { success: true };
+  };
+
   const editUser = async (id, updates) => {
     if (user?.role !== 'admin') return;
     const { data: updatedObj, error } = await supabase.from('users').update(updates).eq('id', id).select().single();
@@ -146,7 +188,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, setUser, users, login, logout, addUser, editUser, deleteUser, fetchUsers }}>
+    <AuthContext.Provider value={{ user, setUser, users, login, logout, addUser, editUser, deleteUser, fetchUsers, registerClient }}>
       {children}
     </AuthContext.Provider>
   );
