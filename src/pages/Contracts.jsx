@@ -284,9 +284,11 @@ export const Contracts = () => {
                 )}
               </tbody>
             </table>
-          </div>
+          </div>          </div>
+        </div>
+      )}
 
-          {showModal && (
+      {showModal && (
             <Modal title={editingId ? 'Editar Contrato' : 'Novo Contrato'} onClose={() => setShowModal(false)} maxWidth="600px">
               <form onSubmit={handleSubmit}>
                 <div className="form-group">
@@ -381,8 +383,6 @@ export const Contracts = () => {
               </form>
             </Modal>
           )}
-        </div>
-      )}
     </>
   );
 };
