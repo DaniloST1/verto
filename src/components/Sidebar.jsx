@@ -71,7 +71,7 @@ export const Sidebar = ({ open, onClose }) => {
                 <Activity size={20}/> Fluxo Editais
               </NavLink>
               <NavLink to="/tickets" className={({isActive}) => `nav-link ${isActive ? 'active' : ''}`}>
-                <MessageSquare size={20}/> Chamados
+                <MessageSquare size={20}/> TI Otimizações
               </NavLink>
             </>
           )}
