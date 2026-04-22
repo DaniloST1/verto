@@ -12,6 +12,8 @@ import { CashFlow } from './pages/CashFlow';
 import { ClientPayments } from './pages/ClientPayments';
 import { Settings } from './pages/Settings';
 import { UpdateProfile } from './pages/UpdateProfile';
+import { BidsFlow } from './pages/BidsFlow';
+import { Tickets } from './pages/Tickets';
 import { useAuth } from './context/AuthContext';
 
 function App() {
@@ -30,6 +32,8 @@ function App() {
         <Route path="contracts" element={<Contracts />} />
         <Route path="cash-flow" element={<ProtectedRoute allowedRoles={['admin', 'finance']}><CashFlow /></ProtectedRoute>} />
         <Route path="client-payments" element={<ProtectedRoute allowedRoles={['admin', 'finance']}><ClientPayments /></ProtectedRoute>} />
+        <Route path="bids-flow" element={<ProtectedRoute allowedRoles={['admin']}><BidsFlow /></ProtectedRoute>} />
+        <Route path="tickets" element={<ProtectedRoute allowedRoles={['admin']}><Tickets /></ProtectedRoute>} />
         <Route path="settings" element={<ProtectedRoute allowedRoles={['admin', 'supervisor', 'employee', 'finance']}><Settings /></ProtectedRoute>} />
       </Route>
     </Routes>

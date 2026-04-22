@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, FileText, Gavel, FolderOpen, PieChart, CreditCard, Settings, X } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, Gavel, FolderOpen, PieChart, CreditCard, Settings, X, Activity, MessageSquare } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 
@@ -57,6 +57,19 @@ export const Sidebar = ({ open, onClose }) => {
               </NavLink>
               <NavLink to="/client-payments" className={({isActive}) => `nav-link ${isActive ? 'active' : ''}`}>
                 <CreditCard size={20}/> Pagamentos Clientes
+              </NavLink>
+            </>
+          )}
+
+          {isAdmin && (
+            <>
+              <div className="nav-divider"></div>
+              <span className="nav-section-title">ADMINISTRATIVO</span>
+              <NavLink to="/bids-flow" className={({isActive}) => `nav-link ${isActive ? 'active' : ''}`}>
+                <Activity size={20}/> Fluxo Editais
+              </NavLink>
+              <NavLink to="/tickets" className={({isActive}) => `nav-link ${isActive ? 'active' : ''}`}>
+                <MessageSquare size={20}/> Chamados
               </NavLink>
             </>
           )}
