@@ -19,21 +19,21 @@ const maskPhone = (v = '') => {
   v = v.replace(/\D/g, '').slice(0, 11);
   if (v.length === 0) return '';
   if (v.length <= 2) return `(${v}`;
-  if (v.length <= 6) return `(${v.slice(0,2)}) ${v.slice(2)}`;
-  if (v.length <= 10) return `(${v.slice(0,2)}) ${v.slice(2,6)}-${v.slice(6)}`;
-  return `(${v.slice(0,2)}) ${v.slice(2,7)}-${v.slice(7)}`;
+  if (v.length <= 6) return `(${v.slice(0, 2)}) ${v.slice(2)}`;
+  if (v.length <= 10) return `(${v.slice(0, 2)}) ${v.slice(2, 6)}-${v.slice(6)}`;
+  return `(${v.slice(0, 2)}) ${v.slice(2, 7)}-${v.slice(7)}`;
 };
 
 const maskCpfCnpj = (v = '') => {
   v = v.replace(/\D/g, '').slice(0, 14);
   if (v.length <= 11) {
     return v.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
-            .replace(/(\d{3})(\d{3})(\d{3})/, '$1.$2.$3')
-            .replace(/(\d{3})(\d{3})/, '$1.$2');
+      .replace(/(\d{3})(\d{3})(\d{3})/, '$1.$2.$3')
+      .replace(/(\d{3})(\d{3})/, '$1.$2');
   }
   return v.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5')
-          .replace(/(\d{2})(\d{3})(\d{3})(\d{4})/, '$1.$2.$3/$4')
-          .replace(/(\d{2})(\d{3})(\d{3})/, '$1.$2.$3');
+    .replace(/(\d{2})(\d{3})(\d{3})(\d{4})/, '$1.$2.$3/$4')
+    .replace(/(\d{2})(\d{3})(\d{3})/, '$1.$2.$3');
 };
 
 const isValidPassword = (pass) => {
@@ -49,11 +49,11 @@ export const Settings = () => {
   const { user, users, addUser, editUser, deleteUser, fetchUsers } = useAuth();
   const { addToast } = useToast();
   const fileInputRef = useRef(null);
-  
+
   const [formData, setFormData] = useState({
     name: '', email: '', document: '', phone: '', password: '', role: 'employee', avatar_url: ''
   });
-  
+
   const [editingId, setEditingId] = useState(null);
   const [viewingUser, setViewingUser] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(null);
@@ -97,7 +97,7 @@ export const Settings = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (formData.password && !allSatisfied) {
       addToast('A senha não atende a todos os requisitos de segurança.', 'error');
       return;
@@ -107,7 +107,7 @@ export const Settings = () => {
       const avatar_url = await uploadAvatar(editingId);
       await editUser(editingId, {
         name: formData.name, email: formData.email,
-        document: formData.document, phone: formData.phone, 
+        document: formData.document, phone: formData.phone,
         role: formData.role,
         ...(avatar_url ? { avatar_url } : {}),
         ...(formData.password ? { password: formData.password } : {})
@@ -120,18 +120,18 @@ export const Settings = () => {
       // Use addUser for central logic and notification
       const tempUser = {
         name: formData.name, email: formData.email,
-        document: formData.document.replace(/\D/g, ''), 
+        document: formData.document.replace(/\D/g, ''),
         phone: formData.phone,
         password: formData.password,
         role: formData.role
       };
-      
+
       const { data: created, error } = await supabase.from('users').insert([tempUser]).select().single();
-      if (error) { 
-        addToast('Erro ao criar usuário: ' + error.message, 'error'); 
-        return; 
+      if (error) {
+        addToast('Erro ao criar usuário: ' + error.message, 'error');
+        return;
       }
-      
+
       // Upload avatar if provided
       if (avatarFile && created?.id) {
         const avatar_url = await uploadAvatar(created.id);
@@ -139,7 +139,7 @@ export const Settings = () => {
           await supabase.from('users').update({ avatar_url }).eq('id', created.id);
         }
       }
-      
+
       await fetchUsers();
       addToast('Novo usuário cadastrado com sucesso!', 'success');
     }
@@ -150,9 +150,9 @@ export const Settings = () => {
 
   const handleEditClick = (u) => {
     setEditingId(u.id);
-    setFormData({ 
-      name: u.name, email: u.email, document: u.document, phone: u.phone || '', 
-      role: u.role, password: '', avatar_url: u.avatar_url || '' 
+    setFormData({
+      name: u.name, email: u.email, document: u.document, phone: u.phone || '',
+      role: u.role, password: '', avatar_url: u.avatar_url || ''
     });
     setAvatarPreview(u.avatar_url || null);
     setAvatarFile(null);
@@ -220,7 +220,7 @@ export const Settings = () => {
                       <button
                         type="button"
                         style={{ display: 'block', marginTop: '6px', background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '0.8rem' }}
-                        onClick={() => { setAvatarPreview(null); setAvatarFile(null); setFormData(p => ({...p, avatar_url: ''})); }}
+                        onClick={() => { setAvatarPreview(null); setAvatarFile(null); setFormData(p => ({ ...p, avatar_url: '' })); }}
                       >
                         Remover foto
                       </button>
@@ -243,22 +243,22 @@ export const Settings = () => {
               <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
                 <div className="form-group" style={{ flex: '1 1 200px' }}>
                   <label>Documento (CPF/CNPJ)</label>
-                  <input 
-                    type="text" 
-                    placeholder="000.000.000-00" 
-                    value={formData.document} 
-                    onChange={e => setFormData({ ...formData, document: maskCpfCnpj(e.target.value) })} 
+                  <input
+                    type="text"
+                    placeholder="000.000.000-00"
+                    value={formData.document}
+                    onChange={e => setFormData({ ...formData, document: maskCpfCnpj(e.target.value) })}
                     maxLength={18}
-                    required 
+                    required
                   />
                 </div>
                 <div className="form-group" style={{ flex: '1 1 200px' }}>
                   <label>Telefone</label>
-                  <input 
-                    type="text" 
-                    placeholder="(00) 00000-0000" 
-                    value={formData.phone || ''} 
-                    onChange={e => setFormData({ ...formData, phone: maskPhone(e.target.value) })} 
+                  <input
+                    type="text"
+                    placeholder="(00) 00000-0000"
+                    value={formData.phone || ''}
+                    onChange={e => setFormData({ ...formData, phone: maskPhone(e.target.value) })}
                     maxLength={15}
                   />
                 </div>
@@ -267,18 +267,18 @@ export const Settings = () => {
               <div className="form-group">
                 <label>Senha de Acesso {editingId && <span style={{ fontWeight: 400, color: '#94a3b8' }}>(deixe vazio para não alterar)</span>}</label>
                 <div style={{ position: 'relative' }}>
-                  <input 
-                    type={showPassword ? 'text' : 'password'} 
-                    placeholder="••••••••" 
-                    value={formData.password} 
-                    onChange={e => setFormData({ ...formData, password: e.target.value })} 
-                    required={!editingId} 
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    value={formData.password}
+                    onChange={e => setFormData({ ...formData, password: e.target.value })}
+                    required={!editingId}
                     style={{ paddingRight: '40px' }}
                   />
-                  <button 
+                  <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    style={{ 
+                    style={{
                       position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
                       background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer'
                     }}
@@ -286,20 +286,20 @@ export const Settings = () => {
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
-                
+
                 {formData.password && (
-                  <div style={{ 
-                    marginTop: '10px', padding: '12px', background: '#f8fafc', 
+                  <div style={{
+                    marginTop: '10px', padding: '12px', background: '#f8fafc',
                     borderRadius: '8px', border: '1px solid #e2e8f0',
                     display: 'flex', flexDirection: 'column', gap: '6px'
                   }}>
                     {requirements.map((req, i) => (
-                      <div key={i} style={{ 
-                        display: 'flex', alignItems: 'center', gap: '6px', 
+                      <div key={i} style={{
+                        display: 'flex', alignItems: 'center', gap: '6px',
                         fontSize: '0.75rem', color: req.satisfied ? '#10b981' : '#94a3b8'
                       }}>
-                        <div style={{ 
-                          width: '14px', height: '14px', borderRadius: '50%', 
+                        <div style={{
+                          width: '14px', height: '14px', borderRadius: '50%',
                           border: `1px solid ${req.satisfied ? '#10b981' : '#cbd5e1'}`,
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           background: req.satisfied ? '#10b981' : 'transparent',
@@ -338,9 +338,9 @@ export const Settings = () => {
         <div className="glass-panel" style={{ padding: '32px', borderRadius: '12px', display: 'flex', flexDirection: 'column', height: '100%' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
             <h3 style={{ margin: 0, color: '#1e293b' }}>Usuários Cadastrados</h3>
-            <input 
-              type="text" 
-              placeholder="Pesquisar por nome ou cargo..." 
+            <input
+              type="text"
+              placeholder="Pesquisar por nome ou cargo..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               style={{ width: '100%', maxWidth: '300px', padding: '8px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.9rem' }}
@@ -385,13 +385,13 @@ export const Settings = () => {
                     <td style={{ textAlign: 'center' }}>
                       <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
                         <button
-                          className="btn" 
-                          style={{ padding: '6px', background: '#fff', border: '1px solid #cbd5e1', color: '#25D366', borderRadius: '6px' }} 
+                          className="btn"
+                          style={{ padding: '6px', background: '#fff', border: '1px solid #cbd5e1', color: '#25D366', borderRadius: '6px' }}
                           onClick={() => {
                             if (!u.phone) { addToast('Este usuário não possui telefone cadastrado.', 'error'); return; }
                             const cleanPhone = u.phone.replace(/\D/g, '');
                             window.open(`https://api.whatsapp.com/send?phone=55${cleanPhone}`, '_blank');
-                          }} 
+                          }}
                           title="Conversar no WhatsApp"
                         >
                           <MessageCircle size={16} />
@@ -404,12 +404,12 @@ export const Settings = () => {
                             <button className="btn" style={{ padding: '6px', background: '#fff', border: '1px solid #cbd5e1', color: '#3b82f6', borderRadius: '6px' }} onClick={() => handleEditClick(u)} title="Editar">
                               <Edit2 size={16} />
                             </button>
-                            <button className="btn" style={{ padding: '6px', background: '#fff', border: '1px solid #cbd5e1', color: '#ef4444', borderRadius: '6px' }} 
+                            <button className="btn" style={{ padding: '6px', background: '#fff', border: '1px solid #cbd5e1', color: '#ef4444', borderRadius: '6px' }}
                               onClick={() => {
                                 if (window.confirm(`Tem certeza que deseja excluir o usuário ${u.name}? Esta ação não pode ser desfeita.`)) {
                                   deleteUser(u.id);
                                 }
-                              }} 
+                              }}
                               title="Excluir Usuário"
                             >
                               <Trash2 size={16} />

@@ -293,13 +293,21 @@ export const DataProvider = ({ children }) => {
       return;
     }
 
+    // Desvincular contratos relacionados para evitar constraint foreign key (contracts_bid_id_fkey)
+    const { error: contractErr } = await supabase.from('contracts').update({ bid_id: null }).eq('bid_id', id);
+    if (contractErr) {
+      addToast(`Erro ao desvincular contratos: ${contractErr.message}`, 'error');
+      return;
+    }
+
     const { error } = await supabase.from('bids').delete().eq('id', id);
     if (error) {
       addToast(`Erro ao excluir Edital: ${error.message}`, 'error');
     } else {
       setBids(prev => prev.filter(item => item.id !== id));
-      setDisputes(prev => prev.filter(item => item.bid_id !== id));
-      addToast(`Edital e suas disputas excluídos com sucesso.`, 'info');
+      setDisputes(prev => prev.filter(item => item.bid_id !== id)); // Mudar bid_id pra bidId no frontend?
+      setContracts(prev => prev.map(c => c.bidId === id ? { ...c, bidId: null } : c));
+      addToast(`Edital excluído com sucesso.`, 'info');
     }
   };
 
