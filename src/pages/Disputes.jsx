@@ -23,7 +23,6 @@ export const Disputes = () => {
   const [viewMode, setViewMode] = useState('list');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [activeDayDate, setActiveDayDate] = useState(null);
-  const [activeDayDate, setActiveDayDate] = useState(null);
   // Filter states
   const [filterSearch, setFilterSearch] = useState('');
   const [filterClient, setFilterClient] = useState('');
