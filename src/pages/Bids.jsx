@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { Plus, Edit2, Trash2, Filter, X, Eye, Link as LinkIcon, Download, Search, Check, MessageCircle, FileText, Upload } from 'lucide-react';
 import { Modal } from '../components/Modal';
+import { MultiSelectResponsible } from '../components/MultiSelectResponsible';
 import { supabase } from '../lib/supabaseClient';
 
 export const Bids = () => {
@@ -29,15 +30,13 @@ export const Bids = () => {
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({
     number: '', organ: '', estimatedValue: 0, status: 'Em análise',
-    responsible: '', object: '', originPortal: '', clientsLinked: [],
+    responsibleIds: user?.id ? [user.id] : [], object: '', originPortal: '', clientsLinked: [],
     disputeDate: '', disputeStartTime: '', disputeEndTime: '',
     attachmentUrl: '', criterion: 'Maior Desconto'
   });
   
   const [attachmentFile, setAttachmentFile] = useState(null);
   const [uploading, setUploading] = useState(false);
-  const [responsibleInput, setResponsibleInput] = useState('');
-  const [showRespSuggestions, setShowRespSuggestions] = useState(false);
 
   // Lock body scroll when modal is open
   useEffect(() => {
@@ -51,22 +50,14 @@ export const Bids = () => {
     setFilterCriterion('Todos'); setFilterDispute('Todos');
   };
 
-  const getResponsibleStr = (id) => {
-    const u = users.find(usr => usr.id === id);
-    if (!u) return 'Não atribuído';
+  const getResponsibleNames = (ids) => {
+    if (!ids || !Array.isArray(ids) || ids.length === 0) return 'Não atribuído';
     const abr = { admin: 'Admin', finance: 'Financ', supervisor: 'Superv', employee: 'Colab' };
-    return `${u.name} (${abr[u.role] || u.role})`;
+    return ids.map(id => {
+      const u = users.find(usr => usr.id === id);
+      return u ? `${u.name} (${abr[u.role] || u.role})` : 'Desconhecido';
+    }).join(', ');
   };
-
-  const responsibleSuggestions = useMemo(() => {
-    if (!responsibleInput || !showRespSuggestions) return [];
-    const lower = responsibleInput.toLowerCase();
-    const abr = { admin: 'Admin', finance: 'Financ', supervisor: 'Superv', employee: 'Colab' };
-    return users.filter(u => {
-      const roleStr = abr[u.role] || u.role;
-      return u.name.toLowerCase().includes(lower) || roleStr.toLowerCase().includes(lower);
-    }).slice(0, 5);
-  }, [responsibleInput, users, showRespSuggestions]);
 
 
 
@@ -95,20 +86,19 @@ export const Bids = () => {
       setEditingId(bid.id);
       setFormData({
         ...bid,
+        responsibleIds: bid.responsibleIds || [],
         disputeDate: bid.disputeDate || '',
         disputeStartTime: bid.disputeStartTime || '',
         disputeEndTime: bid.disputeEndTime || ''
       });
-      setResponsibleInput(bid.responsible ? getResponsibleStr(bid.responsible) : '');
     } else {
       setEditingId(null);
       setFormData({
         number: '', organ: '', estimatedValue: 0, status: 'Em análise',
-        responsible: '', object: '', originPortal: '', clientsLinked: [],
+        responsibleIds: user?.id ? [user.id] : [], object: '', originPortal: '', clientsLinked: [],
         disputeDate: '', disputeStartTime: '', disputeEndTime: '',
         attachmentUrl: '', criterion: 'Maior Desconto'
       });
-      setResponsibleInput('');
     }
     setAttachmentFile(null);
     setShowModal(true);
@@ -320,9 +310,9 @@ export const Bids = () => {
                    </span>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                   <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, marginBottom: '4px' }}>RESPONSÁVEL</p>
+                   <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, marginBottom: '4px' }}>RESPONSÁVEIS</p>
                    <p style={{ fontWeight: 500, color: '#475569', fontSize: '0.9rem' }}>
-                    {getResponsibleStr(bid.responsible)}
+                    {getResponsibleNames(bid.responsibleIds)}
                    </p>
                 </div>
               </div>
@@ -557,8 +547,8 @@ export const Bids = () => {
                    <p style={{ fontWeight: 700 }}>{currentBid.status?.toUpperCase() || 'EM ANÁLISE'}</p>
                 </div>
                 <div>
-                   <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>RESPONSÁVEL</p>
-                   <p style={{ fontWeight: 700 }}>{getResponsibleStr(currentBid.responsible)}</p>
+                   <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>RESPONSÁVEIS</p>
+                   <p style={{ fontWeight: 700 }}>{getResponsibleNames(currentBid.responsibleIds)}</p>
                 </div>
                 <div>
                    <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>DATA DA DISPUTA</p>
@@ -660,37 +650,12 @@ export const Bids = () => {
                   <option value="Desclassificado">Desclassificado</option>
                 </select>
               </div>
-              <div className="form-group" style={{ flex: 1, position: 'relative' }}>
-                <label>Responsável</label>
-                <div style={{ position: 'relative' }}>
-                  <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                  <input
-                    type="text"
-                    placeholder="Busque por nome ou função..."
-                    value={responsibleInput}
-                    style={{ paddingLeft: '36px' }}
-                    onChange={e => {
-                      setResponsibleInput(e.target.value);
-                      setShowRespSuggestions(true);
-                    }}
-                    onFocus={() => setShowRespSuggestions(true)}
-                    onBlur={() => setTimeout(() => setShowRespSuggestions(false), 200)}
-                  />
-                </div>
-                {showRespSuggestions && responsibleSuggestions.length > 0 && (
-                  <div className="autocomplete-dropdown">
-                    {responsibleSuggestions.map(u => (
-                      <div key={u.id} className="autocomplete-item" onClick={() => {
-                        setFormData({ ...formData, responsible: u.id });
-                        setResponsibleInput(getResponsibleStr(u.id));
-                        setShowRespSuggestions(false);
-                      }}>
-                        <strong>{u.name}</strong>
-                        <span>{u.role.charAt(0).toUpperCase() + u.role.slice(1)}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
+              <div style={{ display: 'flex', flex: 1 }}>
+                <MultiSelectResponsible
+                  selectedIds={formData.responsibleIds || []}
+                  onChange={val => setFormData({ ...formData, responsibleIds: val })}
+                  users={users}
+                />
               </div>
             </div>
             <div className="form-group">

@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { Plus, Edit2, Trash2, Calendar, Flag, Eye, X, Download, FileText, Upload } from 'lucide-react';
 import { Modal } from '../components/Modal';
+import { MultiSelectResponsible } from '../components/MultiSelectResponsible';
 import { supabase } from '../lib/supabaseClient';
 
 const ROLE_NAMES = {
@@ -44,7 +45,7 @@ export const Contracts = () => {
   const [uploading, setUploading] = useState(false);
   
   const [formData, setFormData] = useState({
-    name: '', clientId: '', bidId: '', value: 0, status: 'ativo', startDate: '', endDate: '', responsible: user?.id || '', attachmentUrl: ''
+    name: '', clientId: '', bidId: '', value: 0, status: 'ativo', startDate: '', endDate: '', responsibleIds: user?.id ? [user.id] : [], attachmentUrl: ''
   });
 
   const openModal = (contract = null) => {
@@ -54,7 +55,7 @@ export const Contracts = () => {
       setFormData({ ...contract });
     } else {
       setEditingId(null);
-      setFormData({ name: '', clientId: '', bidId: '', value: 0, status: 'ativo', startDate: '', endDate: '', responsible: user?.id || '', attachmentUrl: '' });
+      setFormData({ name: '', clientId: '', bidId: '', value: 0, status: 'ativo', startDate: '', endDate: '', responsibleIds: user?.id ? [user.id] : [], attachmentUrl: '' });
     }
     setShowModal(true);
   };
@@ -113,11 +114,13 @@ export const Contracts = () => {
     }
   };
 
-  const getResponsibleName = (id) => {
-    const u = users.find(u => u.id === id);
-    if (!u) return 'Desconhecido';
+  const getResponsibleNames = (ids) => {
+    if (!ids || !Array.isArray(ids) || ids.length === 0) return 'Não atribuído';
     const abr = { admin: 'Admin', finance: 'Financ', supervisor: 'Superv', employee: 'Colab' };
-    return `${u.name} (${abr[u.role] || u.role})`;
+    return ids.map(id => {
+      const u = users.find(u => u.id === id);
+      return u ? `${u.name} (${abr[u.role] || u.role})` : 'Desconhecido';
+    }).join(', ');
   };
   const getClientName = (id) => clients.find(c => c.id === id)?.name || '—';
   const getBidNumber = (id) => bids.find(b => b.id === id)?.number || '—';
@@ -170,8 +173,8 @@ export const Contracts = () => {
                    <p style={{ fontWeight: 700 }}>{currentContract.status?.toUpperCase() || '-'}</p>
                 </div>
                 <div>
-                   <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>RESPONSÁVEL</p>
-                   <p style={{ fontWeight: 700 }}>{getResponsibleName(currentContract.responsible)}</p>
+                   <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>RESPONSÁVEIS</p>
+                   <p style={{ fontWeight: 700 }}>{getResponsibleNames(currentContract.responsibleIds)}</p>
                 </div>
                 <div>
                    <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>INÍCIO</p>
@@ -239,7 +242,7 @@ export const Contracts = () => {
                   <th>VALOR</th>
                   <th>STATUS</th>
                   <th>INÍCIO / FIM</th>
-                  <th>RESPONSÁVEL</th>
+                  <th>RESPONSÁVEIS</th>
                   <th style={{ textAlign: 'center' }}>AÇÕES</th>
                 </tr>
               </thead>
@@ -259,7 +262,7 @@ export const Contracts = () => {
                         <Flag size={14} color="#ef4444" /> {formatDisplay(contract.endDate)}
                       </div>
                     </td>
-                    <td>{getResponsibleName(contract.responsible)}</td>
+                    <td>{getResponsibleNames(contract.responsibleIds)}</td>
                     <td style={{ textAlign: 'center' }}>
                       <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
                         <button className="btn" style={{ padding: '6px', background: '#fff', border: '1px solid #e2e8f0', color: '#1e293b', borderRadius: '8px' }} onClick={() => { setCurrentContract(contract); setViewMode('view'); }} title="Ver Contrato">
@@ -366,11 +369,12 @@ export const Contracts = () => {
                 </div>
 
                 {(user?.role === 'supervisor' || user?.role === 'admin') && (
-                  <div className="form-group">
-                    <label>Responsável</label>
-                    <select value={formData.responsible} onChange={e => setFormData({...formData, responsible: e.target.value})}>
-                      {users.map(u => <option key={u.id} value={u.id}>{u.name} ({ROLE_NAMES[u.role] || u.role})</option>)}
-                    </select>
+                  <div style={{ display: 'flex' }}>
+                    <MultiSelectResponsible
+                      selectedIds={formData.responsibleIds || []}
+                      onChange={val => setFormData({ ...formData, responsibleIds: val })}
+                      users={users}
+                    />
                   </div>
                 )}
 

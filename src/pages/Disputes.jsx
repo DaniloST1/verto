@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { Plus, Edit2, Trash2, Calendar as CalendarIcon, List, Search } from 'lucide-react';
 import { Modal } from '../components/Modal';
+import { MultiSelectResponsible } from '../components/MultiSelectResponsible';
 
 const ROLE_NAMES = {
   admin: 'Administrador',
@@ -22,9 +23,7 @@ export const Disputes = () => {
   const [viewMode, setViewMode] = useState('list');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [activeDayDate, setActiveDayDate] = useState(null);
-  const [responsibleInput, setResponsibleInput] = useState('');
-  const [showRespSuggestions, setShowRespSuggestions] = useState(false);
-  
+  const [activeDayDate, setActiveDayDate] = useState(null);
   // Filter states
   const [filterSearch, setFilterSearch] = useState('');
   const [filterClient, setFilterClient] = useState('');
@@ -52,35 +51,25 @@ export const Disputes = () => {
   };
   
   const [formData, setFormData] = useState({
-    name: '', clientId: '', bidId: '', date: '', start_time: '', end_time: '', status: 'agendada', result: 'pendente', responsible: user?.id || ''
+    name: '', clientId: '', bidId: '', date: '', start_time: '', end_time: '', status: 'agendada', result: 'pendente', responsibleIds: user?.id ? [user.id] : []
   });
 
-  const getResponsibleStr = (id) => {
-    const u = users.find(usr => usr.id === id);
-    if (!u) return 'Não atribuído';
+  const getResponsibleNames = (ids) => {
+    if (!ids || !Array.isArray(ids) || ids.length === 0) return 'Não atribuído';
     const abr = { admin: 'Admin', finance: 'Financ', supervisor: 'Superv', employee: 'Colab' };
-    return `${u.name} (${abr[u.role] || u.role})`;
+    return ids.map(id => {
+      const u = users.find(usr => usr.id === id);
+      return u ? `${u.name} (${abr[u.role] || u.role})` : 'Desconhecido';
+    }).join(', ');
   };
-
-  const responsibleSuggestions = useMemo(() => {
-    if (!responsibleInput || !showRespSuggestions) return [];
-    const lower = responsibleInput.toLowerCase();
-    const abr = { admin: 'Admin', finance: 'Financ', supervisor: 'Superv', employee: 'Colab' };
-    return users.filter(u => {
-      const roleStr = abr[u.role] || u.role;
-      return u.name.toLowerCase().includes(lower) || roleStr.toLowerCase().includes(lower);
-    }).slice(0, 5);
-  }, [responsibleInput, users, showRespSuggestions]);
 
   const openModal = (dispute = null) => {
     if (dispute) {
       setEditingId(dispute.id);
-      setFormData({ ...dispute });
-      setResponsibleInput(dispute.responsible ? getResponsibleStr(dispute.responsible) : '');
+      setFormData({ ...dispute, responsibleIds: dispute.responsibleIds || [] });
     } else {
       setEditingId(null);
-      setFormData({ name: '', clientId: '', bidId: '', date: '', start_time: '', end_time: '', status: 'agendada', result: 'pendente', responsible: user?.id || '' });
-      setResponsibleInput(user?.id ? getResponsibleStr(user.id) : '');
+      setFormData({ name: '', clientId: '', bidId: '', date: '', start_time: '', end_time: '', status: 'agendada', result: 'pendente', responsibleIds: user?.id ? [user.id] : [] });
     }
     setShowModal(true);
   };
@@ -160,37 +149,12 @@ export const Disputes = () => {
       </div>
 
       {(user.role === 'supervisor' || user.role === 'admin') && (
-        <div className="form-group" style={{ flex: 1, position: 'relative' }}>
-          <label>Responsável</label>
-          <div style={{ position: 'relative' }}>
-            <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-            <input
-              type="text"
-              placeholder="Busque por nome ou função..."
-              value={responsibleInput}
-              style={{ paddingLeft: '36px' }}
-              onChange={e => {
-                setResponsibleInput(e.target.value);
-                setShowRespSuggestions(true);
-              }}
-              onFocus={() => setShowRespSuggestions(true)}
-              onBlur={() => setTimeout(() => setShowRespSuggestions(false), 200)}
-            />
-          </div>
-          {showRespSuggestions && responsibleSuggestions.length > 0 && (
-            <div className="autocomplete-dropdown">
-              {responsibleSuggestions.map(u => (
-                <div key={u.id} className="autocomplete-item" onClick={() => {
-                  setFormData({ ...formData, responsible: u.id });
-                  setResponsibleInput(getResponsibleStr(u.id));
-                  setShowRespSuggestions(false);
-                }}>
-                  <strong>{u.name}</strong>
-                  <span>{u.role.charAt(0).toUpperCase() + u.role.slice(1)}</span>
-                </div>
-              ))}
-            </div>
-          )}
+        <div style={{ display: 'flex', flex: 1 }}>
+          <MultiSelectResponsible
+            selectedIds={formData.responsibleIds || []}
+            onChange={val => setFormData({ ...formData, responsibleIds: val })}
+            users={users}
+          />
         </div>
       )}
 
@@ -381,7 +345,7 @@ export const Disputes = () => {
               <th>DATA/HORÁRIO</th>
               <th>STATUS</th>
               <th>RESULTADO</th>
-              <th>RESPONSÁVEL</th>
+              <th>RESPONSÁVEIS</th>
               <th style={{ textAlign: 'center' }}>AÇÕES</th>
             </tr>
           </thead>
@@ -420,7 +384,7 @@ export const Disputes = () => {
                     {dispute.result.toUpperCase()}
                   </span>
                 </td>
-                <td>{getResponsibleStr(dispute.responsible)}</td>
+                <td>{getResponsibleNames(dispute.responsibleIds)}</td>
                 <td style={{ textAlign: 'center' }}>
                   <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
                     <button
@@ -488,7 +452,7 @@ export const Disputes = () => {
                       <h4 style={{ margin: '0 0 4px 0', color: '#1e293b' }}>{timeStr} - {disp.name}</h4>
                       <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b' }}>
                         <strong>Cliente:</strong> {getClient(disp.clientId)?.name || 'N/A'}<br/>
-                        <strong>Responsável:</strong> {getResponsibleStr(disp.responsible)}<br/>
+                        <strong>Responsáveis:</strong> {getResponsibleNames(disp.responsibleIds)}<br/>
                         {(disp.start_time || disp.end_time) && <span><strong>Duração:</strong> {disp.start_time || '...'} às {disp.end_time || '...'}</span>}
                       </p>
                     </div>
@@ -505,7 +469,7 @@ export const Disputes = () => {
                  setActiveDayDate(null);
                  setEditingId(null);
                  const datePrefix = activeDayDate;
-                 setFormData({ name: '', clientId: '', bidId: '', date: datePrefix, start_time: '', end_time: '', status: 'agendada', result: 'pendente', responsible: user?.id || '' });
+                 setFormData({ name: '', clientId: '', bidId: '', date: datePrefix, start_time: '', end_time: '', status: 'agendada', result: 'pendente', responsibleIds: user?.id ? [user.id] : [] });
                  setShowModal(true);
                }}>Adicionar Nova</button>
             </div>

@@ -92,6 +92,7 @@ export const DataProvider = ({ children }) => {
     const newObj = {};
     for (const key in obj) {
       if (key === 'cashValue') newObj.cash_value = obj[key];
+      else if (key === 'responsibleIds') newObj.responsible_ids = obj[key];
       else if (key === 'responsible') newObj.responsible_id = obj[key];
       else if (key === 'contractStart') newObj.contract_start = obj[key];
       else if (key === 'contractEnd') newObj.contract_end = obj[key];
@@ -121,6 +122,7 @@ export const DataProvider = ({ children }) => {
     const newObj = {};
     for (const key in obj) {
       if (key === 'cash_value') newObj.cashValue = obj[key];
+      else if (key === 'responsible_ids') newObj.responsibleIds = obj[key];
       else if (key === 'responsible_id') newObj.responsible = obj[key];
       else if (key === 'contract_start') newObj.contractStart = obj[key];
       else if (key === 'contract_end') newObj.contractEnd = obj[key];
@@ -227,7 +229,7 @@ export const DataProvider = ({ children }) => {
         end_time: newBid.dispute_end_time,
         status: 'agendada',
         result: 'pendente',
-        responsible_id: newBid.responsible_id
+        responsible_ids: newBid.responsible_ids || []
       };
       
       const { error: dispErr } = await supabase.from('disputes').insert([disputeData]);
@@ -259,7 +261,7 @@ export const DataProvider = ({ children }) => {
         date: updatedBid.dispute_date,
         start_time: updatedBid.dispute_start_time,
         end_time: updatedBid.dispute_end_time,
-        responsible_id: updatedBid.responsible_id
+        responsible_ids: updatedBid.responsible_ids || []
       };
       
       await supabase.from('disputes').update(basicDispUpdate).eq('bid_id', id);
