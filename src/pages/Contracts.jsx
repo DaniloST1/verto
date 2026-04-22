@@ -284,7 +284,7 @@ export const Contracts = () => {
                 )}
               </tbody>
             </table>
-          </div>          </div>
+          </div>
         </div>
       )}
 
