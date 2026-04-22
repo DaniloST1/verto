@@ -107,6 +107,12 @@ export const Contracts = () => {
     setShowModal(false);
   };
 
+  const handleDelete = (id) => {
+    if (window.confirm('Tem certeza que deseja excluir este contrato permanentemente?')) {
+      deleteContract(id);
+    }
+  };
+
   const getResponsibleName = (id) => {
     const u = users.find(u => u.id === id);
     if (!u) return 'Desconhecido';
@@ -263,7 +269,7 @@ export const Contracts = () => {
                           <Edit2 size={16} />
                         </button>
                         {(user?.role === 'supervisor' || user?.role === 'admin') && (
-                          <button className="btn" style={{ padding: '6px', background: '#fef2f2', border: '1px solid #fecaca', color: '#ef4444', borderRadius: '8px' }} onClick={() => deleteContract(contract.id)} title="Excluir Contrato">
+                          <button className="btn" style={{ padding: '6px', background: '#fef2f2', border: '1px solid #fecaca', color: '#ef4444', borderRadius: '8px' }} onClick={() => handleDelete(contract.id)} title="Excluir Contrato">
                             <Trash2 size={16} />
                           </button>
                         )}
