@@ -140,7 +140,9 @@ export const UpdateProfile = () => {
         display: 'flex', flexDirection: 'column', gap: '24px', padding: '40px'
       }}>
         <div style={{ textAlign: 'center' }}>
-          <img src={LOGO_URL} alt="Verto Logo" style={{ maxHeight: '60px', marginBottom: '8px' }} />
+          <a href="https://www.vertolicitacoes.com.br/" target="_blank" rel="noopener noreferrer">
+            <img src={LOGO_URL} alt="Verto Logo" style={{ maxHeight: '60px', marginBottom: '8px' }} />
+          </a>
           <h2 style={{ fontSize: '1.25rem', color: '#1e293b', margin: 0 }}>Primeiro Acesso</h2>
           <p style={{ color: '#64748b', fontSize: '0.85rem', marginTop: '4px' }}>Atualize seus dados para continuar</p>
         </div>

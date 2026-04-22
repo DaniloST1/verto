@@ -179,12 +179,14 @@ export const Login = () => {
       {/* Card */}
       <div className="login-box" style={{ position: 'relative', zIndex: 2, ...(mode === 'client-register' && { maxWidth: '680px', padding: '44px 52px' }) }}>
         <div className="login-header">
-          <img
-            src={LOGO_URL}
-            alt="Verto Logo"
-            style={{ maxHeight: '80px', maxWidth: '100%', marginBottom: '12px', objectFit: 'contain' }}
-            onError={e => { e.target.onerror = null; e.target.src = '/logo.png'; }}
-          />
+          <a href="https://www.vertolicitacoes.com.br/" target="_blank" rel="noopener noreferrer">
+            <img
+              src={LOGO_URL}
+              alt="Verto Logo"
+              style={{ maxHeight: '80px', maxWidth: '100%', marginBottom: '12px', objectFit: 'contain' }}
+              onError={e => { e.target.onerror = null; e.target.src = '/logo.png'; }}
+            />
+          </a>
           <p style={{ color: '#64748b', fontSize: '0.9rem', marginTop: '4px' }}>
             Soluções em Licitações
           </p>

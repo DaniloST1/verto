@@ -21,12 +21,14 @@ export const Sidebar = ({ open, onClose }) => {
         </button>
 
         <div className="logo-area">
-          <img
-            src={LOGO_URL}
-            alt="Verto Logo"
-            style={{ maxHeight: '56px', maxWidth: '180px', objectFit: 'contain' }}
-            onError={e => { e.target.onerror = null; e.target.src = '/logo.png'; }}
-          />
+          <a href="https://www.vertolicitacoes.com.br/" target="_blank" rel="noopener noreferrer">
+            <img
+              src={LOGO_URL}
+              alt="Verto Logo"
+              style={{ maxHeight: '56px', maxWidth: '180px', objectFit: 'contain' }}
+              onError={e => { e.target.onerror = null; e.target.src = '/logo.png'; }}
+            />
+          </a>
         </div>
 
         <nav className="nav-links" onClick={onClose}>
