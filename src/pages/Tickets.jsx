@@ -119,7 +119,7 @@ export const Tickets = () => {
         <div style={{ display: 'flex', minHeight: '600px', margin: '-24px -32px -32px -32px', flexWrap: 'wrap' }}>
           
           {/* Left Column */}
-          <div style={{ flex: '1 1 500px', padding: '32px', borderRight: '1px solid #e2e8f0', background: '#fff' }}>
+          <div style={{ flex: '0 0 60%', maxWidth: '60%', padding: '32px', borderRight: '1px solid #e2e8f0', background: '#fff' }}>
             
             {/* Title Row */}
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '16px' }}>
@@ -312,7 +312,7 @@ export const Tickets = () => {
           </div>
 
           {/* Right Column: Comments & Activity */}
-          <div style={{ flex: '0 0 320px', background: '#f8fafc', padding: '32px', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ flex: '0 0 40%', maxWidth: '40%', background: '#f8fafc', padding: '32px', display: 'flex', flexDirection: 'column' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
               <MessageSquare size={20} color="#64748b" />
               <h3 style={{ fontSize: '1.1rem', margin: 0, color: '#1e293b' }}>Atividade</h3>
