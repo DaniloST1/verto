@@ -285,7 +285,7 @@ export const Bids = () => {
                     DATA/HORA DISPUTA
                   </p>
                   <p style={{ fontWeight: 600, color: '#1e293b' }}>
-                    {bid.disputeDate ? bid.disputeDate.split('-').reverse().join('/') : '-'}
+                    {bid.disputeDate ? bid.disputeDate.split('T')[0].split('-').reverse().join('/') : '-'}
                     {bid.disputeStartTime && (
                       <span style={{ marginLeft: '4px' }}>
                          às {bid.disputeStartTime} {bid.disputeEndTime ? ` até ${bid.disputeEndTime}` : ''}
@@ -553,7 +553,7 @@ export const Bids = () => {
                 <div>
                    <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>DATA DA DISPUTA</p>
                    <p style={{ fontWeight: 700 }}>
-                     {currentBid.disputeDate ? currentBid.disputeDate.split('-').reverse().join('/') : '-'}
+                     {currentBid.disputeDate ? currentBid.disputeDate.split('T')[0].split('-').reverse().join('/') : '-'}
                    </p>
                 </div>
                 <div>

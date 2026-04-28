@@ -368,7 +368,7 @@ export const Disputes = () => {
                 <td>
                   <div>
                     <div style={{ color: '#1e293b', fontWeight: 500 }}>
-                      {dispute.date ? (dispute.date.includes('T') ? new Date(dispute.date).toLocaleDateString('pt-BR') : dispute.date.split('-').reverse().join('/')) : '—'}
+                      {dispute.date ? dispute.date.split('T')[0].split('-').reverse().join('/') : '—'}
                     </div>
                     {(dispute.start_time || dispute.end_time) && (
                       <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
