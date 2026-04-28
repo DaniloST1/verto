@@ -115,7 +115,7 @@ export const Tickets = () => {
     const progress = totalChecks === 0 ? 0 : Math.round((completedChecks / totalChecks) * 100);
 
     return (
-      <Modal title="" onClose={() => setActiveCardId(null)} maxWidth="980px">
+      <Modal title="" onClose={() => setActiveCardId(null)} maxWidth="80%">
         <div style={{ display: 'flex', minHeight: '600px', margin: '-24px -32px -32px -32px', flexWrap: 'wrap' }}>
           
           {/* Left Column */}
