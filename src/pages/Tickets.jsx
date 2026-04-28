@@ -26,6 +26,9 @@ export const Tickets = () => {
   const [newChecklistItem, setNewChecklistItem] = useState('');
   const [newUpdate, setNewUpdate] = useState('');
   
+  const [editingUpdateId, setEditingUpdateId] = useState(null);
+  const [editingUpdateText, setEditingUpdateText] = useState('');
+
   const fileInputRef = useRef(null);
   const [uploading, setUploading] = useState(false);
 
@@ -47,6 +50,7 @@ export const Tickets = () => {
     const newItem = {
       id: crypto.randomUUID(),
       title: 'Nova Otimização / Chamado',
+      tag: 'Sistema',
       priority: 'Média',
       status: 'To do',
       url: '',
@@ -62,6 +66,7 @@ export const Tickets = () => {
 
   const openCard = (id) => {
     setActiveCardId(id);
+    setEditingUpdateId(null);
   };
 
   const updateActiveCard = (updates) => {
@@ -123,7 +128,7 @@ export const Tickets = () => {
             
             {/* Title Row */}
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '16px' }}>
-               <CheckCircle size={24} color="#64748b" style={{ marginTop: '4px', flexShrink: 0 }} />
+               <CheckCircle size={24} color={activeCard.status === 'Concluído' ? '#10b981' : '#64748b'} style={{ marginTop: '4px', flexShrink: 0 }} />
                <input 
                  value={activeCard.title}
                  onChange={e => updateActiveCard({ title: e.target.value })}
@@ -139,50 +144,56 @@ export const Tickets = () => {
               na lista <strong style={{ color: '#1e293b', cursor: 'pointer', textDecoration: 'underline' }}>{activeCard.status}</strong>
             </div>
 
-            {/* Action Buttons (Adicionar, Checklist, Membros, Anexo) */}
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap', marginLeft: '36px' }}>
-              <button className="btn" style={{ background: '#475569', color: '#fff', fontSize: '0.85rem', padding: '6px 12px' }}>
-                <Plus size={14}/> Adicionar
-              </button>
-              <button className="btn" style={{ background: '#f1f5f9', color: '#475569', fontSize: '0.85rem', padding: '6px 12px', border: '1px solid #cbd5e1' }} onClick={() => {
-                document.getElementById('checklist-input')?.focus();
-              }}>
-                <CheckSquare size={14}/> Checklist
-              </button>
-              <button className="btn" style={{ background: '#f1f5f9', color: '#475569', fontSize: '0.85rem', padding: '6px 12px', border: '1px solid #cbd5e1' }}>
-                <Users size={14}/> Membros
-              </button>
-              <button className="btn" style={{ background: '#f1f5f9', color: '#475569', fontSize: '0.85rem', padding: '6px 12px', border: '1px solid #cbd5e1' }} onClick={() => fileInputRef.current?.click()}>
-                <Paperclip size={14}/> Anexo
-              </button>
-              <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*,.pdf,.doc,.docx" style={{ display: 'none' }} />
-            </div>
-
-            {/* Metadata: Etiquetas & Datas */}
-            <div style={{ display: 'flex', gap: '32px', marginBottom: '32px', marginLeft: '36px', flexWrap: 'wrap' }}>
-              <div>
-                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', display: 'block', marginBottom: '8px' }}>Etiquetas (Prioridade)</span>
-                <select 
-                  value={activeCard.priority} 
-                  onChange={e => updateActiveCard({ priority: e.target.value })}
-                  style={{ padding: '6px 12px', borderRadius: '4px', background: getPriorityColor(activeCard.priority), color: '#fff', border: 'none', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer' }}
-                >
-                  <option value="Baixa">Baixa</option>
-                  <option value="Média">Média</option>
-                  <option value="Alta">Alta</option>
-                </select>
+            {/* Action Buttons & Metadata */}
+            <div style={{ display: 'flex', gap: '24px', marginBottom: '32px', flexWrap: 'wrap', marginLeft: '36px', alignItems: 'flex-end' }}>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button className="btn" style={{ background: '#f1f5f9', color: '#475569', fontSize: '0.85rem', padding: '6px 12px', border: '1px solid #cbd5e1' }}>
+                  <Users size={14}/> Membros
+                </button>
+                <button className="btn" style={{ background: '#f1f5f9', color: '#475569', fontSize: '0.85rem', padding: '6px 12px', border: '1px solid #cbd5e1' }} onClick={() => fileInputRef.current?.click()}>
+                  <Paperclip size={14}/> Anexo
+                </button>
+                <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*,.pdf,.doc,.docx" style={{ display: 'none' }} />
               </div>
-              <div>
-                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', display: 'block', marginBottom: '8px' }}>Status da Tarefa</span>
-                <select 
-                  value={activeCard.status} 
-                  onChange={e => updateActiveCard({ status: e.target.value })}
-                  style={{ padding: '6px 12px', borderRadius: '4px', background: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer' }}
-                >
-                  <option value="To do">To do</option>
-                  <option value="Em andamento">Em andamento</option>
-                  <option value="Concluído">Concluído</option>
-                </select>
+
+              <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+                <div>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', display: 'block', marginBottom: '8px' }}>Etiqueta</span>
+                  <select 
+                    value={activeCard.tag || 'Sistema'} 
+                    onChange={e => updateActiveCard({ tag: e.target.value })}
+                    style={{ padding: '6px 12px', borderRadius: '4px', background: '#3b82f6', color: '#fff', border: 'none', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer' }}
+                  >
+                    <option value="Sistema">Sistema</option>
+                    <option value="Site">Site</option>
+                    <option value="Chatbot">Chatbot</option>
+                    <option value="Outro">Outro</option>
+                  </select>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', display: 'block', marginBottom: '8px' }}>Prioridade</span>
+                  <select 
+                    value={activeCard.priority} 
+                    onChange={e => updateActiveCard({ priority: e.target.value })}
+                    style={{ padding: '6px 12px', borderRadius: '4px', background: getPriorityColor(activeCard.priority), color: '#fff', border: 'none', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer' }}
+                  >
+                    <option value="Baixa">Baixa</option>
+                    <option value="Média">Média</option>
+                    <option value="Alta">Alta</option>
+                  </select>
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', display: 'block', marginBottom: '8px' }}>Status da Tarefa</span>
+                  <select 
+                    value={activeCard.status} 
+                    onChange={e => updateActiveCard({ status: e.target.value })}
+                    style={{ padding: '6px 12px', borderRadius: '4px', background: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer' }}
+                  >
+                    <option value="To do">To do</option>
+                    <option value="Em andamento">Em andamento</option>
+                    <option value="Concluído">Concluído</option>
+                  </select>
+                </div>
               </div>
             </div>
 
@@ -340,13 +351,47 @@ export const Tickets = () => {
                   <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#1d3e83', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', fontWeight: 600, flexShrink: 0 }}>
                     {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
                   </div>
-                  <div>
-                    <div style={{ fontSize: '0.8rem', color: '#1e293b', fontWeight: 600, marginBottom: '4px' }}>
-                      {user?.name || 'Usuário'} <span style={{ fontWeight: 400, color: '#64748b', marginLeft: '4px' }}>{new Date(upd.date).toLocaleString('pt-BR')}</span>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '0.8rem', color: '#1e293b', fontWeight: 600, marginBottom: '4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span>{user?.name || 'Usuário'} <span style={{ fontWeight: 400, color: '#64748b', marginLeft: '4px' }}>{new Date(upd.date).toLocaleString('pt-BR')}</span></span>
+                      
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button onClick={() => { setEditingUpdateId(upd.id); setEditingUpdateText(upd.text); }} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: 0 }} title="Editar">
+                          <Edit2 size={12}/>
+                        </button>
+                        <button onClick={() => {
+                          if (window.confirm('Excluir este comentário?')) {
+                            updateActiveCard({ updates: activeCard.updates.filter(u => u.id !== upd.id) });
+                          }
+                        }} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 0 }} title="Excluir">
+                          <Trash2 size={12}/>
+                        </button>
+                      </div>
                     </div>
-                    <div style={{ background: '#fff', padding: '10px 12px', borderRadius: '0 8px 8px 8px', border: '1px solid #e2e8f0', fontSize: '0.85rem', color: '#334155', whiteSpace: 'pre-wrap' }}>
-                      {upd.text}
-                    </div>
+                    
+                    {editingUpdateId === upd.id ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <textarea 
+                          value={editingUpdateText}
+                          onChange={e => setEditingUpdateText(e.target.value)}
+                          style={{ width: '100%', minHeight: '60px', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '6px', resize: 'none', fontSize: '0.85rem' }}
+                        />
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button className="btn btn-primary" style={{ padding: '4px 8px', fontSize: '0.75rem', background: '#1d3e83' }} onClick={() => {
+                            if (editingUpdateText.trim()) {
+                              updateActiveCard({ updates: activeCard.updates.map(u => u.id === upd.id ? { ...u, text: editingUpdateText, edited: true } : u) });
+                              setEditingUpdateId(null);
+                            }
+                          }}>Salvar</button>
+                          <button className="btn" style={{ padding: '4px 8px', fontSize: '0.75rem', background: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1' }} onClick={() => setEditingUpdateId(null)}>Cancelar</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ background: '#fff', padding: '10px 12px', borderRadius: '0 8px 8px 8px', border: '1px solid #e2e8f0', fontSize: '0.85rem', color: '#334155', whiteSpace: 'pre-wrap', position: 'relative' }}>
+                        {upd.text}
+                        {upd.edited && <div style={{ fontSize: '0.65rem', color: '#94a3b8', textAlign: 'right', marginTop: '4px', fontStyle: 'italic' }}>editado</div>}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -382,7 +427,8 @@ export const Tickets = () => {
             <tr>
               <th style={{ width: '120px' }}>STATUS</th>
               <th style={{ width: '300px' }}>CARTÃO / TÍTULO</th>
-              <th style={{ width: '120px', textAlign: 'center' }}>ETIQUETA</th>
+              <th style={{ width: '100px', textAlign: 'center' }}>ETIQUETA</th>
+              <th style={{ width: '100px', textAlign: 'center' }}>PRIORIDADE</th>
               <th style={{ width: '120px' }}>DATA</th>
               <th style={{ width: '100px', textAlign: 'center' }}>CHECKLIST</th>
               <th style={{ textAlign: 'center', width: '100px' }}>AÇÃO</th>
@@ -391,7 +437,7 @@ export const Tickets = () => {
           <tbody>
             {items.length === 0 ? (
               <tr>
-                <td colSpan={6} style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
+                <td colSpan={7} style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
                   <AlertCircle size={32} style={{ margin: '0 auto 12px', opacity: 0.5 }} />
                   Nenhum cartão adicionado ainda.
                 </td>
@@ -418,6 +464,11 @@ export const Tickets = () => {
                       {i.images?.length > 0 && <span style={{ fontSize: '0.75rem', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '2px' }}><Paperclip size={10} /> {i.images.length}</span>}
                       {i.updates?.length > 0 && <span style={{ fontSize: '0.75rem', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '2px' }}><MessageSquare size={10} /> {i.updates.length}</span>}
                     </div>
+                  </td>
+                  <td style={{ textAlign: 'center' }}>
+                    <span style={{ padding: '4px 8px', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600, background: '#e0f2fe', color: '#0369a1' }}>
+                      {i.tag || 'Sistema'}
+                    </span>
                   </td>
                   <td style={{ textAlign: 'center' }}>
                     <span style={{ padding: '4px 8px', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600, background: getPriorityColor(i.priority), color: '#fff' }}>
