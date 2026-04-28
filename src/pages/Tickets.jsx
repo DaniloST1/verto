@@ -28,6 +28,7 @@ export const Tickets = () => {
   
   const [editingUpdateId, setEditingUpdateId] = useState(null);
   const [editingUpdateText, setEditingUpdateText] = useState('');
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   const fileInputRef = useRef(null);
   const [uploading, setUploading] = useState(false);
@@ -70,7 +71,14 @@ export const Tickets = () => {
   };
 
   const updateActiveCard = (updates) => {
-    setItems(prev => prev.map(i => i.id === activeCardId ? { ...i, ...updates } : i));
+    const updatedStatus = updates.status !== undefined ? updates.status : activeCard.status;
+    let completedAtUpdate = {};
+    if (updates.status === 'Concluído' && activeCard.status !== 'Concluído') {
+      completedAtUpdate = { completedAt: new Date().toISOString() };
+    } else if (updates.status && updates.status !== 'Concluído') {
+      completedAtUpdate = { completedAt: null };
+    }
+    setItems(prev => prev.map(i => i.id === activeCardId ? { ...i, ...updates, ...completedAtUpdate } : i));
   };
 
   const handleDelete = (id) => {
@@ -140,13 +148,23 @@ export const Tickets = () => {
                />
             </div>
             
-            <div style={{ marginLeft: '36px', fontSize: '0.85rem', color: '#64748b', marginBottom: '24px' }}>
-              na lista <strong style={{ color: '#1e293b', cursor: 'pointer', textDecoration: 'underline' }}>{activeCard.status}</strong>
+            <div style={{ marginLeft: '36px', fontSize: '0.85rem', color: '#64748b', marginBottom: '24px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <div>na lista <strong style={{ color: '#1e293b', cursor: 'pointer', textDecoration: 'underline' }}>{activeCard.status}</strong></div>
+              {activeCard.completedAt && (
+                <div style={{ color: '#10b981', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
+                  <CheckCircle size={14} /> Concluído em {new Date(activeCard.completedAt).toLocaleString('pt-BR')}
+                </div>
+              )}
+              {activeCard.dueDate && !activeCard.completedAt && (
+                <div style={{ color: '#f59e0b', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
+                  <Clock size={14} /> Entrega: {new Date(activeCard.dueDate).toLocaleString('pt-BR')}
+                </div>
+              )}
             </div>
 
             {/* Action Buttons & Metadata */}
             <div style={{ display: 'flex', gap: '24px', marginBottom: '32px', flexWrap: 'wrap', marginLeft: '36px', alignItems: 'flex-end' }}>
-              <div style={{ display: 'flex', gap: '8px' }}>
+              <div style={{ display: 'flex', gap: '8px', position: 'relative' }}>
                 <button className="btn" style={{ background: '#f1f5f9', color: '#475569', fontSize: '0.85rem', padding: '6px 12px', border: '1px solid #cbd5e1' }}>
                   <Users size={14}/> Membros
                 </button>
@@ -154,6 +172,40 @@ export const Tickets = () => {
                   <Paperclip size={14}/> Anexo
                 </button>
                 <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*,.pdf,.doc,.docx" style={{ display: 'none' }} />
+                
+                <button className="btn" style={{ background: '#f1f5f9', color: '#475569', fontSize: '0.85rem', padding: '6px 12px', border: '1px solid #cbd5e1' }} onClick={() => setShowDatePicker(!showDatePicker)}>
+                  <Clock size={14}/> Datas
+                </button>
+                
+                {showDatePicker && (
+                  <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '8px', zIndex: 10, background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)', width: '300px', padding: '16px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', alignItems: 'center', borderBottom: '1px solid #f1f5f9', paddingBottom: '8px' }}>
+                      <h4 style={{ margin: 0, fontSize: '0.9rem', color: '#1e293b', textAlign: 'center', flex: 1 }}>Datas</h4>
+                      <button onClick={() => setShowDatePicker(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}><X size={16}/></button>
+                    </div>
+                    
+                    <div style={{ marginBottom: '16px' }}>
+                       <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>Data de início</label>
+                       <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                          <input type="checkbox" checked={!!activeCard.startDate} onChange={e => updateActiveCard({ startDate: e.target.checked ? new Date().toISOString().split('T')[0] : null })} style={{ width: '16px', height: '16px', cursor: 'pointer' }} />
+                          <input type="date" value={activeCard.startDate || ''} onChange={e => updateActiveCard({ startDate: e.target.value })} disabled={!activeCard.startDate} style={{ flex: 1, padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '0.85rem' }} />
+                       </div>
+                    </div>
+
+                    <div style={{ marginBottom: '24px' }}>
+                       <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>Data de entrega</label>
+                       <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+                          <input type="checkbox" checked={!!activeCard.dueDate} onChange={e => updateActiveCard({ dueDate: e.target.checked ? new Date().toISOString().slice(0, 16) : null })} style={{ width: '16px', height: '16px', cursor: 'pointer', marginTop: '8px' }} />
+                          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                             <input type="date" value={activeCard.dueDate ? activeCard.dueDate.split('T')[0] : ''} onChange={e => updateActiveCard({ dueDate: `${e.target.value}T${activeCard.dueDate ? activeCard.dueDate.split('T')[1] || '12:00' : '12:00'}` })} disabled={!activeCard.dueDate} style={{ padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '0.85rem' }} />
+                             <input type="time" value={activeCard.dueDate ? activeCard.dueDate.split('T')[1] : ''} onChange={e => updateActiveCard({ dueDate: `${activeCard.dueDate ? activeCard.dueDate.split('T')[0] : new Date().toISOString().split('T')[0]}T${e.target.value}` })} disabled={!activeCard.dueDate} style={{ padding: '6px 8px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '0.85rem' }} />
+                          </div>
+                       </div>
+                    </div>
+                    
+                    <button className="btn btn-primary" style={{ width: '100%', padding: '8px', background: '#1d3e83', fontSize: '0.85rem' }} onClick={() => setShowDatePicker(false)}>Salvar</button>
+                  </div>
+                )}
               </div>
 
               <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
