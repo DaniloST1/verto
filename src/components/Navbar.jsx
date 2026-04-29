@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { User, LogOut, Settings as SettingsIcon, Key, Upload, Menu, Eye, EyeOff, CheckCircle } from 'lucide-react';
+import { User, LogOut, Settings as SettingsIcon, Key, Upload, Menu, Eye, EyeOff, CheckCircle, MessageCircle, RefreshCw } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { Modal } from './Modal';
+import { QRCodeSVG } from 'qrcode.react';
 
 const ROLE_NAMES = {
   admin: 'Administrador',
@@ -40,7 +41,30 @@ export const Navbar = ({ onMenuToggle }) => {
   const { user, logout } = useAuth();
   const { addToast } = useToast();
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [modalType, setModalType] = useState(null); // 'profile'
+  const [modalType, setModalType] = useState(null); // 'profile' | 'whatsapp'
+  const [qrData, setQrData] = useState(null);
+  const [loadingQr, setLoadingQr] = useState(false);
+
+  const fetchQR = async () => {
+    setLoadingQr(true);
+    try {
+      const res = await fetch('https://verto-7795.onrender.com/api/qr');
+      const data = await res.json();
+      setQrData(data);
+    } catch (error) {
+      console.error('Erro ao buscar QR Code:', error);
+    } finally {
+      setLoadingQr(false);
+    }
+  };
+
+  useEffect(() => {
+    if (modalType === 'whatsapp') {
+      fetchQR();
+      const interval = setInterval(fetchQR, 5000); // Atualiza a cada 5 segundos
+      return () => clearInterval(interval);
+    }
+  }, [modalType]);
 
   const fileInputRef = useRef(null);
   const [avatarPreview, setAvatarPreview] = useState(user?.avatar_url || null);
@@ -151,7 +175,22 @@ export const Navbar = ({ onMenuToggle }) => {
         <Menu size={22} />
       </button>
 
-      <div className="search-bar"></div>
+      <div className="search-bar" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+        {(user?.role === 'admin' || user?.role === 'supervisor') && (
+          <button 
+            onClick={() => setModalType('whatsapp')}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '8px',
+              padding: '8px 16px', background: '#25D366', color: 'white',
+              border: 'none', borderRadius: '8px', cursor: 'pointer',
+              fontWeight: 600, fontSize: '0.9rem', boxShadow: '0 2px 8px rgba(37,211,102,0.3)'
+            }}
+          >
+            <MessageCircle size={18} />
+            Conectar Robô
+          </button>
+        )}
+      </div>
       
       <div
         className="user-profile"
@@ -352,6 +391,49 @@ export const Navbar = ({ onMenuToggle }) => {
             </div>
           </form>
         </Modal>
+      {/* WhatsApp Modal */}
+      {modalType === 'whatsapp' && (
+        <Modal title="Conexão do WhatsApp (Robô)" onClose={() => setModalType(null)} maxWidth="450px">
+          <div style={{ textAlign: 'center', padding: '20px 10px' }}>
+            {qrData?.connected ? (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+                <div style={{ width: '80px', height: '80px', background: '#d1fae5', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <CheckCircle size={40} color="#10b981" />
+                </div>
+                <h3 style={{ margin: 0, color: '#1e293b' }}>O Robô já está conectado!</h3>
+                <p style={{ color: '#64748b', fontSize: '0.9rem' }}>Ele já está online e pronto para responder os clientes automaticamente.</p>
+              </div>
+            ) : qrData?.qr ? (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <div style={{ background: 'white', padding: '16px', borderRadius: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', marginBottom: '16px' }}>
+                  <QRCodeSVG value={qrData.qr} size={256} />
+                </div>
+                <h3 style={{ margin: '0 0 8px 0', color: '#1e293b' }}>Escaneie o QR Code</h3>
+                <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '24px' }}>
+                  Abra o WhatsApp no celular da empresa, vá em "Aparelhos Conectados" e aponte a câmera para esta tela.
+                </p>
+                <button 
+                  onClick={fetchQR} 
+                  disabled={loadingQr}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '8px',
+                    padding: '10px 20px', background: '#f1f5f9', color: '#475569',
+                    border: '1px solid #cbd5e1', borderRadius: '8px', cursor: 'pointer'
+                  }}
+                >
+                  <RefreshCw size={16} className={loadingQr ? 'spin' : ''} />
+                  Atualizar QR Code
+                </button>
+              </div>
+            ) : (
+              <div style={{ padding: '40px 0', color: '#64748b' }}>
+                <RefreshCw size={32} className="spin" style={{ marginBottom: '16px', color: '#94a3b8' }} />
+                <p>Gerando código... Aguarde.</p>
+                <p style={{ fontSize: '0.8rem', marginTop: '8px' }}>(Pode demorar alguns minutos na primeira vez)</p>
+              </div>
+            )}
+          </div>
+        </Modal>
       )}
 
       <style>{`
@@ -398,6 +480,8 @@ export const Navbar = ({ onMenuToggle }) => {
         @media (max-width: 480px) {
           .btn-logout { padding: 6px; }
         }
+        .spin { animation: spin 1s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
       `}</style>
     </header>
   );
