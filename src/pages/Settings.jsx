@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Plus, Edit2, Upload, User, Eye, EyeOff, MessageCircle, Trash2, CheckCircle } from 'lucide-react';
+import { Plus, Edit2, Upload, User, Eye, EyeOff, MessageCircle, Trash2, CheckCircle, Mail } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { useToast } from '../context/ToastContext';
 import { Modal } from '../components/Modal';
@@ -427,7 +427,7 @@ export const Settings = () => {
       </div>
 
       {viewingUser && (
-        <Modal title="Detalhes do Usuário" onClose={() => setViewingUser(null)} maxWidth="500px">
+        <Modal title="Detalhes do Usuário" onClose={() => setViewingUser(null)} maxWidth="40%">
           <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '24px', paddingBottom: '16px', borderBottom: '1px solid #e2e8f0' }}>
               <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: '#f1f5f9', overflow: 'hidden', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -458,8 +458,31 @@ export const Settings = () => {
                 <div style={{ color: '#1e293b' }}>{viewingUser.phone || '——'}</div>
               </div>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px' }}>
-              <button className="btn btn-primary" onClick={() => setViewingUser(null)}>Fechar</button>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '32px', paddingTop: '16px', borderTop: '1px solid #e2e8f0', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                <button 
+                  className="btn" 
+                  style={{ background: '#25D366', color: '#fff', border: 'none', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem' }}
+                  onClick={() => {
+                    if (!viewingUser.phone) { addToast('Este usuário não possui telefone cadastrado.', 'error'); return; }
+                    const cleanPhone = viewingUser.phone.replace(/\D/g, '');
+                    window.open(`https://api.whatsapp.com/send?phone=55${cleanPhone}`, '_blank');
+                  }}
+                >
+                  <MessageCircle size={16} /> Fale via WhatsApp
+                </button>
+                <button 
+                  className="btn" 
+                  style={{ background: '#3b82f6', color: '#fff', border: 'none', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem' }}
+                  onClick={() => {
+                    if (!viewingUser.email) { addToast('Este usuário não possui e-mail cadastrado.', 'error'); return; }
+                    window.location.href = `mailto:${viewingUser.email}`;
+                  }}
+                >
+                  <Mail size={16} /> Envie um E-mail
+                </button>
+              </div>
+              <button className="btn btn-secondary" style={{ padding: '8px 24px', fontSize: '0.9rem' }} onClick={() => setViewingUser(null)}>Fechar</button>
             </div>
           </div>
         </Modal>
