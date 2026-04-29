@@ -391,6 +391,7 @@ export const Navbar = ({ onMenuToggle }) => {
             </div>
           </form>
         </Modal>
+      )}
       {/* WhatsApp Modal */}
       {modalType === 'whatsapp' && (
         <Modal title="Conexão do WhatsApp (Robô)" onClose={() => setModalType(null)} maxWidth="450px">
