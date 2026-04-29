@@ -77,7 +77,7 @@ export const BidsFlow = () => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 140px)', width: '100%', overflow: 'hidden' }}>
       <div className="page-header" style={{ marginBottom: '24px', flexShrink: 0 }}>
         <div>
           <h1 className="page-title" style={{ fontSize: '2rem', color: '#0f172a' }}>Fluxo Editais</h1>
