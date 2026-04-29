@@ -48,7 +48,7 @@ export const Navbar = ({ onMenuToggle }) => {
   const fetchQR = async () => {
     setLoadingQr(true);
     try {
-      const res = await fetch('https://verto-7795.onrender.com/api/qr');
+      const res = await fetch('https://chatboot-verto.onrender.com/api/qr');
       const data = await res.json();
       setQrData(data);
     } catch (error) {
