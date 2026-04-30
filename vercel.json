@@ -1,6 +1,8 @@
 {
-  "routes": [
-    { "handle": "filesystem" },
-    { "src": "/.*", "dest": "/index.html" }
+  "rewrites": [
+    {
+      "source": "/api/bot/:path*",
+      "destination": "http://163.176.160.203:3000/api/:path*"
+    }
   ]
 }

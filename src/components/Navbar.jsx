@@ -49,7 +49,7 @@ export const Navbar = ({ onMenuToggle }) => {
   const checkBotStatus = async () => {
     setLoadingQr(true);
     try {
-      const res = await fetch('http://163.176.160.203:3000/api/qr');
+      const res = await fetch('/api/bot/qr');
       if (!res.ok) throw new Error('API offline');
       const data = await res.json();
       setQrData(data);
