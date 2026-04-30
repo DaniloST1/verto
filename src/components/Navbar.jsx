@@ -44,27 +44,31 @@ export const Navbar = ({ onMenuToggle }) => {
   const [modalType, setModalType] = useState(null); // 'profile' | 'whatsapp'
   const [qrData, setQrData] = useState(null);
   const [loadingQr, setLoadingQr] = useState(false);
+  const [botStatus, setBotStatus] = useState('checking'); // 'checking', 'connected', 'disconnected', 'error'
 
-  const fetchQR = async () => {
+  const checkBotStatus = async () => {
     setLoadingQr(true);
     try {
       const res = await fetch('http://163.176.160.203:3000/api/qr');
+      if (!res.ok) throw new Error('API offline');
       const data = await res.json();
       setQrData(data);
+      setBotStatus(data.connected ? 'connected' : 'disconnected');
     } catch (error) {
-      console.error('Erro ao buscar QR Code:', error);
+      console.error('Erro ao buscar status do Robô:', error);
+      setBotStatus('error');
     } finally {
       setLoadingQr(false);
     }
   };
 
   useEffect(() => {
-    if (modalType === 'whatsapp') {
-      fetchQR();
-      const interval = setInterval(fetchQR, 5000); // Atualiza a cada 5 segundos
+    if (user?.role === 'admin' || user?.role === 'supervisor') {
+      checkBotStatus();
+      const interval = setInterval(checkBotStatus, 10000); // Checa a cada 10s em background
       return () => clearInterval(interval);
     }
-  }, [modalType]);
+  }, [user]);
 
   const fileInputRef = useRef(null);
   const [avatarPreview, setAvatarPreview] = useState(user?.avatar_url || null);
@@ -178,16 +182,20 @@ export const Navbar = ({ onMenuToggle }) => {
       <div className="search-bar" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
         {(user?.role === 'admin' || user?.role === 'supervisor') && (
           <button 
-            onClick={() => setModalType('whatsapp')}
+            onClick={() => { setModalType('whatsapp'); checkBotStatus(); }}
             style={{
               display: 'flex', alignItems: 'center', gap: '8px',
-              padding: '8px 16px', background: '#25D366', color: 'white',
+              padding: '8px 16px', 
+              background: botStatus === 'connected' ? '#10b981' : botStatus === 'disconnected' ? '#f59e0b' : '#ef4444', 
+              color: 'white',
               border: 'none', borderRadius: '8px', cursor: 'pointer',
-              fontWeight: 600, fontSize: '0.9rem', boxShadow: '0 2px 8px rgba(37,211,102,0.3)'
+              fontWeight: 600, fontSize: '0.9rem', 
+              boxShadow: `0 2px 8px ${botStatus === 'connected' ? 'rgba(16,185,129,0.4)' : botStatus === 'disconnected' ? 'rgba(245,158,11,0.4)' : 'rgba(239,68,68,0.4)'}`,
+              transition: 'all 0.3s ease'
             }}
           >
             <MessageCircle size={18} />
-            Conectar Robô
+            {botStatus === 'connected' ? 'Robô Online' : botStatus === 'disconnected' ? 'Conectar Robô' : 'Robô Offline'}
           </button>
         )}
       </div>
@@ -414,7 +422,7 @@ export const Navbar = ({ onMenuToggle }) => {
                   Abra o WhatsApp no celular da empresa, vá em "Aparelhos Conectados" e aponte a câmera para esta tela.
                 </p>
                 <button 
-                  onClick={fetchQR} 
+                  onClick={checkBotStatus} 
                   disabled={loadingQr}
                   style={{
                     display: 'flex', alignItems: 'center', gap: '8px',
