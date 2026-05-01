@@ -33,21 +33,53 @@ export const Tickets = () => {
   const fileInputRef = useRef(null);
   const [uploading, setUploading] = useState(false);
 
-  useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      try { setItems(JSON.parse(saved)); } catch (e) {}
+  const fetchTickets = async () => {
+    try {
+      const { data, error } = await supabase.from('tickets').select('*').order('createdAt', { ascending: false });
+      if (error) throw error;
+      
+      // Migration script: se existir no localStorage, joga pro Supabase
+      const localData = localStorage.getItem(STORAGE_KEY);
+      if (localData) {
+        try {
+          const parsedLocal = JSON.parse(localData);
+          if (parsedLocal && parsedLocal.length > 0) {
+             const { error: insertError } = await supabase.from('tickets').insert(parsedLocal);
+             if (!insertError) {
+                localStorage.removeItem(STORAGE_KEY);
+                const { data: newData } = await supabase.from('tickets').select('*').order('createdAt', { ascending: false });
+                if (newData) setItems(newData);
+             } else {
+                if (data) setItems(data);
+             }
+          } else {
+             localStorage.removeItem(STORAGE_KEY);
+             if (data) setItems(data);
+          }
+        } catch (e) {
+           if (data) setItems(data);
+        }
+      } else {
+        if (data) setItems(data);
+      }
+    } catch (e) {
+       console.warn('Tabela tickets não encontrada ou erro de conexão. Usando local storage como fallback.');
+       const saved = localStorage.getItem(STORAGE_KEY);
+       if (saved) {
+         try { setItems(JSON.parse(saved)); } catch (err) {}
+       }
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-  }, []);
+  };
 
   useEffect(() => {
-    if (!loading) localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-  }, [items, loading]);
+    fetchTickets();
+  }, []);
 
   const activeCard = items.find(i => i.id === activeCardId);
 
-  const openNewCard = () => {
+  const openNewCard = async () => {
     const newItem = {
       id: crypto.randomUUID(),
       title: 'Nova Otimização / Chamado',
@@ -63,6 +95,19 @@ export const Tickets = () => {
     };
     setItems(prev => [newItem, ...prev]);
     setActiveCardId(newItem.id);
+
+    try {
+      const { error } = await supabase.from('tickets').update(newItem).eq('id', newItem.id);
+      if (error && error.code === 'PGRST116') {
+         // Não encontrou para atualizar, faz insert
+      }
+      // Na verdade, só faz insert:
+      const { error: insertError } = await supabase.from('tickets').insert([newItem]);
+      if (insertError) {
+        const currentItems = [newItem, ...items];
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(currentItems));
+      }
+    } catch (e) {}
   };
 
   const openCard = (id) => {
@@ -70,7 +115,7 @@ export const Tickets = () => {
     setEditingUpdateId(null);
   };
 
-  const updateActiveCard = (updates) => {
+  const updateActiveCard = async (updates) => {
     const updatedStatus = updates.status !== undefined ? updates.status : activeCard.status;
     let completedAtUpdate = {};
     if (updates.status === 'Concluído' && activeCard.status !== 'Concluído') {
@@ -78,14 +123,33 @@ export const Tickets = () => {
     } else if (updates.status && updates.status !== 'Concluído') {
       completedAtUpdate = { completedAt: null };
     }
-    setItems(prev => prev.map(i => i.id === activeCardId ? { ...i, ...updates, ...completedAtUpdate } : i));
+    
+    const finalUpdates = { ...updates, ...completedAtUpdate };
+    setItems(prev => prev.map(i => i.id === activeCardId ? { ...i, ...finalUpdates } : i));
+
+    try {
+      const { error } = await supabase.from('tickets').update(finalUpdates).eq('id', activeCardId);
+      if (error) {
+        // Fallback local
+        const updatedItems = items.map(i => i.id === activeCardId ? { ...i, ...finalUpdates } : i);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedItems));
+      }
+    } catch (e) {}
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm('Excluir este cartão permanentemente?')) {
       setItems(prev => prev.filter(i => i.id !== id));
       addToast('Cartão excluído.', 'info');
       if (activeCardId === id) setActiveCardId(null);
+      
+      try {
+        const { error } = await supabase.from('tickets').delete().eq('id', id);
+        if (error) {
+          const updatedItems = items.filter(i => i.id !== id);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedItems));
+        }
+      } catch (e) {}
     }
   };
 
