@@ -19,6 +19,11 @@ export const Tickets = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Filter states
+  const [filterTag, setFilterTag] = useState('');
+  const [filterPriority, setFilterPriority] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
+
   // Unified modal state
   const [activeCardId, setActiveCardId] = useState(null);
   
@@ -525,6 +530,15 @@ export const Tickets = () => {
     );
   };
 
+  const filteredItems = items.filter(i => {
+    if (filterTag && i.tag !== filterTag) return false;
+    if (filterPriority && i.priority !== filterPriority) return false;
+    if (filterStatus && i.status !== filterStatus) return false;
+    return true;
+  });
+
+  const activeFiltersCount = [filterTag, filterPriority, filterStatus].filter(Boolean).length;
+
   return (
     <div>
       <div className="page-header" style={{ marginBottom: '24px' }}>
@@ -535,6 +549,81 @@ export const Tickets = () => {
         <button className="btn btn-primary" onClick={openNewCard} style={{ borderRadius: '8px', background: '#1d3e83' }}>
           <Plus size={18} /> Adicionar Cartão
         </button>
+      </div>
+
+      {/* Filter Bar */}
+      <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <Tag size={16} color="#64748b" />
+          <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#64748b' }}>Filtros:</span>
+        </div>
+
+        {/* Etiqueta */}
+        <select
+          value={filterTag}
+          onChange={e => setFilterTag(e.target.value)}
+          style={{
+            padding: '6px 12px', borderRadius: '8px', border: '1px solid #cbd5e1',
+            fontSize: '0.85rem', fontWeight: 600, color: filterTag ? '#1d3e83' : '#64748b',
+            background: filterTag ? '#eff6ff' : '#f8fafc', cursor: 'pointer', outline: 'none'
+          }}
+        >
+          <option value="">Todas as Etiquetas</option>
+          <option value="Sistema">Sistema</option>
+          <option value="Site">Site</option>
+          <option value="Chatbot">Chatbot</option>
+          <option value="Outro">Outro</option>
+        </select>
+
+        {/* Prioridade */}
+        <select
+          value={filterPriority}
+          onChange={e => setFilterPriority(e.target.value)}
+          style={{
+            padding: '6px 12px', borderRadius: '8px', border: '1px solid #cbd5e1',
+            fontSize: '0.85rem', fontWeight: 600, color: filterPriority ? '#1d3e83' : '#64748b',
+            background: filterPriority ? '#eff6ff' : '#f8fafc', cursor: 'pointer', outline: 'none'
+          }}
+        >
+          <option value="">Todas as Prioridades</option>
+          <option value="Alta">Alta</option>
+          <option value="Média">Média</option>
+          <option value="Baixa">Baixa</option>
+        </select>
+
+        {/* Status */}
+        <select
+          value={filterStatus}
+          onChange={e => setFilterStatus(e.target.value)}
+          style={{
+            padding: '6px 12px', borderRadius: '8px', border: '1px solid #cbd5e1',
+            fontSize: '0.85rem', fontWeight: 600, color: filterStatus ? '#1d3e83' : '#64748b',
+            background: filterStatus ? '#eff6ff' : '#f8fafc', cursor: 'pointer', outline: 'none'
+          }}
+        >
+          <option value="">Todos os Status</option>
+          <option value="To do">To do</option>
+          <option value="Em andamento">Em andamento</option>
+          <option value="Concluído">Concluído</option>
+        </select>
+
+        {/* Limpar filtros */}
+        {activeFiltersCount > 0 && (
+          <button
+            onClick={() => { setFilterTag(''); setFilterPriority(''); setFilterStatus(''); }}
+            style={{
+              padding: '6px 12px', borderRadius: '8px', border: '1px solid #fecaca',
+              fontSize: '0.85rem', fontWeight: 600, color: '#ef4444', background: '#fef2f2',
+              cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px'
+            }}
+          >
+            <X size={14} /> Limpar ({activeFiltersCount})
+          </button>
+        )}
+
+        <span style={{ fontSize: '0.8rem', color: '#94a3b8', marginLeft: 'auto' }}>
+          {filteredItems.length} de {items.length} cartões
+        </span>
       </div>
 
       <div className="table-container glass-panel" style={{ overflowX: 'auto', borderRadius: '12px' }}>
@@ -551,14 +640,14 @@ export const Tickets = () => {
             </tr>
           </thead>
           <tbody>
-            {items.length === 0 ? (
+            {filteredItems.length === 0 ? (
               <tr>
                 <td colSpan={7} style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
                   <AlertCircle size={32} style={{ margin: '0 auto 12px', opacity: 0.5 }} />
-                  Nenhum cartão adicionado ainda.
+                  {items.length === 0 ? 'Nenhum cartão adicionado ainda.' : 'Nenhum cartão corresponde aos filtros selecionados.'}
                 </td>
               </tr>
-            ) : items.map(i => {
+            ) : filteredItems.map(i => {
               const totalChecks = i.checklist?.length || 0;
               const completedChecks = i.checklist?.filter(c => c.completed).length || 0;
               const progress = totalChecks === 0 ? 0 : Math.round((completedChecks / totalChecks) * 100);
