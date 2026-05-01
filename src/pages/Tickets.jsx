@@ -552,60 +552,63 @@ export const Tickets = () => {
       </div>
 
       {/* Filter Bar */}
-      <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+      <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', alignItems: 'center', flexWrap: 'nowrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
           <Tag size={16} color="#64748b" />
           <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#64748b' }}>Filtros:</span>
         </div>
 
-        {/* Etiqueta */}
-        <select
-          value={filterTag}
-          onChange={e => setFilterTag(e.target.value)}
-          style={{
-            padding: '6px 12px', borderRadius: '8px', border: '1px solid #cbd5e1',
-            fontSize: '0.85rem', fontWeight: 600, color: filterTag ? '#1d3e83' : '#64748b',
-            background: filterTag ? '#eff6ff' : '#f8fafc', cursor: 'pointer', outline: 'none'
-          }}
-        >
-          <option value="">Todas as Etiquetas</option>
-          <option value="Sistema">Sistema</option>
-          <option value="Site">Site</option>
-          <option value="Chatbot">Chatbot</option>
-          <option value="Outro">Outro</option>
-        </select>
+        {/* Selects lado a lado */}
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'nowrap' }}>
+          {/* Etiqueta */}
+          <select
+            value={filterTag}
+            onChange={e => setFilterTag(e.target.value)}
+            style={{
+              padding: '6px 12px', borderRadius: '8px', border: '1px solid #cbd5e1',
+              fontSize: '0.85rem', fontWeight: 600, color: filterTag ? '#1d3e83' : '#64748b',
+              background: filterTag ? '#eff6ff' : '#f8fafc', cursor: 'pointer', outline: 'none', whiteSpace: 'nowrap'
+            }}
+          >
+            <option value="">Todas as Etiquetas</option>
+            <option value="Sistema">Sistema</option>
+            <option value="Site">Site</option>
+            <option value="Chatbot">Chatbot</option>
+            <option value="Outro">Outro</option>
+          </select>
 
-        {/* Prioridade */}
-        <select
-          value={filterPriority}
-          onChange={e => setFilterPriority(e.target.value)}
-          style={{
-            padding: '6px 12px', borderRadius: '8px', border: '1px solid #cbd5e1',
-            fontSize: '0.85rem', fontWeight: 600, color: filterPriority ? '#1d3e83' : '#64748b',
-            background: filterPriority ? '#eff6ff' : '#f8fafc', cursor: 'pointer', outline: 'none'
-          }}
-        >
-          <option value="">Todas as Prioridades</option>
-          <option value="Alta">Alta</option>
-          <option value="Média">Média</option>
-          <option value="Baixa">Baixa</option>
-        </select>
+          {/* Prioridade */}
+          <select
+            value={filterPriority}
+            onChange={e => setFilterPriority(e.target.value)}
+            style={{
+              padding: '6px 12px', borderRadius: '8px', border: '1px solid #cbd5e1',
+              fontSize: '0.85rem', fontWeight: 600, color: filterPriority ? '#1d3e83' : '#64748b',
+              background: filterPriority ? '#eff6ff' : '#f8fafc', cursor: 'pointer', outline: 'none', whiteSpace: 'nowrap'
+            }}
+          >
+            <option value="">Todas as Prioridades</option>
+            <option value="Alta">Alta</option>
+            <option value="Média">Média</option>
+            <option value="Baixa">Baixa</option>
+          </select>
 
-        {/* Status */}
-        <select
-          value={filterStatus}
-          onChange={e => setFilterStatus(e.target.value)}
-          style={{
-            padding: '6px 12px', borderRadius: '8px', border: '1px solid #cbd5e1',
-            fontSize: '0.85rem', fontWeight: 600, color: filterStatus ? '#1d3e83' : '#64748b',
-            background: filterStatus ? '#eff6ff' : '#f8fafc', cursor: 'pointer', outline: 'none'
-          }}
-        >
-          <option value="">Todos os Status</option>
-          <option value="To do">To do</option>
-          <option value="Em andamento">Em andamento</option>
-          <option value="Concluído">Concluído</option>
-        </select>
+          {/* Status */}
+          <select
+            value={filterStatus}
+            onChange={e => setFilterStatus(e.target.value)}
+            style={{
+              padding: '6px 12px', borderRadius: '8px', border: '1px solid #cbd5e1',
+              fontSize: '0.85rem', fontWeight: 600, color: filterStatus ? '#1d3e83' : '#64748b',
+              background: filterStatus ? '#eff6ff' : '#f8fafc', cursor: 'pointer', outline: 'none', whiteSpace: 'nowrap'
+            }}
+          >
+            <option value="">Todos os Status</option>
+            <option value="To do">To do</option>
+            <option value="Em andamento">Em andamento</option>
+            <option value="Concluído">Concluído</option>
+          </select>
+        </div>
 
         {/* Limpar filtros */}
         {activeFiltersCount > 0 && (
