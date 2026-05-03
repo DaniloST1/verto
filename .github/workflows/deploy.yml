@@ -25,6 +25,26 @@ jobs:
       - name: 🔨 Gerar versão de Produção (Build)
         run: npm run build
 
+      - name: 🔍 Descobrir estrutura de diretórios no servidor
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 46.202.145.236
+          port: 65002
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          script: |
+            echo "=== Diretório home ==="
+            ls -la ~/
+            echo ""
+            echo "=== Pasta domains (se existir) ==="
+            ls -la ~/domains/ 2>/dev/null || echo "Pasta domains nao encontrada"
+            echo ""
+            echo "=== Todos os arquivos .htaccess (para localizar sites) ==="
+            find ~ -name ".htaccess" 2>/dev/null | head -20
+            echo ""
+            echo "=== Todos os index.html ==="
+            find ~ -name "index.html" 2>/dev/null | head -20
+
       - name: 🚀 Enviar para Hostinger (SFTP/SSH)
         uses: appleboy/scp-action@v0.1.7
         with:
