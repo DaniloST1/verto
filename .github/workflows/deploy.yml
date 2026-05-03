@@ -1,4 +1,4 @@
-name: Deploy to Hostinger via FTP
+name: Deploy to Hostinger via SSH
 
 on:
   push:
@@ -8,6 +8,7 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: 🚚 Obter código do repositório
@@ -24,14 +25,14 @@ jobs:
       - name: 🔨 Gerar versão de Produção (Build)
         run: npm run build
 
-      - name: 📡 Instalar lftp
-        run: sudo apt-get install -y lftp
-
-      - name: 🚀 Enviar para Hostinger (FTP)
-        run: |
-          lftp -c "
-          set ftp:ssl-allow no;
-          open -u ${{ secrets.FTP_USERNAME }},${{ secrets.FTP_PASSWORD }} ${{ secrets.FTP_SERVER }};
-          mirror --reverse --delete --verbose ./dist/ /public_html/;
-          bye
-          "
+      - name: 🚀 Enviar para Hostinger (SFTP/SSH)
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: 46.202.145.236
+          port: 65002
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          source: "dist/*"
+          target: "/home/u969433331/public_html/"
+          strip_components: 1
+          rm: true
