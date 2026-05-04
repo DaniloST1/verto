@@ -100,7 +100,9 @@ export const Login = () => {
       // 1. Update Database
       const { error: dbError } = await supabase.from('users').update({ 
         password: tempPassword,
-        must_change_password: true 
+        must_change_password: true,
+        is_blocked: false,
+        login_attempts: 0
       }).eq('id', data.id);
 
       if (dbError) throw dbError;
