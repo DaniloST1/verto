@@ -30,6 +30,17 @@ export const Login = () => {
   const [resetSent, setResetSent] = useState(false);
   const [error, setError] = useState('');
 
+  // CAPTCHA State
+  const [captchaNum1, setCaptchaNum1] = useState(Math.floor(Math.random() * 10) + 1);
+  const [captchaNum2, setCaptchaNum2] = useState(Math.floor(Math.random() * 10) + 1);
+  const [captchaAnswer, setCaptchaAnswer] = useState('');
+
+  const regenerateCaptcha = () => {
+    setCaptchaNum1(Math.floor(Math.random() * 10) + 1);
+    setCaptchaNum2(Math.floor(Math.random() * 10) + 1);
+    setCaptchaAnswer('');
+  };
+
   // Client first-access states
   const [cnpj, setCnpj] = useState('');
   const [validatedClient, setValidatedClient] = useState(null); // The DB client record
@@ -40,6 +51,14 @@ export const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    // CAPTCHA Validation
+    if (parseInt(captchaAnswer) !== captchaNum1 + captchaNum2) {
+      setError('A soma de segurança (CAPTCHA) está incorreta. Tente novamente.');
+      regenerateCaptcha();
+      return;
+    }
+
     setLoading(true);
     const result = await login(identifier, password);
     setLoading(false);
@@ -62,6 +81,7 @@ export const Login = () => {
           `Senha incorreta. Você possui mais ${remaining} tentativa${remaining !== 1 ? 's' : ''} antes de ter sua conta bloqueada.`
         );
       }
+      regenerateCaptcha();
       return;
     }
 
@@ -239,6 +259,29 @@ export const Login = () => {
                   onChange={e => setPassword(e.target.value)}
                   required
                 />
+              </div>
+              
+              {/* Custom Math CAPTCHA */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: '#f8fafc', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                <label style={{ fontSize: '0.82rem', fontWeight: 600, color: '#475569' }}>
+                  Responda para confirmar que não é um robô:
+                </label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ 
+                    background: '#1d3e83', color: '#fff', padding: '8px 16px', 
+                    borderRadius: '8px', fontWeight: 700, letterSpacing: '2px', fontSize: '1.1rem' 
+                  }}>
+                    {captchaNum1} + {captchaNum2} =
+                  </div>
+                  <input
+                    type="number"
+                    placeholder="?"
+                    value={captchaAnswer}
+                    onChange={e => setCaptchaAnswer(e.target.value)}
+                    required
+                    style={{ flex: 1, padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '1rem', textAlign: 'center' }}
+                  />
+                </div>
               </div>
 
               {/* Attempt warning */}
