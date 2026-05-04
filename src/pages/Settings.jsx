@@ -55,6 +55,7 @@ export const Settings = () => {
   });
 
   const [editingId, setEditingId] = useState(null);
+  const [showFormModal, setShowFormModal] = useState(false);
   const [viewingUser, setViewingUser] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(null);
   const [avatarFile, setAvatarFile] = useState(null);
@@ -116,6 +117,7 @@ export const Settings = () => {
       await fetchUsers();
       addToast('Usuário atualizado com sucesso!', 'success');
       setEditingId(null);
+      setShowFormModal(false);
     } else {
       // Use addUser for central logic and notification
       const tempUser = {
@@ -142,6 +144,7 @@ export const Settings = () => {
 
       await fetchUsers();
       addToast('Novo usuário cadastrado com sucesso!', 'success');
+      setShowFormModal(false);
     }
     setFormData({ name: '', email: '', document: '', phone: '', password: '', role: 'employee', avatar_url: '' });
     setAvatarPreview(null);
@@ -156,10 +159,12 @@ export const Settings = () => {
     });
     setAvatarPreview(u.avatar_url || null);
     setAvatarFile(null);
+    setShowFormModal(true);
   };
 
   const handleCancel = () => {
     setEditingId(null);
+    setShowFormModal(false);
     setFormData({ name: '', email: '', document: '', phone: '', password: '', role: 'employee', avatar_url: '' });
     setAvatarPreview(null);
     setAvatarFile(null);
@@ -170,20 +175,26 @@ export const Settings = () => {
 
   return (
     <div>
-      <div className="page-header" style={{ marginBottom: '24px' }}>
+      <div className="page-header" style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h1 className="page-title" style={{ fontSize: '2rem', color: '#0f172a' }}>{isAdmin ? 'Gestão de Usuários' : 'Diretório da Equipe'}</h1>
           <p style={{ color: 'var(--text-muted)' }}>{isAdmin ? 'Crie e gerencie os acessos da equipe' : 'Visualize e entre em contato com os membros da equipe'}</p>
         </div>
+        {isAdmin && (
+          <button
+            className="btn btn-primary"
+            style={{ background: '#1d3e83', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px' }}
+            onClick={() => { setEditingId(null); setFormData({ name: '', email: '', document: '', phone: '', password: '', role: 'employee', avatar_url: '' }); setAvatarPreview(null); setAvatarFile(null); setShowFormModal(true); }}
+          >
+            <Plus size={18} /> Novo Usuário
+          </button>
+        )}
       </div>
 
-      <div className={isAdmin ? 'grid-cards' : ''} style={isAdmin ? { display: 'grid', gridTemplateColumns: 'minmax(300px, 1fr) minmax(400px, 1.5fr)', gap: '24px' } : { width: '100%' }}>
-        {isAdmin && (
-          /* Form Panel */
-          <div className="glass-panel" style={{ padding: '32px', borderRadius: '12px' }}>
-            <h3 style={{ marginBottom: '24px', color: '#1e293b' }}>
-              {editingId ? 'Editar Usuário' : 'Criar Novo Usuário'}
-            </h3>
+      <div style={{ width: '100%' }}>
+        {isAdmin && showFormModal && (
+          <Modal title={editingId ? 'Editar Usuário' : 'Criar Novo Usuário'} onClose={handleCancel} maxWidth="560px">
+            <div style={{ padding: '8px 0' }}>
             <form onSubmit={handleSubmit}>
               {/* Avatar Upload */}
               <div className="form-group">
@@ -328,15 +339,14 @@ export const Settings = () => {
                 <button type="submit" className="btn btn-primary" style={{ flex: 1, background: '#1d3e83' }} disabled={uploading}>
                   {uploading ? 'Salvando...' : editingId ? 'Salvar Alterações' : <><Plus size={18} /> Criar Usuário</>}
                 </button>
-                {editingId && (
-                  <button type="button" className="btn btn-secondary" onClick={handleCancel}>Cancelar</button>
-                )}
+                <button type="button" className="btn btn-secondary" onClick={handleCancel}>Cancelar</button>
               </div>
             </form>
-          </div>
+            </div>
+          </Modal>
         )}
 
-        <div className="glass-panel" style={{ padding: '32px', borderRadius: '12px', display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <div className="glass-panel" style={{ padding: '32px', borderRadius: '12px', display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
             <h3 style={{ margin: 0, color: '#1e293b' }}>Usuários Cadastrados</h3>
             <input
