@@ -100,9 +100,7 @@ export const Login = () => {
       // 1. Update Database
       const { error: dbError } = await supabase.from('users').update({ 
         password: tempPassword,
-        must_change_password: true,
-        is_blocked: false,
-        login_attempts: 0
+        must_change_password: true 
       }).eq('id', data.id);
 
       if (dbError) throw dbError;
@@ -110,33 +108,35 @@ export const Login = () => {
       // 2. Send via Method
       if (resetMethod === 'email') {
         const targetEmail = data.email || resetEmail;
-        await fetch('https://api.resend.com/emails', {
+        
+        // Configuração do EmailJS (precisa ser configurada no site do EmailJS)
+        const emailData = {
+          service_id: 'service_verto', // Você vai criar no EmailJS
+          template_id: 'template_verto', // Você vai criar no EmailJS
+          user_id: 'SEU_PUBLIC_KEY_AQUI', // Sua Public Key do EmailJS
+          template_params: {
+            to_email: targetEmail,
+            to_name: data.name,
+            temp_password: tempPassword
+          }
+        };
+
+        const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer re_3iAfSNj3_B2pzyBZSPvV2xGgAMDmaqH64',
+            'Content-Type': 'application/json'
           },
-          body: JSON.stringify({
-            from: 'Verto Soluções <onboarding@resend.dev>',
-            to: [targetEmail],
-            subject: 'Sua Senha Temporária - Verto Soluções',
-            html: `
-              <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
-                <h2 style="color: #1d3e83; text-align: center;">Verto Soluções em Licitações</h2>
-                <p>Olá, <strong>${data.name}</strong>,</p>
-                <p>Sua senha temporária de acesso ao portal é:</p>
-                <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; text-align: center; border-radius: 8px; margin: 20px 0;">
-                  <h1 style="margin: 0; color: #1d3e83; letter-spacing: 4px;">${tempPassword}</h1>
-                </div>
-                <p style="color: #64748b; font-size: 0.85rem;">Após o login, altere sua senha por segurança.</p>
-              </div>
-            `,
-          }),
+          body: JSON.stringify(emailData)
         });
+
+        if (!response.ok) {
+          throw new Error('Falha ao enviar e-mail via EmailJS');
+        }
       }
 
     } catch (err) {
       console.error('Erro no reset:', err);
+      setError('Erro ao enviar o e-mail. Verifique se o serviço de e-mail está configurado.');
     } finally {
       setLoading(false);
       setResetSent(true);
