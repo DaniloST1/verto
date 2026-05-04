@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Plus, Edit2, Upload, User, Eye, EyeOff, MessageCircle, Trash2, CheckCircle, Mail } from 'lucide-react';
+import { Plus, Edit2, Upload, User, Eye, EyeOff, MessageCircle, Trash2, CheckCircle, Mail, Unlock } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { useToast } from '../context/ToastContext';
 import { Modal } from '../components/Modal';
@@ -46,7 +46,7 @@ const isValidPassword = (pass) => {
 };
 
 export const Settings = () => {
-  const { user, users, addUser, editUser, deleteUser, fetchUsers } = useAuth();
+  const { user, users, addUser, editUser, deleteUser, fetchUsers, unlockUser } = useAuth();
   const { addToast } = useToast();
   const fileInputRef = useRef(null);
 
@@ -166,6 +166,7 @@ export const Settings = () => {
   };
 
   const isAdmin = user?.role === 'admin';
+  const isAdminOrSupervisor = user?.role === 'admin' || user?.role === 'supervisor';
 
   return (
     <div>
@@ -373,7 +374,14 @@ export const Settings = () => {
                             <User size={16} color="#94a3b8" />
                           )}
                         </div>
-                        <span style={{ fontWeight: 600, color: '#334155' }}>{u.name}</span>
+                        <div>
+                          <span style={{ fontWeight: 600, color: '#334155', display: 'block' }}>{u.name}</span>
+                          {u.is_blocked && (
+                            <span style={{ fontSize: '0.7rem', background: '#fee2e2', color: '#dc2626', padding: '1px 6px', borderRadius: '4px', fontWeight: 600 }}>
+                              🔒 Bloqueado
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </td>
                     <td style={{ color: '#64748b' }}>{u.email}</td>
@@ -383,7 +391,18 @@ export const Settings = () => {
                       </span>
                     </td>
                     <td style={{ textAlign: 'center' }}>
-                      <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                        {/* Unblock button — visible to admin and supervisor */}
+                        {isAdminOrSupervisor && u.is_blocked && (
+                          <button
+                            className="btn"
+                            style={{ padding: '6px 10px', background: '#fff', border: '1px solid #dc2626', color: '#dc2626', borderRadius: '6px', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+                            onClick={() => unlockUser(u.id)}
+                            title="Desbloquear conta"
+                          >
+                            <Unlock size={14} /> Desbloquear
+                          </button>
+                        )}
                         <button
                           className="btn"
                           style={{ padding: '6px', background: '#fff', border: '1px solid #cbd5e1', color: '#25D366', borderRadius: '6px' }}

@@ -41,17 +41,39 @@ export const Login = () => {
     e.preventDefault();
     setError('');
     setLoading(true);
-    const loggedUser = await login(identifier, password);
+    const result = await login(identifier, password);
     setLoading(false);
-    if (loggedUser) {
-      if (loggedUser.must_change_password) {
-        setValidatedClient({ ...loggedUser, currentPassword: password }); // Reusing state to hold user data
-        setMode('change-password');
-      } else if (loggedUser.is_first_login) {
-        navigate('/update-profile');
+
+    if (!result) return; // Invalid credentials — toast already shown by context
+
+    // Account is blocked
+    if (result.blocked) {
+      setMode('blocked');
+      return;
+    }
+
+    // Wrong password with attempt tracking
+    if (result.attempts !== undefined) {
+      const remaining = 5 - result.attempts;
+      if (remaining <= 0) {
+        setMode('blocked');
       } else {
-        navigate('/');
+        setError(
+          `Senha incorreta. Você possui mais ${remaining} tentativa${remaining !== 1 ? 's' : ''} antes de ter sua conta bloqueada.`
+        );
       }
+      return;
+    }
+
+    // Successful login
+    const loggedUser = result;
+    if (loggedUser.must_change_password) {
+      setValidatedClient({ ...loggedUser, currentPassword: password });
+      setMode('change-password');
+    } else if (loggedUser.is_first_login) {
+      navigate('/update-profile');
+    } else {
+      navigate('/');
     }
   };
 
@@ -216,6 +238,20 @@ export const Login = () => {
                   required
                 />
               </div>
+
+              {/* Attempt warning */}
+              {error && (
+                <div style={{
+                  padding: '12px 16px', borderRadius: '8px',
+                  background: '#fffbeb', border: '1px solid #fcd34d',
+                  color: '#92400e', fontSize: '0.82rem', fontWeight: 500,
+                  display: 'flex', alignItems: 'flex-start', gap: '8px'
+                }}>
+                  <span style={{ fontSize: '1rem', flexShrink: 0 }}>⚠️</span>
+                  <span>{error}</span>
+                </div>
+              )}
+
               <button
                 type="submit"
                 className="btn btn-primary"
@@ -430,6 +466,41 @@ export const Login = () => {
               </>
             )}
           </>
+        )}
+
+        {/* ─── CONTA BLOQUEADA ─── */}
+        {mode === 'blocked' && (
+          <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ fontSize: '3.5rem' }}>🔒</div>
+            <div>
+              <h3 style={{ color: '#dc2626', fontWeight: 700, marginBottom: '8px', fontSize: '1.2rem' }}>
+                Conta Bloqueada
+              </h3>
+              <p style={{ color: '#64748b', fontSize: '0.88rem', lineHeight: '1.6' }}>
+                Sua conta foi bloqueada após múltiplas tentativas de acesso incorretas.
+              </p>
+            </div>
+            <div style={{
+              padding: '16px', borderRadius: '10px',
+              background: '#fef2f2', border: '1px solid #fecaca',
+              color: '#7f1d1d', fontSize: '0.85rem', lineHeight: '1.6', textAlign: 'left'
+            }}>
+              <strong>Como desbloquear:</strong><br />
+              Entre em contato com um <strong>Administrador</strong> ou <strong>Supervisor</strong>
+              do sistema e solicite o desbloqueio da sua conta.
+            </div>
+            <button
+              onClick={() => { setMode('login'); setError(''); setPassword(''); }}
+              style={{
+                width: '100%', padding: '13px', border: '1px solid #94a3b8',
+                borderRadius: '10px', background: 'transparent', color: '#64748b',
+                fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer',
+              }}
+            >
+              <ArrowLeft size={14} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+              Voltar ao Login
+            </button>
+          </div>
         )}
 
         {/* ─── FORCE CHANGE PASSWORD ─── */}

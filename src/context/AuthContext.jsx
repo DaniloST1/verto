@@ -17,9 +17,9 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     fetchUsers();
 
-    // Inactivity Timer (3 hours)
+    // Inactivity Timer (30 minutes)
     let timeoutId;
-    const INACTIVITY_LIMIT = 3 * 60 * 60 * 1000; // 3 hours
+    const INACTIVITY_LIMIT = 30 * 60 * 1000; // 30 minutes
 
     const resetTimer = () => {
       if (timeoutId) clearTimeout(timeoutId);
@@ -51,29 +51,71 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (identifier, password) => {
     const cleanId = identifier.replace(/[^\w\s@.-]/gi, '');
-    
-    const { data, error } = await supabase
+
+    // Step 1: Find user by identifier only (without password)
+    const { data: foundUser, error: findError } = await supabase
       .from('users')
       .select('*')
       .or(`email.eq.${identifier},document.eq.${cleanId}`)
-      .eq('password', password)
       .single();
 
-    if (data && !error) {
-      setUser(data);
-      localStorage.setItem('verto_user', JSON.stringify(data));
-      addToast('Login realizado com sucesso!', 'success');
-      return data;
-    } else {
+    if (findError || !foundUser) {
       addToast('Credenciais inválidas. Tente novamente.', 'error');
       return null;
     }
+
+    // Step 2: Check if account is blocked
+    if (foundUser.is_blocked) {
+      return { blocked: true };
+    }
+
+    // Step 3: Validate password
+    if (foundUser.password !== password) {
+      const newAttempts = (foundUser.login_attempts || 0) + 1;
+      const shouldBlock = newAttempts >= 5;
+
+      await supabase.from('users').update({
+        login_attempts: newAttempts,
+        ...(shouldBlock ? { is_blocked: true } : {}),
+      }).eq('id', foundUser.id);
+
+      if (shouldBlock) {
+        return { blocked: true };
+      }
+      return { attempts: newAttempts };
+    }
+
+    // Step 4: Successful login — reset counters
+    const cleanUser = { ...foundUser, login_attempts: 0, is_blocked: false };
+    await supabase.from('users').update({ login_attempts: 0, is_blocked: false }).eq('id', foundUser.id);
+    setUser(cleanUser);
+    localStorage.setItem('verto_user', JSON.stringify(cleanUser));
+    addToast('Login realizado com sucesso!', 'success');
+    return cleanUser;
   };
 
   const logout = (message = 'Logout realizado.') => {
     setUser(null);
     localStorage.removeItem('verto_user');
     if (message) addToast(message, 'info');
+  };
+
+  const unlockUser = async (id) => {
+    if (user?.role !== 'admin' && user?.role !== 'supervisor') {
+      addToast('Sem permissão para desbloquear usuários.', 'error');
+      return;
+    }
+    const { error } = await supabase.from('users').update({
+      is_blocked: false,
+      login_attempts: 0,
+    }).eq('id', id);
+
+    if (!error) {
+      setUsers(prev => prev.map(u => u.id === id ? { ...u, is_blocked: false, login_attempts: 0 } : u));
+      addToast('Conta desbloqueada com sucesso!', 'success');
+    } else {
+      addToast('Erro ao desbloquear: ' + error.message, 'error');
+    }
   };
 
   const addUser = async (newUser) => {
@@ -197,7 +239,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, setUser, users, login, logout, addUser, editUser, deleteUser, fetchUsers, registerClient }}>
+    <AuthContext.Provider value={{ user, setUser, users, login, logout, addUser, editUser, deleteUser, fetchUsers, registerClient, unlockUser }}>
       {children}
     </AuthContext.Provider>
   );
