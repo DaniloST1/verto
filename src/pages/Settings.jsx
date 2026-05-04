@@ -396,11 +396,11 @@ export const Settings = () => {
                         {isAdminOrSupervisor && u.is_blocked && (
                           <button
                             className="btn"
-                            style={{ padding: '6px 10px', background: '#fff', border: '1px solid #dc2626', color: '#dc2626', borderRadius: '6px', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+                            style={{ padding: '6px', background: '#fff', border: '1px solid #dc2626', color: '#dc2626', borderRadius: '6px', display: 'flex', alignItems: 'center' }}
                             onClick={() => unlockUser(u.id)}
                             title="Desbloquear conta"
                           >
-                            <Unlock size={14} /> Desbloquear
+                            <Unlock size={16} />
                           </button>
                         )}
                         <button
